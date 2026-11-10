@@ -1350,6 +1350,13 @@ run_resources() {
 }
 
 run_workflows() {
+  intent_skill="$repo_root/skills/ft-intent/SKILL.md"
+  assert_contains "$intent_skill" 'reading the relevant files does not settle'
+  assert_contains "$intent_skill" 'behavior measured'
+  assert_contains "$intent_skill" 'evidence weighed across several subsystems'
+  assert_contains "$intent_skill" 'material counterevidence'
+  assert_contains "$intent_skill" 'reading files or running one command do not justify an assessment'
+
   assess_skill="$repo_root/skills/ft-assess/SKILL.md"
   research_skill="$repo_root/skills/ft-research/SKILL.md"
   handoff_skill="$repo_root/skills/ft-handoff/SKILL.md"
@@ -1420,7 +1427,7 @@ run_refs() {
   assert_contains "$intent_skill" 'create no ref or synthetic hash'
   assert_contains "$intent_skill" 'Open questions'
   assert_contains "$intent_skill" 'Assumed state'
-  for provenance_list in '### Stated by the user' '### Unverified assumptions' '### Access limits'; do
+  for provenance_list in '### Stated by the user' '### Verified by the agent' '### Unverified assumptions' '### Access limits'; do
     assert_contains "$intent_template" "$provenance_list"
   done
 
@@ -1471,9 +1478,17 @@ run_decisions() {
   implement_skill="$repo_root/skills/ft-implement/SKILL.md"
   template="$repo_root/skills/ft-spec/assets/decisions.md"
 
-  assert_contains "$intent_skill" 'durable, costly to reverse, surprising without context, or resolves a meaningful trade-off'
-  assert_contains "$intent_skill" 'Do not create an ADR for a local, easily reversible, or obvious implementation choice.'
-  assert_contains "$spec_skill" 'Do not create an ADR for local, easily reversible, or obvious choices.'
+  for decision_skill in "$intent_skill" "$spec_skill" "$implement_skill" "$repo_root/skills/ft-init/assets/AGENTS-snippet.md"; do
+    for contract_text in 'only when BOTH hold' 'at least one alternative weighed and rejected for a stated reason' 'reversing it takes more than reverting a diff' 'a future reader would likely undo it without the recorded reason' 'Durability alone' 'a restated user preference or instruction' 'local, easily reversible, or obvious choices do not qualify' 'A user preference with no weighed alternative is a constraint in the intent'; do
+      assert_contains "$decision_skill" "$contract_text"
+    done
+  done
+  adr_contract="$(sed -n 's/.*\(A decision qualifies only when BOTH hold:.*not an ADR\.\).*/\1/p' "$intent_skill")"
+  [ -n "$adr_contract" ] || fail "missing ADR qualification text"
+  for decision_skill in "$spec_skill" "$implement_skill" "$repo_root/skills/ft-init/assets/AGENTS-snippet.md"; do
+    assert_contains "$decision_skill" "$adr_contract"
+  done
+  assert_contains "$intent_skill" 'the user makes a decision in the conversation'
   assert_contains "$implement_skill" 'materially changes approved `spec.md` or `tasks.md`'
   assert_contains "$implement_skill" 'renewed explicit approval'
   assert_contains "$implement_skill" 'If it does not materially change approved scope or design, record it and continue.'
@@ -1848,6 +1863,10 @@ run_flow() {
   assert_contains "$repo_root/skills/ft-init/assets/AGENTS-snippet.md" 'before looking for a track or supporting artifact'
   assert_contains "$repo_root/skills/ft-init/assets/AGENTS-snippet.md" 'never scan the whole tree for discovery'
   assert_contains "$repo_root/skills/ft-init/assets/AGENTS-snippet.md" 'Full-cycle implementation requires'
+  assert_contains "$intent_skill" 'exactly one of four lists'
+  assert_contains "$repo_root/skills/ft-intent/assets/intent.md" 'each with the path or command that showed it'
+  assert_contains "$implement_skill" 'and `Verified by the agent` fact as given'
+  assert_contains "$implement_skill" 'a verified fact'
   pass "flow"
 }
 

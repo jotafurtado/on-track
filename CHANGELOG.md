@@ -8,6 +8,8 @@ Notable changes to fast-track-ai are recorded here. Entries describe user and ma
 
 - The generated track table gains a `phase` column (`intent`, `spec`, `implement N/M`, or `-`) beside `status`; consumers that parse the table must account for the extra column.
 - Classify compound requests before allocation: operational parts run without artifacts, and bounded reversible changes use a direct lane without a track. Explicit user lane choices prevail; direct work escalates before a criterion-breaking edit, with a qualifying ADR as its only artifact exception.
+- Reserve auxiliary assessments for system conditions beyond simple file reading or a one-command fact. Record session-verified facts with their path or command in intent, and stop on a verified-fact divergence during implementation.
+- Require both a real weighed choice and costly reversal or an essential recorded reason for ADRs; durability and user preferences alone no longer qualify.
 - Consumer projects must reinstall the skills for the new text and rerun `ft-init` to refresh the managed `AGENTS.md` block.
 
 ## [0.0.1] - 2026-10-17

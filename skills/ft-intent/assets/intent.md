@@ -29,6 +29,9 @@ What stays for another track, with number when it exists.
 ### Stated by the user
 Facts the user asserted. The executor takes these as given.
 
+### Verified by the agent
+Facts confirmed in this session, each with the path or command that showed it. The executor takes these as given.
+
 ### Unverified assumptions
 Premises the agent adopted without checking. The executor verifies each before a task depends on it.
 

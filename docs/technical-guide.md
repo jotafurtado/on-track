@@ -136,8 +136,8 @@ Durante o intent o agente avisa em uma frase e grava, sem pedir licença:
 flowchart LR
   intent["Intent"] --> tech["Tecnologia ou API incerta"]
   intent --> fonte["URL documento ou trecho seu"]
-  intent --> escolha["Decisao duravel ou dificil de reverter"]
-  intent --> estado["Avaliacao do que ja existe"]
+  intent --> escolha["Escolha real e reversão custosa ou motivo essencial"]
+  intent --> estado["Condição não resolvida pela leitura dos arquivos"]
   tech --> research["research/slug.md"]
   fonte --> ref["refs/slug.md"]
   escolha --> adr["decisions/NNN-slug.md"]
@@ -151,6 +151,8 @@ flowchart LR
 | Assessment | `fast-track-ai/assessments/<YYYY-MM-DD>-<slug>.md` | Avaliação para dentro do projeto, com evidência e contraevidência. Sem `status`. |
 | Decision | `fast-track-ai/decisions/<NNN-slug>.md` | Escolha aceita. Só `accepted` ou `superseded`. |
 | Handoff | `fast-track-ai/handoffs/<YYYY-MM-DD-HHmmssZ>-<slug>.md` | Contexto para outra sessão. Os 3 mais novos ficam ativos. O resto vai para `handoffs/archive/`. |
+
+Uma ADR exige uma alternativa ponderada e rejeitada por motivo explícito e, além disso, reversão que demande mais que desfazer o diff ou uma justificativa sem a qual um leitor futuro provavelmente desfaria a escolha. Preferência sem alternativa é restrição, não ADR. Assessment só é acionado quando escopo ou desenho depende de condição que a leitura dos arquivos relevantes não resolve: comandos, medição de comportamento, evidências entre subsistemas ou contraevidência material. Fatos obtidos por leitura ou um comando ficam em `Verified by the agent`, sem assessment.
 
 No intent, cite o slug em `research:`, `refs:`, `assessments:` ou `decisions:`. Assessment não entra em `research:`.
 
@@ -174,7 +176,7 @@ O `tasks.md` exige ao menos um header `## Group`. Tasks do mesmo grupo rodam jun
 
 Grupo seguinte declara `(depends: Nome)` no título e espera o anterior. Na dúvida, o agente separa em grupos sequenciais. O mesmo arquivo não é editado em paralelo.
 
-A implementação toca só os arquivos listados na spec e na task. Item em `Out of scope` fica de fora. O `Assumed state` do intent separa três listas: `Stated by the user` são fatos que você afirmou e o executor toma como dados; `Unverified assumptions` são premissas que o agente adotou sem checar e que ele verifica antes de uma task depender delas; `Access limits` são fontes que o agente não alcançou. Se faltar arquivo na lista, o agente para e pergunta.
+A implementação toca só os arquivos listados na spec e na task. Item em `Out of scope` fica de fora. O `Assumed state` do intent separa quatro listas: `Stated by the user` são fatos que você afirmou e o executor toma como dados; `Verified by the agent` são fatos confirmados na sessão, com caminho ou comando de origem, também tomados como dados; `Unverified assumptions` são premissas que o agente adotou sem checar e que ele verifica antes de uma task depender delas; `Access limits` são fontes que o agente não alcançou. Se um fato declarado, verificado ou presumido se mostrar falso, o agente registra a divergência em `assets/` e para antes de mudar a abordagem. Se faltar arquivo na lista, o agente para e pergunta.
 
 ## Status
 

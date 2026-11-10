@@ -41,7 +41,7 @@ Essa memória fica nos arquivos, não depende de o modelo lembrar de conversas a
 | **Decisão (`decision` ou ADR)** | O que foi decidido, por quê e quais consequências a escolha traz. | `fast-track-ai/decisions/<NNN-slug>.md` |
 | **Handoff** | O contexto necessário para continuar em outra sessão, agente ou modelo. | `fast-track-ai/handoffs/<timestamp>-<slug>.md` |
 
-**Referências e decisões não têm comandos próprios.** O agente registra as referências ao preparar a intenção, quando o material fornecido fundamenta a mudança. Decisões relevantes são registradas ao longo da intenção, do planejamento ou da implementação: escolhas duradouras, difíceis de reverter ou que precisam de contexto para serem compreendidas. Não é preciso pedir um documento separado para cada uma.
+**Referências e decisões não têm comandos próprios.** O agente registra as referências ao preparar a intenção, quando o material fornecido fundamenta a mudança. Decisões relevantes são registradas ao longo da intenção, do planejamento ou da implementação: escolhas com alternativa ponderada e rejeitada por um motivo, cuja reversão exige mais que desfazer o diff ou que um leitor futuro provavelmente desfaria sem conhecer a justificativa. Durabilidade ou preferência do usuário, por si sós, não justificam ADR. Não é preciso pedir um documento separado para cada uma.
 
 ## 3. Como Usar?
 
