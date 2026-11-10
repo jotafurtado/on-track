@@ -1,6 +1,6 @@
 # AGENTS.md - fast-track-ai repo
 
-Method `fast-track-ai`, a lightweight agent-driven SDLC. Binding norm lives in Obsidian, `10 - Projetos/Code/dot-ai/dot-ai - Fundamentos v1.2.md`. Obsidian holds only the norm. This repo holds the executable: skills, commands, scripts, and templates, all inside `skills/`.
+Method `fast-track-ai`, a lightweight agent-driven SDLC. Binding norm lives in Obsidian, `10 - Projetos/Code/fast-track-ai/dot-ai - Fundamentos v1.3.md`. Obsidian holds only the norm. This repo holds the executable: skills, commands, scripts, and templates, all inside `skills/`.
 
 ## Map
 
