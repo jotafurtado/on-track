@@ -158,6 +158,8 @@ No intent, cite o slug em `research:`, `refs:`, `assessments:` ou `decisions:`. 
 
 Ref e decision não têm comando próprio. Research, assess e handoff têm.
 
+O intent separa restrições em `From the user` e `Proposed by the agent`; todas vinculam a spec. Uma restrição proposta só entra para evitar perda de dados, problema de segurança ou quebra do resultado pedido, identifica o risco e não amplia o resultado. Regras do método não são repetidas no intent. Seções sem conteúdo usam `None.`. Perguntas em aberto terminam com interrogação e identificam a decisão que destravam e o responsável, quando houver; instruções para a spec entram no escopo ou são descartadas. O resumo preserva os quatro tópicos e acrescenta, só quando aplicável, as restrições propostas para veto e o alerta sobre premissa não verificada que sustenta o problema ou o resultado.
+
 ## Grupos de tarefas
 
 ```mermaid

@@ -1867,6 +1867,22 @@ run_flow() {
   assert_contains "$repo_root/skills/ft-intent/assets/intent.md" 'each with the path or command that showed it'
   assert_contains "$implement_skill" 'and `Verified by the agent` fact as given'
   assert_contains "$implement_skill" 'a verified fact'
+  intent_template="$repo_root/skills/ft-intent/assets/intent.md"
+  for heading in '### From the user' '### Proposed by the agent'; do
+    assert_contains "$intent_template" "$heading"
+  done
+  for quality_file in "$intent_skill" "$intent_template"; do
+    for contract_text in 'data loss, a security problem, or breaking the stated outcome' 'risk' 'never widen the outcome' 'question mark' 'decision it unlocks' 'owner when one exists'; do
+      assert_contains "$quality_file" "$contract_text"
+    done
+  done
+  assert_contains "$intent_skill" '`None.`'
+  assert_contains "$intent_skill" 'method rules (approval, statuses, gates, lane rules)'
+  assert_contains "$intent_skill" 'Fold spec-phase instructions into scope or drop them'
+  assert_contains "$intent_skill" 'only when applicable'
+  assert_contains "$intent_skill" 'list agent-proposed constraints so the user can veto them'
+  assert_contains "$intent_skill" 'Problem or Proposed outcome rests on an entry under `Unverified assumptions`'
+  assert_contains "$spec_skill" 'Every constraint in the intent is binding, regardless of provenance'
   pass "flow"
 }
 

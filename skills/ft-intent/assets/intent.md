@@ -19,7 +19,12 @@ What changes for the user when done.
 Who uses, who operates, which systems are touched.
 
 ## Constraints
-Technical, security, brand, and deadline limits.
+
+### From the user
+Limits stated by the user.
+
+### Proposed by the agent
+Add only when omission risks data loss, a security problem, or breaking the stated outcome. Name the risk each constraint guards against; never widen the outcome.
 
 ## Out of scope
 What stays for another track, with number when it exists.
@@ -39,4 +44,4 @@ Premises the agent adopted without checking. The executor verifies each before a
 Sources or systems the agent could not reach.
 
 ## Open questions
-Unanswered questions, with owner when one exists.
+Only unanswered questions: each ends with a question mark and names the decision it unlocks, with an owner when one exists. Instructions for the spec phase belong in scope or are omitted.
