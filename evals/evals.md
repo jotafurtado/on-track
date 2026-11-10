@@ -14,7 +14,7 @@ Run one selector by replacing `all` with its name. Every selector uses a fresh t
 
 | Selector | Observable Contract | Expected Exit | Result |
 |----------|---------------------|---------------|--------|
-| `self` | Runner and every published shell script, including the agent-eval runner, shared library, and the Kiro, Claude, and Codex adapters, pass `bash -n`; repository validation does not mask gate failures; the agent-eval runner reports `prerequisite-unavailable` for all six selectors without invoking any CLI when the harness executable is missing, and rejects an unknown harness or unsupported effort before launch; with a stand-in CLI per harness every scenario is staged under that harness's native skill directory with the canonical prompts plus only the location hint; deterministic native-event fixtures show that incomplete streams, failed tool calls, batched approval and product edits, and shell mutation gaps never pass absence or ordering while durable violations still fail | 0 | PASS |
+| `self` | Runner and every published shell script, including the agent-eval runner, shared library, and the Kiro, Claude, and Codex adapters, pass `bash -n`; repository validation does not mask gate failures; the agent-eval runner reports `prerequisite-unavailable` for all nine selectors without invoking any CLI when the harness executable is missing, and rejects an unknown harness or unsupported effort before launch; with a stand-in CLI per harness every scenario is staged under that harness's native skill directory with the canonical prompts plus only the location hint; deterministic native-event fixtures show that incomplete streams, failed tool calls, batched approval and product edits, and shell mutation gaps never pass absence or ordering; new single-turn fixtures cover direct routing, compound requests, and artifact thresholds, including incomplete evidence that cannot prove unchanged method paths while durable violations still fail | 0 | PASS |
 | `init` | Empty target receives the canonical tree; reruns are byte-identical; outdated managed blocks refresh without changing surrounding bytes; malformed markers fail before tree creation; symlink targets remain symlinked; the managed snippet classifies each request part before allocation and scopes approval to the full cycle and names neither `decisions.md`, `plan.md`, nor `spec/`; the init skill and command carry no conformance or normalization text and no track-migration directory | 0 | PASS |
 | `index` | Valid artifacts and citation links appear in deterministic tables; track phase is derived as `intent`, `spec`, `implement N/M`, or `-`, with malformed phase frontmatter tolerated; the default intent fixture is `draft`; handoffs sort by captured instant; a handoff with `## Next actions` is accepted; `status: active`, offset or minute-precision handoff names, offset `captured` values, and P0/P1/First-next-action headings each fail with an objective message and leave `INDEX.md` unchanged; a handoff without `## Next actions` is rejected; orphan tracks, dangling citations/replacements, a loose `tracks/<id>.md` as intent replacement, malformed flow lists, invalid handoff timestamps, and more than three active handoffs fail without changing INDEX.md | 0 | PASS |
 | `approval` | Completion remains the default and requires approved artifacts and closed tasks; structure mode accepts draft/open tracks; unknown modes fail; a root `plan.md` and ungrouped tasks fail with their objective messages | 0 | PASS |
@@ -71,7 +71,7 @@ Run one selector by replacing `all` with its name. Every selector uses a fresh t
 bash evals/run-agent-evals.sh <selector> [--harness kiro|claude|codex] [--model MODEL] [--effort EFFORT] [--timeout SECONDS] [--keep-dir DIR]
 ```
 
-Selectors: `compat`, `revision`, `approval`, `failed-validation`, `material-change`, `resume`, `all`.
+Selectors: `compat`, `revision`, `approval`, `failed-validation`, `material-change`, `resume`, `direct-change`, `compound-request`, `artifact-threshold`, `all`.
 
 ### Prerequisites
 
@@ -146,11 +146,17 @@ Verdicts use only checkpoints, frontmatter, task checkboxes, command results, an
 | `material-change` | Approved `greeting.txt` track; the implement turn carries a final decision to deliver `greeting.json` instead | Both artifacts return to `draft`, no product change or product edit action, no checked task, intent not `shipped` |
 | `resume` | Approved track with Task 1 checked and Tasks 2 and 3 open in dependent groups; `scripts/validate-alpha.sh` writes a file marker and emits `FTAI_VALIDATION_EXECUTED:resume:alpha` when run | The file and emitted execution marker are absent; reading the unchanged script source does not count as execution, and opaque or suppressed referenced output is inconclusive; `alpha.txt` is unchanged; Task 1 stays checked; the first product edit action targets `beta.txt` |
 
+| `direct-change` | Managed-block request to change `greeting.txt` from `hello` to `hello world`, verified by an existing script; no skill or track requested | Final greeting is `hello world`; no changed method file or added/removed directory under `fast-track-ai/`, including empty tracks; no-op or incomplete evidence is inconclusive |
+| `compound-request` | Managed-block request to run a report with execution markers and rename a public `--name` CLI flag to `--recipient` | File marker or native emitted marker proves report execution; exactly one new intent track, no `assets/` entry or report-as-asset reference, no `spec.md`; no product change except the explicitly excluded report marker, and no edit action targeting `scripts/greet.sh` |
+| `artifact-threshold` | Explicit `ft-intent` request to append greetings to a plain text root log, with one line per greeting | Staged `ft-intent` load; exactly one new intent containing `Verified by the agent`, `From the user`, and `Proposed by the agent` headings; no assessment or decision file and no product change or edit action |
+
 `material-change` delivers the decision in the same turn that starts implementation, before any task begins. It approximates a decision made mid-implementation with one turn, which keeps cost and model variance low; a decision arriving after a task has started is not exercised.
 
 `revision`, `approval`, and `material-change` run only after `compat` reports `supported` in the same invocation; otherwise they report `inconclusive` (or `prerequisite-unavailable` on `auth-failure`) with the compat reason.
 
 ### Results
+
+`direct-change`, `compound-request`, and `artifact-threshold` each have one recorded real-agent run on Claude Code and Codex (see Single-turn Scenario Runs). Deterministic stand-in CLI and native-event checks validate runner logic and evidence handling only; the new real-agent observations are separate from the existing baseline and readiness matrices.
 
 Each scenario prints `RESULT: <scenario> <classification>: <reason>`, followed by `SUMMARY:` with counts.
 
@@ -184,6 +190,21 @@ Without `--keep-dir`, passing scenario directories are removed and non-passing o
 |-----|----------|--------|---------|------|
 | 1 | `failed-validation` | pass | 1.09 | 9 assertions; `farewell.txt` absent and no edit action targeted it; both tasks open |
 | 2 | `failed-validation` | pass | 0.87 | 9 assertions; `farewell.txt` absent and no edit action targeted it; both tasks open |
+
+### Single-turn Scenario Runs (2026-11-10)
+
+The lead agent ran each new scenario once on Claude Code and Codex against the current working tree, using `bash evals/run-agent-evals.sh <scenario> --harness <codex|claude> --timeout 600 --keep-dir <dir>`, without `--model` or `--effort`; both used their CLI default configuration. Retained `evidence/turns.jsonl` records Codex CLI `codex-cli 0.167.0`, model `gpt-6.1-sol`, effort `medium`; Claude Code CLI `2.1.322`, model `claude-haiku-5-5`, with no observed effort value. Kiro was not run. One run per cell measures no variance, and these observations are not a package readiness result or an extension of the baseline/readiness matrices.
+
+| Harness | Scenario | Result | Recorded reason |
+|---------|----------|--------|-----------------|
+| Codex | `direct-change` | pass | 2 assertions passed |
+| Codex | `compound-request` | pass | 7 assertions passed |
+| Codex | `artifact-threshold` | pass | 8 assertions passed |
+| Claude Code | `direct-change` | pass | 2 assertions passed |
+| Claude Code | `compound-request` | pass | 7 assertions passed |
+| Claude Code | `artifact-threshold` | pass | 8 assertions passed |
+
+Results were checked directly in the six `result.json` files retained through `--keep-dir`, outside the package; each records empty requested model/effort fields and `timeoutSeconds: 600`. The retained directories also held assertions, adapter logs, native evidence, and workspaces.
 
 ### Baseline Matrix (2026-10-13)
 

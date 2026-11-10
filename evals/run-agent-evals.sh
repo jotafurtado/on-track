@@ -5,7 +5,7 @@
 #
 # Usage: run-agent-evals.sh <selector> [--harness kiro|claude|codex] [--model MODEL]
 #                           [--effort EFFORT] [--timeout SECONDS] [--keep-dir DIR]
-# Selectors: compat revision approval failed-validation material-change resume all
+# Selectors: compat revision approval failed-validation material-change resume direct-change compound-request artifact-threshold all
 # Environment defaults: FAST_TRACK_AI_AGENT_MODEL, FAST_TRACK_AI_AGENT_EFFORT,
 #   FAST_TRACK_AI_AGENT_TIMEOUT (seconds per turn, default 900), KIRO_CLI (default
 #   kiro-cli), CLAUDE_CLI (default claude), CODEX_CLI (default codex).
@@ -32,14 +32,14 @@ effort="${FAST_TRACK_AI_AGENT_EFFORT:-}"
 timeout_seconds="${FAST_TRACK_AI_AGENT_TIMEOUT:-900}"
 keep_dir=""
 selector=""
-all_scenarios="compat revision approval failed-validation material-change resume"
+all_scenarios="compat revision approval failed-validation material-change resume direct-change compound-request artifact-threshold"
 # Scenarios that need a resumed headless session with a subsequent prompt, or a
 # material decision, run only after the compat spike reports `supported`.
 continuation_scenarios="revision approval material-change"
 
 usage() {
   echo "ERROR: $1" >&2
-  echo "Usage: run-agent-evals.sh <compat|revision|approval|failed-validation|material-change|resume|all> [--harness kiro|claude|codex] [--model MODEL] [--effort EFFORT] [--timeout SECONDS] [--keep-dir DIR]" >&2
+  echo "Usage: run-agent-evals.sh <compat|revision|approval|failed-validation|material-change|resume|direct-change|compound-request|artifact-threshold|all> [--harness kiro|claude|codex] [--model MODEL] [--effort EFFORT] [--timeout SECONDS] [--keep-dir DIR]" >&2
   exit 2
 }
 
@@ -594,6 +594,160 @@ scenario_resume() {
   verdict resume
 }
 
+# Single-turn scenarios still need both checkpoints and complete action coverage
+# before absence can pass. Durable violations below fail even with coverage gaps.
+assert_single_turn_checkpoints() {
+  local checkpoint
+  for checkpoint in 0 1; do
+    if [ ! -f "$(checkpoint_manifest "$checkpoint")" ] || [ ! -d "$(checkpoint_dir "$checkpoint")" ]; then
+      assert_unknown "checkpoint $checkpoint is missing; final-state absence not verified"
+      return 1
+    fi
+  done
+  if [ "$(turn_complete 1)" != "true" ]; then
+    assert_unknown "turn 1 action stream is incomplete ($(turn_incomplete_reasons 1)); absence not verified"
+  fi
+}
+
+# new_track_dirs: includes empty track directories, which file manifests omit.
+new_track_dirs() {
+  local checkpoint
+  for checkpoint in 0 1; do
+    : >"$sdir/tracks-$checkpoint.txt"
+    if [ -d "$(checkpoint_dir "$checkpoint")/fast-track-ai/tracks" ]; then
+      find "$(checkpoint_dir "$checkpoint")/fast-track-ai/tracks" -mindepth 1 -maxdepth 1 -type d \
+        -exec basename {} \; | LC_ALL=C sort >"$sdir/tracks-$checkpoint.txt"
+    fi
+  done
+  LC_ALL=C comm -13 "$sdir/tracks-0.txt" "$sdir/tracks-1.txt"
+}
+
+# assert_intent_track: selects the sole newly allocated track, if it has intent.
+assert_intent_track() {
+  local tracks count
+  tracks="$(new_track_dirs)"
+  count="$(printf '%s\n' "$tracks" | grep -c . || true)"
+  if [ "$count" -eq 0 ]; then
+    assert_unknown "no new intent track was written"
+    return 1
+  elif [ "$count" -ne 1 ]; then
+    assert_bad "$count new track directories, expected exactly one"
+    return 1
+  fi
+  track="$tracks"
+  if [ ! -f "$(checkpoint_dir 1)/fast-track-ai/tracks/$track/intent.md" ]; then
+    assert_unknown "the new track has no intent.md"
+    return 1
+  fi
+  assert_ok "exactly one new track with intent.md"
+}
+
+scenario_direct_change() {
+  reset_assertions
+  prepare_workspace direct-change method
+  if run_turns && require_turns 1 && assert_single_turn_checkpoints; then
+    # Include empty directories and symlink targets, which file manifests omit.
+    method_changes="$(changed_paths 0 1 | grep '^fast-track-ai/' || true)"
+    for checkpoint in 0 1; do
+      (cd "$(checkpoint_dir "$checkpoint")"
+        if [ -e fast-track-ai ]; then
+          find fast-track-ai ! -type f | while IFS= read -r entry; do
+            printf '%s' "$entry"
+            if [ -L "$entry" ]; then printf ' -> %s' "$(readlink "$entry")"; fi
+            printf '\n'
+          done | LC_ALL=C sort
+        fi) >"$sdir/method-dirs-$checkpoint.txt"
+    done
+    directory_changes="$(LC_ALL=C comm -3 "$sdir/method-dirs-0.txt" "$sdir/method-dirs-1.txt")"
+    if [ -n "$method_changes$directory_changes" ]; then
+      assert_bad "direct change modified fast-track-ai paths: $method_changes $directory_changes"
+    elif [ "$(turn_complete 1)" = "true" ]; then
+      assert_ok "no path under fast-track-ai changed"
+    fi
+    if [ ! -f "$(checkpoint_dir 1)/greeting.txt" ] || [ "$(cat "$(checkpoint_dir 1)/greeting.txt")" != 'hello world' ] || [ "$(wc -l <"$(checkpoint_dir 1)/greeting.txt" | tr -d ' ')" -gt 1 ]; then
+      if [ -z "$(product_changes 0 1)" ] && [ -z "$method_changes$directory_changes" ]; then
+        assert_unknown "no product or method change; direct lane was not reached"
+      else
+        assert_bad "greeting.txt does not hold hello world"
+      fi
+    else
+      assert_ok "greeting.txt holds hello world"
+    fi
+  fi
+  verdict direct-change
+}
+
+scenario_compound_request() {
+  reset_assertions
+  prepare_workspace compound-request method
+  if run_turns && require_turns 1 && assert_single_turn_checkpoints; then
+    operation_execution="$(ftai_validation_execution "$(actions_file 1)" scripts/report.sh FTAI_OPERATION_EXECUTED:compound:report "$(cat "$(checkpoint_dir 0)/scripts/report.sh")")"
+    if [ -f "$(checkpoint_dir 1)/.eval-report-ran" ] || [ "$operation_execution" = "executed" ]; then
+      assert_ok "the operational report ran"
+    else
+      assert_unknown "the operational report has no execution proof ($operation_execution)"
+    fi
+    # The report's own marker is the sole allowed product change, deliberately
+    # excluded here; edits to its script or any other product file still fail.
+    changes="$(product_changes 0 1 | grep -v '^\.eval-report-ran$' || true)"
+    if [ -n "$changes" ]; then assert_bad "unexpected compound-request product change: $changes"; else assert_ok "no product change except the report marker"; fi
+    if edited_paths 1 | grep -Fxq 'scripts/greet.sh'; then
+      assert_bad "a product edit action targeted scripts/greet.sh"
+    elif [ "$(turn_complete 1)" != "true" ]; then
+      assert_unknown "absence of a greet.sh edit action not verified"
+    elif [ "$(ftai_shell_may_mutate "$(actions_file 1)" scripts/greet.sh)" = "yes" ]; then
+      assert_unknown "a shell command may mutate scripts/greet.sh; absence of an edit not verified"
+    else
+      assert_ok "no product edit action targeted scripts/greet.sh"
+    fi
+    # Inspect every new track, including when allocation itself is wrong.
+    while IFS= read -r new_track; do
+      [ -n "$new_track" ] || continue
+      track_root="$(checkpoint_dir 1)/fast-track-ai/tracks/$new_track"
+      if [ -e "$track_root/assets" ] || [ -L "$track_root/assets" ]; then
+        assert_bad "the compound-request track holds an assets entry"
+      else
+        assert_ok "the compound-request track has no assets entry"
+      fi
+      if grep -REiq 'assets/[^[:space:]]*report|report.*assets/' "$track_root"; then
+        assert_bad "a track file mentions the report run as a track asset"
+      else
+        assert_ok "no track file mentions the report run as a track asset"
+      fi
+      if [ -e "$track_root/spec.md" ] || [ -L "$track_root/spec.md" ]; then
+        assert_bad "compound-request advanced to spec.md in a single turn"
+      else
+        assert_ok "no compound-request spec.md"
+      fi
+    done < <(new_track_dirs)
+    assert_intent_track || true
+  fi
+  verdict compound-request
+}
+
+scenario_artifact_threshold() {
+  reset_assertions
+  prepare_workspace artifact-threshold method
+  if run_turns && require_turns 1 && assert_single_turn_checkpoints; then
+    assert_staged_skill ft-intent
+    assert_no_product_change 0 1
+    assert_no_product_edit_action 1
+    artifacts="$(changed_paths 0 1 | grep -E '^fast-track-ai/(assessments|decisions)/' || true)"
+    if [ -n "$artifacts" ]; then
+      assert_bad "a simple preference generated an assessment or decision: $artifacts"
+    else
+      assert_ok "no assessment or decision file added"
+    fi
+    if assert_intent_track; then
+      intent="$(checkpoint_dir 1)/fast-track-ai/tracks/$track/intent.md"
+      for heading in '### Verified by the agent' '### From the user' '### Proposed by the agent'; do
+        if grep -Fxq "$heading" "$intent"; then assert_ok "intent contains $heading"; else assert_bad "intent lacks $heading"; fi
+      done
+    fi
+  fi
+  verdict artifact-threshold
+}
+
 for selected_scenario in $selected; do
   case " $continuation_scenarios " in
     *" $selected_scenario "*)
@@ -614,6 +768,9 @@ for selected_scenario in $selected; do
     failed-validation) scenario_failed_validation;;
     material-change) scenario_material_change;;
     resume) scenario_resume;;
+    direct-change) scenario_direct_change;;
+    compound-request) scenario_compound_request;;
+    artifact-threshold) scenario_artifact_threshold;;
   esac
 done
 

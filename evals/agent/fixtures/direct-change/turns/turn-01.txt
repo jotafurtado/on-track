@@ -1,0 +1,1 @@
+Follow the fast-track-ai rules in AGENTS.md in this repository. Change greeting.txt to say hello world. The existing scripts/check-greeting.sh verifies it.

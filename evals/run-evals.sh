@@ -223,6 +223,7 @@ case "$PWD" in
   */compat/workspace) printf 'ftai-compat-7f3a9c2e\n' >token.txt;;
   */resume/workspace) : >.eval-validate-alpha-ran;;
 esac
+if [ -n "${FAKE_SETUP:-}" ]; then bash "$FAKE_SETUP"; fi
 if [ -n "${FAKE_EVENTS:-}" ]; then cat "$FAKE_EVENTS"; exit 0; fi
 case "${FAKE_KIND:-}" in
   claude) printf '%s\n' '{"type":"system","subtype":"init","session_id":"fake-session","model":"fake","permissionMode":"dontAsk","claude_code_version":"0.0.0"}' '{"type":"result","subtype":"success","is_error":false,"session_id":"fake-session","usage":{"input_tokens":1,"output_tokens":1}}';;
@@ -251,8 +252,8 @@ check_agent_runner_prerequisites() {
       bash "$runner" all --harness "$harness_name" >"$out_file" 2>&1 || fail "agent-eval runner without a $cli_label did not exit 0"
     assert_contains "$out_file" "HARNESS: $harness_name"
     assert_contains "$out_file" "RESULT: compat prerequisite-unavailable: $cli_label not found"
-    assert_contains "$out_file" "prerequisite-unavailable=6"
-    [ "$(grep -c '^RESULT: .* prerequisite-unavailable: ' "$out_file")" -eq 6 ] || fail "$harness_name: not all six selectors reported prerequisite-unavailable"
+    assert_contains "$out_file" "prerequisite-unavailable=9"
+    [ "$(grep -c '^RESULT: .* prerequisite-unavailable: ' "$out_file")" -eq 9 ] || fail "$harness_name: not all nine selectors reported prerequisite-unavailable"
     [ ! -e "$tripwire.called" ] || fail "$harness_name: a CLI was invoked despite a missing prerequisite"
   done
   # Default harness is Kiro.
@@ -608,6 +609,108 @@ check_native_event_evidence() {
   validation_case unproven "opaque source filtering is not a verified read" 'cat scripts/validate-alpha.sh | another-command' "$source_output"
 }
 
+# Run the new verdicts through the real adapter with local stand-in CLI events.
+# These assert runner behavior, never the behavior of an actual model.
+check_single_turn_scenario_evidence() {
+  write_fake_agent
+  local selector_name expected case_name setup_file events_file case_dir
+  setup_file="$work/single-turn-setup.sh"
+  events_file="$work/single-turn-events.jsonl"
+  single_turn_case() {
+    selector_name="$1"; expected="$2"; case_name="$3"
+    case_dir="$work/single-turn-$case_name"
+    rc=0
+    env CLAUDE_CLI="$fake_agent" FAKE_SETUP="$setup_file" FAKE_EVENTS="$events_file" \
+      bash "$repo_root/evals/run-agent-evals.sh" "$selector_name" --harness claude --timeout 60 --keep-dir "$case_dir" >"$case_dir.out" 2>&1 || rc=$?
+    assert_contains "$case_dir.out" "RESULT: $selector_name $expected:"
+    if [ "$expected" = fail ]; then
+      assert_equal "$rc" 1 "$case_name exit"
+    else
+      assert_equal "$rc" 0 "$case_name exit"
+    fi
+  }
+
+  printf "printf 'hello world\n' >greeting.txt\n" >"$setup_file"
+  { cl_init; cl_done; } >"$events_file"
+  single_turn_case direct-change pass direct-complete
+  # A successful result event with an unanswered native action cannot prove absence.
+  { cl_init; cl_use opaque Read '{"file_path":"greeting.txt"}'; cl_done; } >"$events_file"
+  single_turn_case direct-change inconclusive direct-incomplete
+  assert_not_contains "$case_dir/claude/direct-change/assertions.log" 'PASS no path under fast-track-ai changed'
+  printf 'mkdir -p fast-track-ai/tracks/001-empty\n' >>"$setup_file"
+  single_turn_case direct-change fail direct-durable-incomplete
+  assert_contains "$case_dir/claude/direct-change/assertions.log" 'FAIL direct change modified fast-track-ai paths'
+  { cl_init; cl_done; } >"$events_file"
+  single_turn_case direct-change fail direct-empty-track
+  cat >"$setup_file" <<'SETUP'
+printf 'hello world\n' >greeting.txt
+ln -s INDEX.md fast-track-ai/extra-link
+SETUP
+  single_turn_case direct-change fail direct-symlink
+  cat >"$setup_file" <<'SETUP'
+printf 'hello world\n' >greeting.txt
+rmdir fast-track-ai/tracks
+SETUP
+  single_turn_case direct-change fail direct-removed-tracks
+  printf ':\n' >"$setup_file"
+  single_turn_case direct-change inconclusive direct-noop
+
+  cat >"$setup_file" <<'SETUP'
+mkdir -p fast-track-ai/tracks/001-recipient
+printf '%s\n' '---' 'id: 001-recipient' 'status: draft' '---' '# Intent' >fast-track-ai/tracks/001-recipient/intent.md
+: >.eval-report-ran
+SETUP
+  single_turn_case compound-request pass compound-complete
+  # An observed edit fails even when its final bytes match the baseline.
+  { cl_init; cl_use g1 Edit '{"file_path":"scripts/greet.sh","old_string":"x","new_string":"y"}'; cl_res g1; cl_done; } >"$events_file"
+  single_turn_case compound-request fail compound-edit-action
+  { cl_init; cl_done; } >"$events_file"
+  printf 'mkdir -p fast-track-ai/tracks/001-recipient/assets\n' >>"$setup_file"
+  single_turn_case compound-request fail compound-assets
+  # Native output proves the report ran without retaining its file marker.
+  sed '$d' "$setup_file" | sed '/^: >.eval-report-ran$/d' >"$work/compound-no-marker.sh"
+  cp "$work/compound-no-marker.sh" "$setup_file"
+  single_turn_case compound-request inconclusive compound-no-execution
+  { cl_init; cl_use r1 Bash '{"command":"scripts/report.sh"}'
+    printf '%s\n' '{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"r1","content":"FTAI_OPERATION_EXECUTED:compound:report"}]}}'
+    cl_done; } >"$events_file"
+  single_turn_case compound-request pass compound-native-execution
+  cat >>"$setup_file" <<'SETUP'
+printf 'Report output: assets/report-output.md\n' >>fast-track-ai/tracks/001-recipient/intent.md
+SETUP
+  single_turn_case compound-request fail compound-asset-reference
+  cp "$work/compound-no-marker.sh" "$setup_file"
+  printf ': >fast-track-ai/tracks/001-recipient/spec.md\n' >>"$setup_file"
+  single_turn_case compound-request fail compound-spec
+
+  cat >"$setup_file" <<'SETUP'
+mkdir -p fast-track-ai/tracks/001-log
+printf '%s\n' '---' 'id: 001-log' 'status: draft' '---' '# Intent' '### Verified by the agent' '### From the user' '### Proposed by the agent' >fast-track-ai/tracks/001-log/intent.md
+SETUP
+  { cl_init; cl_use s1 Read '{"file_path":".claude/skills/ft-intent/SKILL.md"}'; cl_res s1; cl_done; } >"$events_file"
+  single_turn_case artifact-threshold pass threshold-complete
+  printf ': >fast-track-ai/assessments/unnecessary.md\n' >>"$setup_file"
+  single_turn_case artifact-threshold fail threshold-assessment
+  sed '$d' "$setup_file" >"$work/threshold-clean.sh"
+  cp "$work/threshold-clean.sh" "$setup_file"
+  printf "printf 'changed\n' >scripts/greet.sh\n" >>"$setup_file"
+  single_turn_case artifact-threshold fail threshold-product
+  cp "$work/threshold-clean.sh" "$setup_file"
+  printf ': >fast-track-ai/decisions/001-unnecessary.md\n' >>"$setup_file"
+  single_turn_case artifact-threshold fail threshold-decision
+  cp "$work/threshold-clean.sh" "$setup_file"
+  cat >>"$setup_file" <<'SETUP'
+sed '/^### Verified by the agent$/d' fast-track-ai/tracks/001-log/intent.md >intent.tmp
+mv intent.tmp fast-track-ai/tracks/001-log/intent.md
+SETUP
+  single_turn_case artifact-threshold fail threshold-missing-heading
+  cp "$work/threshold-clean.sh" "$setup_file"
+  { cl_init; cl_done; } >"$events_file"
+  single_turn_case artifact-threshold inconclusive threshold-no-skill-load
+  printf ':\n' >"$setup_file"
+  single_turn_case artifact-threshold inconclusive threshold-no-intent
+}
+
 run_self() {
   bash -n "$repo_root/install.sh"
   bash -n "$init_script"
@@ -622,6 +725,7 @@ run_self() {
   check_agent_runner_prerequisites
   check_agent_runner_staging
   check_native_event_evidence
+  check_single_turn_scenario_evidence
   pass "runner self-check"
 }
 

@@ -4,6 +4,10 @@ Notable changes to fast-track-ai are recorded here. Entries describe user and ma
 
 ## [Unreleased]
 
+### Added
+
+- Optional single-turn agent-eval scenarios for direct changes, compound operational/change requests, and assessment/ADR artifact thresholds. One real-agent run per scenario on Claude Code and Codex passed on 2026-11-10; these observations are recorded separately from package readiness.
+
 ### Changed
 
 - The generated track table gains a `phase` column (`intent`, `spec`, `implement N/M`, or `-`) beside `status`; consumers that parse the table must account for the extra column.
