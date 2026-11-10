@@ -690,6 +690,8 @@ run_init() {
   assert_not_contains "$snippet" 'Intent autonomy'
   assert_not_contains "$snippet" 'Tasks parallelism'
   assert_not_contains "$snippet" 'Each script and template has one owner skill'
+  assert_contains "$snippet" 'tracks with their status and phase'
+  assert_contains "$target/AGENTS.md" 'tracks with their status and phase'
   assert_contains "$snippet" 'status: approved'
   assert_not_contains "$snippet" 'decisions.md'
   assert_not_contains "$snippet" 'plan.md'
@@ -703,6 +705,50 @@ run_index() {
   target="$work/index-target"
   "$init_script" "$target" >/dev/null
   write_intent "$target" "001-example" "draft"
+
+  write_intent "$target" "020-spec-only" "draft"
+  write_spec "$target/fast-track-ai/tracks/020-spec-only/spec.md" approved
+  write_intent "$target" "021-tasks-only" "draft"
+  write_tasks "$target/fast-track-ai/tracks/021-tasks-only/tasks.md" approved x
+  write_intent "$target" "022-draft-spec" "draft"
+  write_spec "$target/fast-track-ai/tracks/022-draft-spec/spec.md" draft
+  write_tasks "$target/fast-track-ai/tracks/022-draft-spec/tasks.md" approved x
+  write_intent "$target" "023-draft-tasks" "draft"
+  write_spec "$target/fast-track-ai/tracks/023-draft-tasks/spec.md" approved
+  write_tasks "$target/fast-track-ai/tracks/023-draft-tasks/tasks.md" draft x
+  write_intent "$target" "024-open-tasks" "draft"
+  write_spec "$target/fast-track-ai/tracks/024-open-tasks/spec.md" approved
+  write_tasks "$target/fast-track-ai/tracks/024-open-tasks/tasks.md" approved " "
+  cat >>"$target/fast-track-ai/tracks/024-open-tasks/tasks.md" <<'EOF'
+- [x] Completed task. Files: fixture. Validate: fixture.
+- [X] Uppercase check is not a gate task.
+  - [x] Indented check is not a gate task.
+- [x]No trailing space is not a gate task.
+EOF
+  write_intent "$target" "025-closed-tasks" "draft"
+  write_spec "$target/fast-track-ai/tracks/025-closed-tasks/spec.md" approved
+  write_tasks "$target/fast-track-ai/tracks/025-closed-tasks/tasks.md" approved x
+  write_intent "$target" "026-malformed-spec" "draft"
+  write_tasks "$target/fast-track-ai/tracks/026-malformed-spec/tasks.md" approved x
+  for malformed in \
+    $'---\nstatus: approved\n' \
+    $'---\nstatus: approved\nstatus: approved\n---\n' \
+    $'---\nstatus: approved\ninvalid field\n---\n' \
+    $'status: approved\n' \
+    $'---\n---\n'; do
+    printf '%s' "$malformed" >"$target/fast-track-ai/tracks/026-malformed-spec/spec.md"
+    "$index_script" "$target" >/dev/null
+    assert_contains "$target/fast-track-ai/INDEX.md" "| 026-malformed-spec | draft | spec |"
+  done
+  write_intent "$target" "027-shipped" "shipped"
+  write_spec "$target/fast-track-ai/tracks/027-shipped/spec.md" approved
+  write_tasks "$target/fast-track-ai/tracks/027-shipped/tasks.md" approved x
+  write_intent "$target" "028-dropped" "dropped"
+  write_intent "$target" "029-directories" "draft"
+  mkdir "$target/fast-track-ai/tracks/029-directories/spec.md" "$target/fast-track-ai/tracks/029-directories/tasks.md"
+  write_intent "$target" "030-no-task-lines" "draft"
+  write_spec "$target/fast-track-ai/tracks/030-no-task-lines/spec.md" approved
+  printf '%s\n' '---' 'status: approved' '---' >"$target/fast-track-ai/tracks/030-no-task-lines/tasks.md"
 
   inline_hash="$(printf 'inline fixture\n' | shasum -a 256 | awk '{print $1}')"
   cat >"$target/fast-track-ai/refs/inline-source.md" <<EOF
@@ -850,7 +896,18 @@ EOF
   write_handoff "$target/fast-track-ai/handoffs/archive/2026-09-20-140000Z-archived.md" "2026-09-20T14:00:00Z" "archived"
 
   "$index_script" "$target" >/dev/null
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 001-example | draft |"
+  assert_contains "$target/fast-track-ai/INDEX.md" "| track | status | phase |"
+  assert_contains "$target/fast-track-ai/INDEX.md" "|---|---|---|"
+  assert_contains "$target/fast-track-ai/INDEX.md" "| 001-example | draft | intent |"
+  for phase_track in 020-spec-only 021-tasks-only 022-draft-spec 023-draft-tasks 026-malformed-spec; do
+    assert_contains "$target/fast-track-ai/INDEX.md" "| $phase_track | draft | spec |"
+  done
+  assert_contains "$target/fast-track-ai/INDEX.md" "| 024-open-tasks | draft | implement 1/2 |"
+  assert_contains "$target/fast-track-ai/INDEX.md" "| 025-closed-tasks | draft | implement 1/1 |"
+  assert_contains "$target/fast-track-ai/INDEX.md" "| 027-shipped | shipped | - |"
+  assert_contains "$target/fast-track-ai/INDEX.md" "| 028-dropped | dropped | - |"
+  assert_contains "$target/fast-track-ai/INDEX.md" "| 029-directories | draft | intent |"
+  assert_contains "$target/fast-track-ai/INDEX.md" "| 030-no-task-lines | draft | implement 0/0 |"
   assert_contains "$target/fast-track-ai/INDEX.md" "| inline-source | inline | 2026-09-20 |"
   assert_contains "$target/fast-track-ai/INDEX.md" "| inline-no-separator | inline | 2026-09-20 |"
   assert_contains "$target/fast-track-ai/INDEX.md" "| pinned-source | pointer | 2026-09-20 |"
@@ -947,8 +1004,8 @@ EOF
   write_intent "$target" "002-replacement" "draft"
   awk '{ if ($0 == "status: draft") { print "status: superseded"; print "superseded_by: 002-replacement"; next } print }' "$work/intent-original.md" >"$target/fast-track-ai/tracks/001-example/intent.md"
   "$index_script" "$target" >/dev/null
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 001-example | superseded |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 002-replacement | draft |"
+  assert_contains "$target/fast-track-ai/INDEX.md" "| 001-example | superseded | - |"
+  assert_contains "$target/fast-track-ai/INDEX.md" "| 002-replacement | draft | intent |"
   cp "$work/intent-original.md" "$target/fast-track-ai/tracks/001-example/intent.md"
   rm -rf "$target/fast-track-ai/tracks/002-replacement"
 
@@ -1201,9 +1258,9 @@ run_installed_scripts() {
   write_tasks "$t/fast-track-ai/tracks/003-unapproved/tasks.md" approved x
 
   "$i_index" "$t" >/dev/null || fail "installed index failed through $base"
-  for track in 001-valid 002-open 003-unapproved; do
-    assert_contains "$t/fast-track-ai/INDEX.md" "| $track | draft |"
-  done
+  assert_contains "$t/fast-track-ai/INDEX.md" "| 001-valid | draft | implement 1/1 |"
+  assert_contains "$t/fast-track-ai/INDEX.md" "| 002-open | draft | implement 0/1 |"
+  assert_contains "$t/fast-track-ai/INDEX.md" "| 003-unapproved | draft | spec |"
   cp "$t/fast-track-ai/INDEX.md" "$t/index.first"
   "$i_index" "$t" >/dev/null || fail "installed index rerun failed through $base"
   cmp -s "$t/index.first" "$t/fast-track-ai/INDEX.md" || fail "installed index rerun changed INDEX.md through $base"

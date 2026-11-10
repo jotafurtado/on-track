@@ -54,6 +54,8 @@ O script `skills/ft-init/scripts/fast-track-ai-init.sh` cria a árvore e o bloco
 
 Leia o `INDEX.md` antes de procurar track, ref, research, assessment, decision ou handoff. Ele é gerado. Edição manual se perde na próxima geração.
 
+A tabela de tracks traz `track`, `status` e `phase`: `intent` indica que ainda não há arquivos regulares `spec.md` nem `tasks.md`; `spec` indica que só um existe ou que algum ainda não está aprovado; `implement N/M` indica ambos aprovados, com N tarefas marcadas entre M tarefas. Tracks `shipped`, `dropped` ou `superseded` mostram `-`; entradas ausentes ou malformadas nos arquivos de fase não fazem a geração do índice falhar.
+
 ## Ciclo de uma mudança
 
 ```mermaid

@@ -4,6 +4,10 @@ Notable changes to fast-track-ai are recorded here. Entries describe user and ma
 
 ## [Unreleased]
 
+### Changed
+
+- The generated track table gains a `phase` column (`intent`, `spec`, `implement N/M`, or `-`) beside `status`; consumers that parse the table must account for the extra column.
+
 ## [0.0.1] - 2026-10-17
 
 ### Added

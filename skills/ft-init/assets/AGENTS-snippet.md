@@ -2,7 +2,7 @@
 
 ## fast-track-ai
 
-Active memory lives in `fast-track-ai/`. Always read `fast-track-ai/INDEX.md` first; never scan the whole tree for discovery. The generated index lists tracks, refs, research, assessments, decisions, and active handoffs.
+Active memory lives in `fast-track-ai/`. Always read `fast-track-ai/INDEX.md` first; never scan the whole tree for discovery. The generated index lists tracks with their status and phase, refs, research, assessments, decisions, and active handoffs.
 
 A change that will be implemented starts as `intent.md`. The `ft-intent` skill drafts `intent.md` only. The `ft-spec` skill drafts `spec.md` and `tasks.md`. Intent approval is not required before those files. No `spec.md` and `tasks.md` with `status: approved` means no implementation. Research, assess, and handoff may stop after their artifact and index regeneration without drafting an intent. Intents live in `fast-track-ai/tracks/NNN-slug/intent.md`.
 
