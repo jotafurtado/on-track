@@ -1838,6 +1838,16 @@ run_flow() {
   assert_not_contains "$implement_skill" "pointer; do not vendor"
   assert_contains "$tasks_template" "## Group"
   assert_contains "$tasks_template" "(depends:"
+  for routing_file in "$intent_skill" "$repo_root/skills/ft-init/assets/AGENTS-snippet.md"; do
+    for contract_text in 'splitting compound requests' 'before allocating anything' 'handle each part in its own lane' 'naming `ft-intent` or asking for a track or intent selects the full cycle' 'asking to do it directly or without a track selects the direct lane' 'the request states what to build, with no open question that changes it' 'explicit choice wins in both directions' 'at most three files' 'no public contract (API, CLI flags, schema, consumed file format)' 'persisted data or migration' 'security control (authentication, authorization, secrets, permissions)' 'dependency (add, upgrade, remove)' 'reverting the diff alone' 'no data backfill or external side effect' 'Say in one sentence that the change takes the direct lane' 'implement, run the check, and report the change and result' 'any edit where a direct criterion is uncertain' 'one existing command or one observable check' 'stop before the edit that breaks it' 'name the failed criterion' 'start the full cycle with `ft-intent`' 'never record it inside a track' 'Create no track or file under' 'do not regenerate the index' 'file only that ADR and regenerate the index' 'method never commits on its own'; do
+      assert_contains "$routing_file" "$contract_text"
+    done
+  done
+  assert_contains "$repo_root/commands/ft-intent.md" 'Split compound requests'
+  assert_contains "$intent_skill" 'If reached without the user naming this skill'
+  assert_contains "$repo_root/skills/ft-init/assets/AGENTS-snippet.md" 'before looking for a track or supporting artifact'
+  assert_contains "$repo_root/skills/ft-init/assets/AGENTS-snippet.md" 'never scan the whole tree for discovery'
+  assert_contains "$repo_root/skills/ft-init/assets/AGENTS-snippet.md" 'Full-cycle implementation requires'
   pass "flow"
 }
 

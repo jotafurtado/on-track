@@ -12,7 +12,7 @@ Você define o rumo e revisa as entregas. O agente documenta, planeja, implement
 
 ## 2. Como Funciona?
 
-Depois da inicialização, cada mudança segue o fluxo abaixo. Os números mostram a sequência; os rótulos distinguem suas ações das ações do agente.
+O agente classifica cada parte do pedido e executa operações sem artefatos. Mudanças pequenas e reversíveis seguem pela via direta, sem track: implementar, verificar e relatar. As demais seguem o fluxo abaixo; você pode escolher qualquer uma das vias, conforme o [guia técnico](docs/technical-guide.md#pedido-sem-código), que detalha os critérios. Os números mostram a sequência; os rótulos distinguem suas ações das ações do agente.
 
 ![Fluxo numerado do Fast Track AI em arco aberto. Você inicia o pedido, revisa a intenção, aprova o plano e confirma a conclusão. O agente documenta a intenção, planeja e implementa com validação. As skills correspondentes aparecem em cada etapa.](docs/images/workflow.png)
 
@@ -85,7 +85,7 @@ A continuação com `.` aciona a próxima etapa do ciclo. Não é necessário ch
 | Grupo | Comando | Quando Usar |
 |---|---|---|
 | **Preparação** | `/ft-init` | Ao adotar o método em um projeto. Prepara a estrutura e o índice. |
-| **Desenvolvimento, nesta ordem** | `/ft-intent` | Inicia cada mudança: registra problema, resultado esperado, escopo e limites. |
+| **Desenvolvimento, nesta ordem** | `/ft-intent` | Inicia uma mudança no ciclo completo: registra problema, resultado esperado, escopo e limites. |
 | | `/ft-spec` | Depois da intenção: escreve a especificação e as tarefas para sua revisão e aprovação. |
 | | `/ft-implement` | Depois do plano aprovado: implementa as tarefas, valida os resultados e revisa a entrega. |
 | **Apoio, a qualquer momento** | `/ft-research` | Pesquisa fatos externos, documentação ou alternativas com fontes rastreáveis. |
@@ -99,7 +99,7 @@ As skills de apoio não precisam seguir uma ordem nem iniciar uma mudança. Por 
 /ft-handoff Registre o contexto antes de encerrar.
 ```
 
-No desenvolvimento, mantenha a ordem **intent → spec → implement**. Se continuar com `.`, o agente faz essas transições; você só precisa nomear uma skill quando quiser chamá-la diretamente.
+No ciclo completo, mantenha a ordem **intent → spec → implement**. Se continuar com `.`, o agente faz essas transições; você só precisa nomear uma skill quando quiser chamá-la diretamente.
 
 ### Para Aprofundar
 

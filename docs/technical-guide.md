@@ -4,7 +4,7 @@ Para instalar e começar, veja o [README](../README.md). Este guia preserva os f
 
 O [fluxo principal em PNG](images/workflow.png) tem uma [fonte vetorial editável](images/workflow.svg), assim como a [arte dos artefatos de apoio](images/support-context.png), com sua [fonte em SVG](images/support-context.svg). Os diagramas abaixo continuam em Mermaid para detalhar os caminhos que não precisam aparecer no início rápido.
 
-Método leve de SDLC para agente. Um pedido de mudança vira track. A track só vira código depois de `spec.md` e `tasks.md` com `status: approved`.
+Método leve de SDLC para agente. Uma mudança fora da via direta vira track. A track só vira código depois de `spec.md` e `tasks.md` com `status: approved`.
 
 Você avança o ciclo respondendo `.` no fim de cada resumo. Outra frase corrige a etapa atual e o agente mostra o resumo de novo.
 
@@ -109,8 +109,11 @@ Sinônimos do ponto: `sim`, `pode continuar`, `yes`, `continue`.
 
 ```mermaid
 flowchart TD
-  pedido["Pedido"] --> tipo{"O que voce quer"}
-  tipo -->|"mudanca no sistema"| ciclo["Ciclo intent spec implement"]
+  pedido["Pedido"] --> partes["Separar partes do pedido"]
+  partes --> tipo{"Classificar cada parte"}
+  tipo -->|"operação sem edição versionada"| operacao["Executar sem track nem artefato"]
+  tipo -->|"mudança direta ou escolha explícita"| direta["Implementar, verificar e relatar sem track"]
+  tipo -->|"demais mudanças ou intent explícito"| ciclo["Ciclo intent spec implement"]
   tipo -->|"pesquise ou investigue"| research["fast-track-ai/research/slug.md"]
   tipo -->|"avalie ou audite"| assess["fast-track-ai/assessments/data-slug.md"]
   tipo -->|"handoff compact ou retomar depois"| handoff["fast-track-ai/handoffs/timestamp-slug.md"]
@@ -118,6 +121,8 @@ flowchart TD
   assess --> pare
   handoff --> pare
 ```
+
+Pedidos compostos são separados antes de alocar artefatos. Operações sem edição de arquivo versionado não geram track nem nota em `assets/`. A via direta exige todos os critérios: resultado já definido, sem pergunta que mude o que será feito; até três arquivos; nenhum contrato público, dado persistido, migração, controle de segurança ou dependência alterado; reversão apenas pelo diff, sem efeito externo; e um comando existente ou uma observação para verificar. O agente anuncia a via direta, implementa, verifica e relata, sem arquivo no método nem regeneração do índice. Se um critério deixar de valer, para antes da edição que o viola, explica o motivo e inicia `ft-intent`. Só uma ADR qualificável pode ser registrada nessa via, com regeneração do índice. O diff e o commit do mantenedor registram a mudança; o método não faz commit. Critério incerto exige ciclo completo. A escolha explícita prevalece: nomear `ft-intent` ou pedir intent ou track seleciona o ciclo completo para uma edição; pedir execução direta ou sem track seleciona a via direta.
 
 Comando explícito de research, assess ou handoff para no artefato e no index. Não cria track.
 
