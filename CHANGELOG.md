@@ -4,6 +4,8 @@ Notable changes to On Track Method are recorded here. Entries describe user and 
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-12
+
 ### Added
 
 - Public documentation under `docs/` in English with a Brazilian Portuguese mirror: getting started, guides, reference, and concepts, readable as plain Markdown and renderable with VitePress. The single-file technical guide is retired.
