@@ -28,3 +28,8 @@ Thumbs.db
 
 # Local-only history and discarded artwork
 /.archive/
+
+# Documentation site tooling
+docs/node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/

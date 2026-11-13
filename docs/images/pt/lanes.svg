@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1800" viewBox="0 0 2400 1800" role="img" aria-labelledby="title description">
-  <title id="title">Fast Track AI: você decide, a IA implementa</title>
-  <desc id="description">Trilha aberta com sete etapas. Você inicia o pedido; o agente documenta a intenção; você revisa; o agente planeja; você aprova; o agente implementa e valida; você confirma a conclusão. Antes de começar, execute ft-init. As chamadas com barra correspondem ao Claude Code. No Codex, use o nome da skill precedido por cifrão. A mudança termina sem commit, push ou deploy automático.</desc>
+  <title id="title">On Track Method: três caminhos para um pedido</title>
+  <desc id="description">Três vias horizontais. Express: o agente implementa, roda a verificação, grava um crumb local e relata, sem perguntas e sem sinal. Highway, o padrão: intent, um sinal, spec, um sinal, implement, um sinal e ship. Off Road, a pedido: intent e spec com mais consulta, cada um seguido de um sinal; ele entra no Highway quando a spec é aprovada, então implement e ship são os mesmos. Um sinal é uma parada em que um ponto segue, um x para e qualquer outra resposta revisa a etapa.</desc>
   <metadata id="font-license"><![CDATA[Copyright 2014 The DM Sans Project Authors (https://github.com/googlefonts/dm-fonts)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
@@ -113,6 +113,10 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     .station { fill:var(--surface); stroke-width:3; }
     .caption { font-size:30px; fill:var(--muted); }
     .center { text-anchor:middle; }
+    .lane { font-size:64px; font-weight:600; letter-spacing:-2.5px; }
+    .stage { font-size:40px; font-weight:600; letter-spacing:-1px; text-anchor:middle; }
+    .note { font-size:30px; fill:var(--muted); text-anchor:middle; }
+    .tag { font-size:30px; font-weight:600; }
   </style>
   <defs>
     <marker id="direction" viewBox="0 0 20 20" refX="10" refY="10" markerWidth="18" markerHeight="18" orient="auto" markerUnits="userSpaceOnUse"><path d="M5 3 L12 10 L5 17" fill="none" stroke="var(--fg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -120,107 +124,110 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   <rect width="2400" height="1800" fill="var(--surface)"/>
   <g aria-label="Cabeçalho">
     <path d="M112 68 H137 L126 86 H151" fill="none" stroke="var(--fg)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="169" y="88" class="brand">Fast Track AI</text>
-    <text x="110" y="214" class="headline">Você Decide. A IA Implementa.</text>
-    <text x="114" y="280" class="intro">Um pedido. Um plano aprovado. Uma entrega verificada.</text>
+    <text x="169" y="88" class="brand">On Track Method</text>
+    <text x="110" y="214" class="headline">Três Caminhos para um Pedido.</text>
+    <text x="114" y="280" class="intro">O tamanho do pedido define o registro. Você sempre pode escolher a via.</text>
     <rect x="1832" y="49" width="454" height="66" rx="33" fill="none" stroke="var(--border)" stroke-width="2"/>
-    <text x="2059" y="92" font-size="30" text-anchor="middle">Antes de Começar: /ft-init</text>
+    <text x="2059" y="92" font-size="30" text-anchor="middle">Padrão: Highway</text>
     <path d="M114 331 H2286" stroke="var(--border)" stroke-width="1.5"/>
   </g>
-  <g transform="translate(0 120)">
-  <g aria-label="Sequência da mudança">
-    <path class="track" d="M541.821 1145 A760 430 0 1 1 1580 1302.391" stroke="var(--border)" stroke-width="18"/>
-    <path class="track" d="M541.821 1145 A760 430 0 1 1 1580 1302.391" stroke="var(--fg)" stroke-opacity=".55" stroke-width="2"/>
-    <path class="track" d="M448.965 995.851 A760 430 0 0 1 446.502 986.126" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
-    <path class="track" d="M589.095 674.207 A760 430 0 0 1 597.051 668.233" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
-    <path class="track" d="M1090.837 504.459 A760 430 0 0 1 1100.800 503.679" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
-    <path class="track" d="M1653.433 584.915 A760 430 0 0 1 1662.659 588.858" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
-    <path class="track" d="M1951.035 864.149 A760 430 0 0 1 1953.498 873.874" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
-    <path class="track" d="M1810.905 1185.793 A760 430 0 0 1 1802.949 1191.767" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+  <g data-lane="express" aria-label="Via Express: implementar, verificar, crumb, relatar">
+    <text x="114" y="498" class="tag" style="fill:var(--artifact)">Cinco critérios valem</text>
+    <text x="110" y="568" class="lane">Express</text>
+    <text x="114" y="622" class="detail">Sem track, sem sinal</text>
+    <path class="track" d="M640 560 H2130" stroke="var(--border)" stroke-width="18"/>
+    <path class="track" d="M640 560 H2130" stroke="var(--fg)" stroke-opacity=".55" stroke-width="2"/>
+    <path class="track" d="M980 560 H990" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <path class="track" d="M1440 560 H1450" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <path class="track" d="M1895 560 H1905" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <circle cx="640" cy="560" r="11" fill="var(--fg)"/>
+    <circle cx="760" cy="560" r="52" class="station" stroke="var(--agent)"/>
+    <circle cx="760" cy="560" r="9" fill="var(--agent)"/>
+    <text x="760" y="682" class="stage">Implementar</text>
+    <text x="760" y="726" class="note">A edição em si</text>
+    <circle cx="1217" cy="560" r="52" class="station" stroke="var(--agent)"/>
+    <circle cx="1217" cy="560" r="9" fill="var(--agent)"/>
+    <text x="1217" y="682" class="stage">Verificar</text>
+    <text x="1217" y="726" class="note">Um comando</text>
+    <circle cx="1673" cy="560" r="52" class="station" stroke="var(--artifact)"/>
+    <circle cx="1673" cy="560" r="9" fill="var(--artifact)"/>
+    <text x="1673" y="682" class="stage">Crumb</text>
+    <text x="1673" y="726" class="note">Nota local</text>
+    <circle cx="2130" cy="560" r="52" class="station" stroke="var(--agent)"/>
+    <circle cx="2130" cy="560" r="9" fill="var(--agent)"/>
+    <text x="2130" y="682" class="stage">Relatar</text>
+    <text x="2130" y="726" class="note">O que mudou</text>
   </g>
-  <g aria-label="Mensagem central">
-    <text x="1200" y="845" font-size="104" font-weight="600" letter-spacing="-4" class="center">Do Pedido</text>
-    <text x="1200" y="956" font-size="104" font-weight="600" letter-spacing="-4" class="center">à Entrega.</text>
-    <path d="M1080 1008 H1320" stroke="var(--border)" stroke-width="2"/>
-    <text x="1200" y="1066" font-size="32" class="center" fill="var(--muted)" style="fill:var(--muted)">O contexto fica no projeto.</text>
+  <g data-lane="off-road" aria-label="Off Road: intent e spec com mais consulta, entrando no Highway na aprovação da spec">
+    <text x="114" y="1278" class="tag" style="fill:var(--human)">A pedido</text>
+    <text x="110" y="1348" class="lane">Off Road</text>
+    <text x="114" y="1402" class="detail">Mais consulta</text>
+    <path class="track" d="M640 1340 H1440 C1540 1340 1540 1180 1540 1020 V960" stroke="var(--border)" stroke-width="18"/>
+    <path class="track" d="M640 1340 H1440 C1540 1340 1540 1180 1540 1020 V960" stroke="var(--fg)" stroke-opacity=".55" stroke-width="2"/>
+    <path class="track" d="M870 1340 H880" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <path class="track" d="M1095 1340 H1105" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <path class="track" d="M1315 1340 H1325" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <path class="track" d="M1540 1085 V1075" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <circle cx="640" cy="1340" r="11" fill="var(--fg)"/>
+    <circle cx="760" cy="1340" r="52" class="station" stroke="var(--agent)"/>
+    <circle cx="760" cy="1340" r="9" fill="var(--agent)"/>
+    <text x="760" y="1462" class="stage">Intent</text>
+    <text x="760" y="1506" class="note">+ escolhas do agente</text>
+    <circle cx="985" cy="1340" r="27" class="station" stroke="var(--human)"/>
+    <circle cx="985" cy="1340" r="7" fill="var(--human)"/>
+    <circle cx="1210" cy="1340" r="52" class="station" stroke="var(--agent)"/>
+    <circle cx="1210" cy="1340" r="9" fill="var(--agent)"/>
+    <text x="1210" y="1462" class="stage">Spec</text>
+    <text x="1210" y="1506" class="note">+ escolhas do agente</text>
+    <circle cx="1420" cy="1340" r="27" class="station" stroke="var(--human)"/>
+    <circle cx="1420" cy="1340" r="7" fill="var(--human)"/>
+    <text x="1596" y="1262" class="detail">Entra no Highway</text>
+    <text x="1596" y="1304" class="detail">quando a spec é aprovada</text>
   </g>
-  <g data-step="1" aria-label="1. Você inicia o pedido com ft-intent">
-    <circle cx="541.821" cy="1145" r="59" class="station" stroke="var(--human)"/>
-    <text x="541.821" y="1144" class="number human">1</text>
-    <path d="M482.821 1145 H441" stroke="var(--human)" stroke-width="2"/>
-    <text x="139" y="1068" class="role human">Você</text>
-    <text x="136" y="1127" class="action">Iniciar</text>
-    <text x="139" y="1178" class="detail">Descreva o pedido</text>
-    <text x="139" y="1233" class="command">/ft-intent</text>
+  <g data-lane="highway" aria-label="Via Highway: intent, spec, implement, ship, com um sinal depois de cada etapa">
+    <text x="114" y="898" class="tag" style="fill:var(--agent)">Padrão</text>
+    <text x="110" y="968" class="lane">Highway</text>
+    <text x="114" y="1022" class="detail">Ciclo completo, três sinais</text>
+    <path class="track" d="M640 960 H2130" stroke="var(--border)" stroke-width="18"/>
+    <path class="track" d="M640 960 H2130" stroke="var(--fg)" stroke-opacity=".55" stroke-width="2"/>
+    <path class="track" d="M870 960 H880" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <path class="track" d="M1095 960 H1105" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <path class="track" d="M1315 960 H1325" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <path class="track" d="M1630 960 H1640" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <path class="track" d="M1825 960 H1835" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <path class="track" d="M2030 960 H2040" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
+    <circle cx="640" cy="960" r="11" fill="var(--fg)"/>
+    <circle cx="1540" cy="960" r="11" fill="var(--fg)"/>
+    <circle cx="760" cy="960" r="52" class="station" stroke="var(--agent)"/>
+    <circle cx="760" cy="960" r="9" fill="var(--agent)"/>
+    <text x="760" y="1082" class="stage">Intent</text>
+    <text x="760" y="1126" class="note">Perguntas bloqueadoras</text>
+    <circle cx="985" cy="960" r="27" class="station" stroke="var(--human)"/>
+    <circle cx="985" cy="960" r="7" fill="var(--human)"/>
+    <circle cx="1210" cy="960" r="52" class="station" stroke="var(--agent)"/>
+    <circle cx="1210" cy="960" r="9" fill="var(--agent)"/>
+    <text x="1210" y="1082" class="stage">Spec</text>
+    <text x="1210" y="1126" class="note">Perguntas bloqueadoras</text>
+    <circle cx="1420" cy="960" r="27" class="station" stroke="var(--human)"/>
+    <circle cx="1420" cy="960" r="7" fill="var(--human)"/>
+    <circle cx="1720" cy="960" r="52" class="station" stroke="var(--agent)"/>
+    <circle cx="1720" cy="960" r="9" fill="var(--agent)"/>
+    <text x="1720" y="1082" class="stage">Implement</text>
+    <text x="1720" y="1126" class="note">Gate e revisão</text>
+    <circle cx="1930" cy="960" r="27" class="station" stroke="var(--human)"/>
+    <circle cx="1930" cy="960" r="7" fill="var(--human)"/>
+    <circle cx="2130" cy="960" r="52" class="station" stroke="var(--success)"/>
+    <path d="M2108 960 L2124 976 L2153 941" fill="none" stroke="var(--success)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="2130" y="1082" class="stage" style="fill:var(--success)">Ship</text>
+    <text x="2130" y="1126" class="note">Você confirma</text>
   </g>
-  <g data-step="2" aria-label="2. O agente documenta a intenção e os limites em intent.md">
-    <circle cx="465.896" cy="818.708" r="59" class="station" stroke="var(--agent)"/>
-    <text x="465.896" y="817.708" class="number agent">2</text>
-    <path d="M406.896 818.708 H372" stroke="var(--agent)" stroke-width="2"/>
-    <text x="139" y="681" class="role agent">Agente de IA</text>
-    <text x="136" y="740" class="action">Documentar</text>
-    <text x="139" y="791" class="detail">Intenção e limites</text>
-    <text x="139" y="842" class="artifact">intent.md</text>
-    <text x="139" y="897" class="command">/ft-intent</text>
-  </g>
-  <g data-step="3" aria-label="3. Você revisa a intenção antes de seguir para o planejamento">
-    <circle cx="820" cy="557.609" r="59" class="station" stroke="var(--human)"/>
-    <text x="820" y="556.609" class="number human">3</text>
-    <path d="M820 498.609 V420" stroke="var(--human)" stroke-width="2"/>
-    <text x="593" y="281" class="role human">Você</text>
-    <text x="590" y="340" class="action">Revisar</text>
-    <text x="593" y="391" class="detail">Confira a intenção</text>
-  </g>
-  <g data-step="4" aria-label="4. O agente prepara spec.md e tasks.md com ft-spec">
-    <circle cx="1396.702" cy="514.652" r="59" class="station" stroke="var(--agent)"/>
-    <text x="1396.702" y="513.652" class="number agent">4</text>
-    <path d="M1450.63 490.7 L1486 475" stroke="var(--agent)" stroke-width="2"/>
-    <text x="1512" y="285" class="role agent">Agente de IA</text>
-    <text x="1509" y="344" class="action">Planejar</text>
-    <text x="1512" y="395" class="detail">Especificação e tarefas</text>
-    <text x="1512" y="446" class="artifact">spec.md + tasks.md</text>
-    <text x="1512" y="501" class="command">/ft-spec</text>
-  </g>
-  <g data-step="5" aria-label="5. Você aprova o plano antes da implementação">
-    <circle cx="1858.179" cy="715" r="59" class="station" stroke="var(--human)"/>
-    <text x="1858.179" y="714" class="number human">5</text>
-    <path d="M1917.179 715 H1940" stroke="var(--human)" stroke-width="2"/>
-    <text x="1970" y="657" class="role human">Você</text>
-    <text x="1967" y="716" class="action">Aprovar</text>
-    <text x="1970" y="767" class="detail">Autorize a</text>
-    <text x="1970" y="809" class="detail">implementação</text>
-  </g>
-  <g data-step="6" aria-label="6. O agente implementa, valida e revisa com ft-implement">
-    <circle cx="1934.104" cy="1041.292" r="59" class="station" stroke="var(--agent)"/>
-    <text x="1934.104" y="1040.292" class="number agent">6</text>
-    <path d="M1993.104 1041.292 H2020" stroke="var(--agent)" stroke-width="2"/>
-    <text x="2047" y="1005" class="role agent">Agente de IA</text>
-    <text x="2044" y="1064" class="action" style="font-size:45px">Implementar</text>
-    <text x="2047" y="1115" class="detail">Código, validação</text>
-    <text x="2047" y="1157" class="detail">e revisão</text>
-    <text x="2047" y="1212" class="command">/ft-implement</text>
-  </g>
-  <g data-step="7" aria-label="7. Você confere a entrega e confirma a conclusão da mudança">
-    <circle cx="1580" cy="1302.391" r="59" class="station" stroke="var(--human)"/>
-    <text x="1580" y="1301.391" class="number human">7</text>
-    <path d="M1521 1302.391 H1480" stroke="var(--human)" stroke-width="2"/>
-    <text x="1160" y="1283" class="role human">Você</text>
-    <text x="1157" y="1342" class="action">Concluir</text>
-    <text x="1160" y="1393" class="detail">Confira e confirme</text>
-    <path d="M1639 1302.391 H1695" stroke="var(--success)" stroke-width="2"/>
-    <circle cx="1730" cy="1302.391" r="34" fill="none" stroke="var(--success)" stroke-width="2"/>
-    <path d="M1715 1302.391 L1726 1313.391 L1745 1290.391" fill="none" stroke="var(--success)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="1784" y="1292.391" font-size="33" font-weight="600" style="fill:var(--success)">Mudança</text>
-    <text x="1784" y="1334.391" font-size="33" font-weight="600" style="fill:var(--success)">Concluída</text>
-  </g>
-  </g>
-  <g transform="translate(0 120)" aria-label="Como continuar e limites da conclusão">
+  <g transform="translate(0 120)" aria-label="Sinais e o que cada via deixa registrado">
     <path d="M114 1493 H2286" stroke="var(--border)" stroke-width="1.5"/>
-    <rect x="116" y="1530" width="60" height="60" rx="15" fill="none" stroke="var(--fg)" stroke-width="1.5"/>
-    <text x="146" y="1568" text-anchor="middle" font-size="40">.</text>
-    <text x="197" y="1568" font-size="33">para avançar ou escreva outra instrução.</text>
+    <circle cx="146" cy="1557" r="27" class="station" stroke="var(--human)"/>
+    <circle cx="146" cy="1557" r="7" fill="var(--human)"/>
+    <text x="197" y="1568" font-size="33">Sinal: <tspan font-weight="700">.</tspan> segue, <tspan font-weight="700">x</tspan> para, qualquer outra resposta revisa a etapa.</text>
     <text x="2283" y="1568" text-anchor="end" font-size="31" style="fill:var(--muted)">Sem commit, push ou deploy automático.</text>
-    <text x="116" y="1630" class="caption">Revise os artefatos antes de continuar.</text>
-    <text x="2283" y="1630" text-anchor="end" class="caption">Uma mudança por vez. Você mantém o controle.</text>
+    <text x="116" y="1630" class="caption">A via Express deixa um crumb local até o commit.</text>
+    <text x="2283" y="1630" text-anchor="end" class="caption">O Off Road só muda as perguntas do intent e da spec.</text>
   </g>
 </svg>

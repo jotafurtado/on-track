@@ -1,110 +1,107 @@
-# Fast Track AI
+# On Track Method
 
-## 1. O Que É?
+[Português (Brasil)](README.pt-BR.md)
 
-O **Fast Track AI** é um framework leve de SDLC, o ciclo de desenvolvimento de software, para colocar agentes de código nos trilhos: *on track*.
+On Track Method is a lightweight software development life cycle (SDLC) that keeps coding agents on track: you set the direction and answer the signals, and the agent documents, plans, implements, and validates. The record is proportional to the request, so work that does not need a track does not get one.
 
-Sem um processo explícito, um pedido pode virar código antes de esclarecer o que precisa mudar. O escopo fica implícito, as decisões se perdem na conversa e outra sessão precisa reconstruir o contexto.
+## Why
 
-O Fast Track organiza esse trabalho em **intenção, plano e implementação**. O agente registra o problema, o resultado esperado e os limites, prepara a especificação e as tarefas, e só implementa depois da sua aprovação. Os artefatos ficam no projeto, não apenas no chat.
+Without an explicit process, a request becomes code before anyone settles what has to change. Decisions get lost in the chat. The next session has to rebuild the context from scratch.
 
-Você define o rumo e revisa as entregas. O agente documenta, planeja, implementa e valida.
+On Track Method classifies each request before touching anything, writes down the problem, the outcome, and the limits when the change deserves it, and only implements a full change after you approve its spec and tasks. The artifacts live in your repository as plain Markdown, not only in the conversation.
 
-## 2. Como Funciona?
+## How a request travels
 
-O agente classifica cada parte do pedido e executa operações sem artefatos. Mudanças pequenas e reversíveis seguem pela via direta, sem track: implementar, verificar e relatar. As demais seguem o fluxo abaixo; você pode escolher qualquer uma das vias, conforme o [guia técnico](docs/technical-guide.md#pedido-sem-código), que detalha os critérios. Os números mostram a sequência; os rótulos distinguem suas ações das ações do agente.
+![Diagram titled "Three Ways a Request Travels". Express, used when five criteria hold, runs Implement, Check, Crumb, and Report with no track and no signal. Highway, the default, runs Intent and Spec with blocking questions, then Implement with gate and review, then Ship, which you confirm, with a signal after each stage. Off Road, on request, runs Intent and Spec with the agent's own choices added to the questions, then joins the Highway when the spec is approved. Footer: a signal of . proceeds, x stops, any other reply revises the stage; Express leaves a local crumb until the commit; no automatic commit, push, or deploy.](docs/images/en/lanes.png)
 
-![Fluxo numerado do Fast Track AI em arco aberto. Você inicia o pedido, revisa a intenção, aprova o plano e confirma a conclusão. O agente documenta a intenção, planeja e implementa com validação. As skills correspondentes aparecem em cada etapa.](docs/images/workflow.png)
+- **Express**: a small, reversible edit that meets five criteria, such as at most three files and one check that verifies it. The agent implements it, runs the check, leaves a local note called a crumb for your commit, and reports, with no track and no stop.
+- **Highway**: every other edit, and the default. The agent writes an intent, then a spec and tasks, then implements and offers ship, stopping for your signal after each stage.
+- **Off Road**: the consulted way onto the Highway, when you want to make more of the decisions yourself. The intent and spec questions also carry the choices the agent would otherwise settle alone, until the spec is approved.
 
-As imagens usam a chamada do [Claude Code](https://code.claude.com/docs/en/skills): `/ft-intent`. No [Codex](https://developers.openai.com/codex/skills), use `$ft-intent` ou o seletor `/skills`. Nos demais harnesses, você também pode pedir `Use a skill ft-intent para <objetivo>`.
+Your explicit choice of lane always wins. The criteria are in the [request classes reference](docs/reference/request-classes.md); see also the [Express changes](docs/guides/express-changes.md) and [Off Road](docs/guides/off-road.md) guides.
 
-Ao terminar uma etapa, o agente apresenta um resumo e os artefatos gerados. Você pode abri-los e revisar antes de continuar:
+## The Highway
 
-- **Responda `.` para avançar.** Depois do plano, isso aprova a especificação e as tarefas antes da implementação.
-- **Escreva outra instrução para ajustar o rumo.** O agente trata a instrução antes de prosseguir.
+![Numbered workflow titled "You Decide. The AI Implements.", drawn as an open arc from request to delivery. 1, you: Start, state the request with /ot-intent. 2, AI agent: Document the intent and limits in intent.md. 3, you: Review, check the intent. 4, AI agent: Plan the specification and tasks in spec.md and tasks.md with /ot-spec. 5, you: Approve, authorize the implementation. 6, AI agent: Implement with code, validation, and review, with /ot-implement. 7, you: Finish, check and confirm, and the change is shipped. A badge says to run /ot-init before you start. Footer: type . to proceed or write another instruction; review the artifacts before you continue; no automatic commit, push, or deploy.](docs/images/en/workflow.png)
 
-A confirmação final marca a mudança como concluída. Não faz commit, push ou deploy automaticamente.
+The images use the [Claude Code](https://code.claude.com/docs/en/skills) call: `/ot-intent`. In [Codex](https://developers.openai.com/codex/skills), use `$ot-intent` or the `/skills` picker. In other harnesses, you can also ask `Use the ot-intent skill to <goal>`.
 
-### Apoio para Preservar o Contexto
+At the end of each Highway stage the agent shows a four-bullet summary and the artifacts it wrote, then waits for your signal as plain text:
 
-Pesquisas, avaliações e handoffs podem ser chamados a qualquer momento. Eles geram documentos que o Agente de IA consulta pelo índice do projeto, sem iniciar uma implementação.
+- **Green**: `.`, or a message that only means proceed, in your language, moves the same track to the next stage; after the spec it approves the spec and tasks, and after implementation it confirms ship.
+- **Red**: `x`, or a message that only means stop, halts without changing any status, deleting files, or undoing code, and you resume by asking for the same stage.
+- **Yellow**: any other reply, an ambiguous one included, is an instruction to the current stage, which revises and shows the summary again.
 
-![Agente de IA no centro consultando o índice e cinco tipos de artefato: referências, pesquisas, avaliações, decisões e handoffs. Pesquisas, avaliações e handoffs têm skills próprias; referências e decisões são registradas durante o fluxo.](docs/images/support-context.png)
+Ship marks the track as done; it never commits, pushes, or deploys. Read the [Highway signals guide](docs/guides/highway-signals.md) and the [cycle reference](docs/reference/cycle.md) for every rule.
 
-Essa memória fica nos arquivos, não depende de o modelo lembrar de conversas anteriores. Os cinco tipos de artefato de apoio são:
+## Context that stays in the project
 
-| Artefato | O Que Preserva | Onde Fica |
+![Diagram titled "Context That Stays in the Project.": an AI agent in the center reads the index at on-track/INDEX.md and connects to five supporting artifacts. Refs, material you provide, recorded during the flow at refs/<slug>.md, with no command of their own. Assessments, evidence of the current state with limits and recommendations, at assessments/<YYYY-MM-DD>-<slug>.md, through /ot-assess. Research, external facts and sources, at research/<slug>.md, through /ot-research. Handoff, continuity across sessions, agents, and models, at handoffs/<timestamp>-<slug>.md, through /ot-handoff. Decisions, what, why, and consequences, recorded during the flow at decisions/<NNN-slug>.md, with no command of their own. Every path lives under on-track/. Footer: memory lives in the project files, not in the chat or the model.](docs/images/en/support-context.png)
+
+Research, assessments, and handoffs can be requested at any time, without starting a change, and refs and decisions are recorded on their own during the flow when they are warranted. Agents find all of them through the generated index, so the memory lives in the files instead of depending on the model remembering earlier conversations.
+
+| Artifact | What it preserves | Where it lives |
 |---|---|---|
-| **Referência (`ref`)** | Material fornecido por você, como uma URL, um documento ou um trecho de código externo que fundamenta a mudança. | `fast-track-ai/refs/<slug>.md` |
-| **Pesquisa (`research`)** | Fatos externos, alternativas e fontes consultadas pelo agente. | `fast-track-ai/research/<slug>.md` |
-| **Avaliação (`assessment`)** | Evidências sobre o estado atual do que foi avaliado, com limitações e recomendações. | `fast-track-ai/assessments/<YYYY-MM-DD>-<slug>.md` |
-| **Decisão (`decision` ou ADR)** | O que foi decidido, por quê e quais consequências a escolha traz. | `fast-track-ai/decisions/<NNN-slug>.md` |
-| **Handoff** | O contexto necessário para continuar em outra sessão, agente ou modelo. | `fast-track-ai/handoffs/<timestamp>-<slug>.md` |
+| **Ref** | Material you supply, such as a URL, a document, or an external code snippet that grounds the change. | `on-track/refs/<slug>.md` |
+| **Research** | External facts, alternatives, and the sources the agent consulted. | `on-track/research/<slug>.md` |
+| **Assessment** | Evidence about the current state of what was evaluated, with limitations and recommendations. | `on-track/assessments/<YYYY-MM-DD>-<slug>.md` |
+| **Decision (ADR)** | What was decided, why, and what the choice implies. | `on-track/decisions/<NNN-slug>.md` |
+| **Handoff** | The context needed to continue in another session, agent, or model. | `on-track/handoffs/<timestamp>-<slug>.md` |
 
-**Referências e decisões não têm comandos próprios.** O agente registra as referências ao preparar a intenção, quando o material fornecido fundamenta a mudança. Decisões relevantes são registradas ao longo da intenção, do planejamento ou da implementação: escolhas com alternativa ponderada e rejeitada por um motivo, cuja reversão exige mais que desfazer o diff ou que um leitor futuro provavelmente desfaria sem conhecer a justificativa. Durabilidade ou preferência do usuário, por si sós, não justificam ADR. Não é preciso pedir um documento separado para cada uma.
+See the [supporting artifacts guide](docs/guides/supporting-artifacts.md) and, for when an assessment or an ADR is warranted, the [thresholds reference](docs/reference/thresholds.md).
 
-## 3. Como Usar?
+## Quick start
 
-### Instale no Seu Projeto
+You need Node.js 22.20 or later, `npx`, Git, Bash, and a coding agent that supports skills.
 
-Você precisa de Node.js 22.20 ou superior, `npx`, Git, Bash e um agente com suporte a skills.
-
-Na raiz do projeto em que quer trabalhar, execute:
+From the root of your project, install all seven skills:
 
 ```bash
-npx skills add jotafurtado/fast-track-ai --skill '*'
+npx skills add jotafurtado/on-track --skill '*'
 ```
 
-Instale as **sete skills**: elas usam recursos umas das outras. O [instalador de skills](https://github.com/vercel-labs/skills#install-a-skill) permite escolher os agentes; a instalação fica no projeto por padrão. Para usar em vários projetos, acrescente `--global`.
-
-Para escolher explicitamente entre os agentes validados, use `--agent claude-code`, `--agent codex` ou `--agent kiro-cli`.
-
-Se já usava os nomes longos, reinstale o conjunto atualizado e remova as entradas antigas do seu harness. Os comandos `ft-*` são os nomes das skills, não aliases.
-
-### Inicialize e Faça Seu Primeiro Pedido
-
-Abra o agente no mesmo projeto e peça:
+Open your agent in the same project and initialize the method:
 
 ```text
-/ft-init
+/ot-init
 ```
 
-Isso prepara a pasta `fast-track-ai/`, o índice dos artefatos e as orientações em `AGENTS.md`. A inicialização pode ser repetida sem duplicar os blocos gerenciados.
+This creates the `on-track/` folder, the artifact index, and the managed block in `AGENTS.md`. Running it again duplicates nothing.
 
-Depois, inicie uma mudança com um pedido concreto:
+Then start a change with a concrete request:
 
 ```text
-/ft-intent Adicione recuperação de senha por e-mail.
-Não altere o login social.
+/ot-intent Add password recovery by email.
+Do not change the social login.
 ```
 
-A continuação com `.` aciona a próxima etapa do ciclo. Não é necessário chamar cada skill manualmente; os nomes curtos servem também para chamadas diretas.
+Replying `.` at each stop moves the track to the next stage, so you do not need to call each skill yourself. The [installation page](docs/getting-started/installation.md) covers the options and the checkout installer; [Your first track](docs/getting-started/first-track.md) walks one request from intent to ship.
 
-### Skills e Ordem de Uso
+## Commands
 
-| Grupo | Comando | Quando Usar |
+| Group | Command | When to use |
 |---|---|---|
-| **Preparação** | `/ft-init` | Ao adotar o método em um projeto. Prepara a estrutura e o índice. |
-| **Desenvolvimento, nesta ordem** | `/ft-intent` | Inicia uma mudança no ciclo completo: registra problema, resultado esperado, escopo e limites. |
-| | `/ft-spec` | Depois da intenção: escreve a especificação e as tarefas para sua revisão e aprovação. |
-| | `/ft-implement` | Depois do plano aprovado: implementa as tarefas, valida os resultados e revisa a entrega. |
-| **Apoio, a qualquer momento** | `/ft-research` | Pesquisa fatos externos, documentação ou alternativas com fontes rastreáveis. |
-| | `/ft-assess` | Avalia o que já existe, com evidências, limitações e recomendações. |
-| | `/ft-handoff` | Registra o contexto para continuar em outra sessão, agente ou modelo. |
+| **Setup** | `/ot-init` | When adopting the method in a project. Prepares the structure and the index. |
+| **Development, in this order** | `/ot-intent` | Starts a Highway change: records the problem, expected outcome, scope, and limits. |
+| | `/ot-spec` | After the intent: writes the spec and the tasks for your review and approval. |
+| | `/ot-implement` | After the approved plan: implements the tasks, validates the results, and reviews the delivery. |
+| **Support, any time** | `/ot-research` | Researches external facts, documentation, or alternatives with traceable sources. |
+| | `/ot-assess` | Evaluates what already exists, with evidence, limitations, and recommendations. |
+| | `/ot-handoff` | Records the context to continue in another session, agent, or model. |
 
-As skills de apoio não precisam seguir uma ordem nem iniciar uma mudança. Por exemplo:
+## Documentation
 
-```text
-/ft-research Investigue opções de envio de e-mail.
-/ft-handoff Registre o contexto antes de encerrar.
-```
+| Section | Start here |
+|---|---|
+| Getting started | [Installation](docs/getting-started/installation.md) |
+| Guides | [Express changes](docs/guides/express-changes.md) |
+| Reference | [Request classes](docs/reference/request-classes.md) |
+| Concepts | [Why On Track](docs/concepts/why-on-track.md) |
 
-No ciclo completo, mantenha a ordem **intent → spec → implement**. Se continuar com `.`, o agente faz essas transições; você só precisa nomear uma skill quando quiser chamá-la diretamente.
+The full table of contents is on the [documentation home](docs/index.md). The [evals and their results](evals/evals.md) record how the package is validated with Claude Code, Codex, and Kiro.
 
-### Para Aprofundar
+Coming from `fast-track-ai`? Follow the [migration steps](docs/getting-started/migrating.md).
 
-O [guia técnico](docs/technical-guide.md) explica os artefatos, as aprovações, os grupos de tarefas e os fluxos detalhados. Os [evals e seus resultados](evals/evals.md) documentam a validação com Claude Code, Codex e Kiro.
-
-## Licença
+## License
 
 [MIT](LICENSE).

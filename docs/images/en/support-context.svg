@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1800" viewBox="0 0 2400 1800" role="img" aria-labelledby="title description">
-  <title id="title">Fast Track AI: contexto que fica no projeto</title>
-  <desc id="description">Ilustração em hub-and-spoke sem ordem entre os artefatos. O Agente de IA consulta fast-track-ai/INDEX.md e, a partir do índice, cinco artefatos de apoio: Referências, Pesquisas, Avaliações, Decisões e Handoff. Referências e decisões são registradas durante o fluxo e não têm comando próprio. ft-research gera pesquisas, ft-assess gera avaliações e ft-handoff gera handoffs. Todos os caminhos ficam em fast-track-ai/. As chamadas com barra correspondem ao Claude Code; no Codex, use dólar e o nome da skill. A memória fica nos arquivos do projeto, não no chat nem no modelo.</desc>
+  <title id="title">On Track Method: context that stays in the project</title>
+  <desc id="description">Hub-and-spoke illustration with no order among the artifacts. The AI agent reads on-track/INDEX.md and, from the index, five supporting artifacts: refs, research, assessments, decisions, and handoff. Refs and decisions are recorded during the flow and have no command of their own. ot-research writes research, ot-assess writes assessments, and ot-handoff writes handoffs. Every path lives under on-track/. The slash calls are the Claude Code form; in Codex, use a dollar sign and the skill name.</desc>
   <metadata id="font-license"><![CDATA[Copyright 2014 The DM Sans Project Authors (https://github.com/googlefonts/dm-fonts)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
@@ -116,16 +116,16 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     .stub { stroke:var(--artifact); stroke-width:2; stroke-linecap:round; }
   </style>
   <rect width="2400" height="1800" fill="var(--surface)"/>
-  <g aria-label="Cabeçalho">
+  <g aria-label="Header">
     <path d="M112 68 H137 L126 86 H151" fill="none" stroke="var(--fg)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="169" y="88" class="brand">Fast Track AI</text>
-    <text x="110" y="214" class="headline">Contexto que Fica no Projeto.</text>
-    <text x="114" y="280" class="intro">Artefatos de apoio ficam disponíveis a qualquer momento, sem iniciar uma implementação.</text>
+    <text x="169" y="88" class="brand">On Track Method</text>
+    <text x="110" y="214" class="headline">Context That Stays in the Project.</text>
+    <text x="114" y="280" class="intro">Supporting artifacts are available at any time, without starting an implementation.</text>
     <rect x="1832" y="49" width="454" height="66" rx="33" fill="none" stroke="var(--border)" stroke-width="2"/>
-    <text x="2059" y="92" font-size="30" text-anchor="middle">Sem Iniciar Implementação</text>
+    <text x="2059" y="92" font-size="30" text-anchor="middle">No Implementation Needed</text>
     <path d="M114 331 H2286" stroke="var(--border)" stroke-width="1.5"/>
   </g>
-  <g aria-label="Conexões com o índice">
+  <g aria-label="Connections to the index">
     <path class="spoke" d="M1058.932 735.836 L952.542 589.404"/>
     <circle cx="1058.932" cy="735.836" r="6" style="fill:var(--fg)"/>
     <path class="spoke" d="M1341.068 735.836 L1447.458 589.404"/>
@@ -137,73 +137,73 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <path class="spoke" d="M1200 1170 L1200 1351"/>
     <circle cx="1200" cy="1170" r="6" style="fill:var(--fg)"/>
   </g>
-  <g data-node="agent" aria-label="Agente de IA consulta fast-track-ai/INDEX.md">
+  <g data-node="agent" aria-label="The AI agent reads on-track/INDEX.md">
     <circle class="hub" cx="1200" cy="930" r="240"/>
     <g transform="translate(1200 820)"><rect class="icon-agent" x="-34" y="-26" width="68" height="52" rx="14"/><path class="icon-agent" d="M-16 -8 L-4 2 L-16 12 M4 12 H18"/></g>
-    <text x="1200" y="930" class="action center">Agente de IA</text>
-    <text x="1200" y="988" class="detail center">Consulta o Índice</text>
-    <text x="1200" y="1040" class="artifact center">fast-track-ai/INDEX.md</text>
+    <text x="1200" y="930" class="action center">AI Agent</text>
+    <text x="1200" y="988" class="detail center">Reads the Index</text>
+    <text x="1200" y="1040" class="artifact center">on-track/INDEX.md</text>
   </g>
-  <g data-node="refs" aria-label="Referências: material fornecido por você, sem comando próprio">
+  <g data-node="refs" aria-label="Refs: material you provide, no command of their own">
     <circle class="node" cx="917.863" cy="541.672" r="59"/>
     <g transform="translate(917.863 541.672)"><path class="icon" d="M-14 -24 H14 V24 L0 12 L-14 24 Z"/></g>
     <path class="stub" d="M858.863 541.672 H818.863"/>
-    <text x="805.863" y="456.172" class="action end">Referências</text>
-    <text x="802.863" y="507.172" class="detail end">Material fornecido por você</text>
-    <text x="802.863" y="549.172" class="detail end">Registradas durante o fluxo.</text>
+    <text x="805.863" y="456.172" class="action end">Refs</text>
+    <text x="802.863" y="507.172" class="detail end">Material you provide</text>
+    <text x="802.863" y="549.172" class="detail end">Recorded during the flow.</text>
     <text x="802.863" y="600.172" class="artifact end">refs/&lt;slug&gt;.md</text>
-    <text x="802.863" y="655.172" class="caption end">Sem comando próprio.</text>
+    <text x="802.863" y="655.172" class="caption end">No command of their own.</text>
   </g>
-  <g data-node="assessments" aria-label="Avaliações com ft-assess">
+  <g data-node="assessments" aria-label="Assessments with ot-assess">
     <circle class="node" cx="1482.137" cy="541.672" r="59"/>
     <g transform="translate(1482.137 541.672)"><rect class="icon" x="-18" y="-24" width="36" height="48" rx="6"/><path class="icon" d="M-9 2 L-3 9 L9 -7"/></g>
     <path class="stub" d="M1541.137 541.672 H1581.137"/>
-    <text x="1594.137" y="456.172" class="action">Avaliações</text>
-    <text x="1597.137" y="507.172" class="detail">Evidências do estado atual,</text>
-    <text x="1597.137" y="549.172" class="detail">limitações e recomendações</text>
+    <text x="1594.137" y="456.172" class="action">Assessments</text>
+    <text x="1597.137" y="507.172" class="detail">Evidence of the current state,</text>
+    <text x="1597.137" y="549.172" class="detail">limits, and recommendations</text>
     <text x="1597.137" y="600.172" class="artifact">assessments/&lt;YYYY-MM-DD&gt;-&lt;slug&gt;.md</text>
-    <text x="1597.137" y="655.172" class="command">/ft-assess</text>
+    <text x="1597.137" y="655.172" class="command">/ot-assess</text>
   </g>
-  <g data-node="decisions" aria-label="Decisões: registradas durante o fluxo, sem comando próprio">
+  <g data-node="decisions" aria-label="Decisions: recorded during the flow, no command of their own">
     <circle class="node" cx="743.493" cy="1078.328" r="59"/>
     <g transform="translate(743.493 1078.328)"><path class="icon" d="M0 24 V4 M0 4 C0 -6 -16 -4 -16 -15 M0 4 C0 -6 16 -4 16 -15"/><circle class="icon" cx="-16" cy="-19" r="5"/><circle class="icon" cx="16" cy="-19" r="5"/></g>
     <path class="stub" d="M684.493 1078.328 H644.493"/>
-    <text x="631.493" y="992.828" class="action end">Decisões</text>
-    <text x="628.493" y="1043.828" class="detail end">O que, por quê e consequências</text>
-    <text x="628.493" y="1085.828" class="detail end">Registradas durante o fluxo.</text>
+    <text x="631.493" y="992.828" class="action end">Decisions</text>
+    <text x="628.493" y="1043.828" class="detail end">What, why, and consequences</text>
+    <text x="628.493" y="1085.828" class="detail end">Recorded during the flow.</text>
     <text x="628.493" y="1136.828" class="artifact end">decisions/&lt;NNN-slug&gt;.md</text>
-    <text x="628.493" y="1191.828" class="caption end">Sem comando próprio.</text>
+    <text x="628.493" y="1191.828" class="caption end">No command of their own.</text>
   </g>
-  <g data-node="research" aria-label="Pesquisas com ft-research">
+  <g data-node="research" aria-label="Research with ot-research">
     <circle class="node" cx="1656.507" cy="1078.328" r="59"/>
     <g transform="translate(1656.507 1078.328)"><circle class="icon" cx="-5" cy="-5" r="15"/><path class="icon" d="M6 6 L22 22"/></g>
     <path class="stub" d="M1715.507 1078.328 H1755.507"/>
-    <text x="1768.507" y="1013.828" class="action">Pesquisas</text>
-    <text x="1771.507" y="1064.828" class="detail">Fatos externos e fontes</text>
+    <text x="1768.507" y="1013.828" class="action">Research</text>
+    <text x="1771.507" y="1064.828" class="detail">External facts and sources</text>
     <text x="1771.507" y="1115.828" class="artifact">research/&lt;slug&gt;.md</text>
-    <text x="1771.507" y="1170.828" class="command">/ft-research</text>
+    <text x="1771.507" y="1170.828" class="command">/ot-research</text>
   </g>
-  <g data-node="handoff" aria-label="Handoff com ft-handoff">
+  <g data-node="handoff" aria-label="Handoff with ot-handoff">
     <circle class="node" cx="1200" cy="1410" r="59"/>
     <g transform="translate(1200 1410)"><path class="icon" d="M-24 0 H10 M0 -11 L11 0 L0 11 M24 -14 V14"/></g>
     <path class="stub" d="M1259 1410 H1299"/>
     <text x="1312" y="1324.5" class="action">Handoff</text>
-    <text x="1315" y="1375.5" class="detail">Continuidade entre sessões,</text>
-    <text x="1315" y="1417.5" class="detail">agentes e modelos</text>
+    <text x="1315" y="1375.5" class="detail">Continuity across sessions,</text>
+    <text x="1315" y="1417.5" class="detail">agents, and models</text>
     <text x="1315" y="1468.5" class="artifact">handoffs/&lt;timestamp&gt;-&lt;slug&gt;.md</text>
-    <text x="1315" y="1523.5" class="command">/ft-handoff</text>
+    <text x="1315" y="1523.5" class="command">/ot-handoff</text>
   </g>
-  <g aria-label="Raiz comum dos caminhos">
+  <g aria-label="Common root of the paths">
     <path d="M140 1384 H158 L166 1394 H198 V1432 H140 Z" fill="none" stroke="var(--artifact)" stroke-width="3" stroke-linejoin="round"/>
-    <text x="222" y="1404" class="caption">Todos os caminhos ficam em</text>
-    <text x="222" y="1448" class="artifact">fast-track-ai/</text>
+    <text x="222" y="1404" class="caption">Every path lives under</text>
+    <text x="222" y="1448" class="artifact">on-track/</text>
   </g>
-  <g aria-label="Onde a memória fica">
+  <g aria-label="Where the memory lives">
     <path d="M114 1613 H2286" stroke="var(--border)" stroke-width="1.5"/>
     <rect x="116" y="1650" width="60" height="60" rx="15" fill="none" stroke="var(--fg)" stroke-width="1.5"/>
     <path d="M134 1669 H158 M134 1680 H158 M134 1691 H148" stroke="var(--fg)" stroke-width="2.5" stroke-linecap="round"/>
-    <text x="197" y="1688" font-size="33">A memória fica nos arquivos do projeto, não no chat nem no modelo.</text>
-    <text x="2283" y="1688" text-anchor="end" font-size="31" style="fill:var(--muted)">Barra: Claude Code. Codex: $ e o nome da skill.</text>
-    <text x="116" y="1750" class="caption">Revise os artefatos como qualquer outro arquivo do projeto.</text>
+    <text x="197" y="1688" font-size="33">Memory lives in the project files, not in the chat or the model.</text>
+    <text x="2283" y="1688" text-anchor="end" font-size="31" style="fill:var(--muted)">Slash: Claude Code. Codex: $ and the skill name.</text>
+    <text x="116" y="1750" class="caption">Review the artifacts like any other project file.</text>
   </g>
 </svg>
