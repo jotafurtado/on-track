@@ -1,21 +1,34 @@
 # Changelog
 
-Notable changes to fast-track-ai are recorded here. Entries describe user and maintainer impact; unreleased work is not assigned a release version.
+Notable changes to On Track Method are recorded here. Entries describe user and maintainer impact; unreleased work is not assigned a release version.
 
 ## [Unreleased]
 
 ### Added
 
-- Optional single-turn agent-eval scenarios for direct changes, compound operational/change requests, and assessment/ADR artifact thresholds. One real-agent run per scenario on Claude Code and Codex passed on 2026-11-10; these observations are recorded separately from package readiness.
+- Public documentation under `docs/` in English with a Brazilian Portuguese mirror: getting started, guides, reference, and concepts, readable as plain Markdown and renderable with VitePress. The single-file technical guide is retired.
+- Local Express crumbs record the request, changed files, and verification for commit preparation, with `files` written as a YAML block list; init creates their ignored folder without overwriting existing files.
+- Optional agent-eval scenario `red-signal`, and crumb assertions in `express-change`. One real-agent run per scenario on Claude Code and Codex passed on 2026-11-11; these observations are recorded separately from package readiness.
+- After the rename, one real-agent run each of `express-change` and `red-signal` on Claude Code and Codex passed on 2026-11-11; these observations are recorded separately from package readiness.
+- With `files` defined as a YAML block list, one real-agent run of `express-change` on Claude Code and Codex passed on 2026-11-11; these observations are recorded separately from package readiness.
+- Optional single-turn agent-eval scenarios for Express changes, compound operational/change requests, and assessment/ADR artifact thresholds. One real-agent run per scenario on Claude Code and Codex passed on 2026-11-10; these observations are recorded separately from package readiness.
 
 ### Changed
 
+- Diagrams now exist per language under `docs/images/en` and `docs/images/pt`, carry the On Track Method names, and include a new lanes diagram.
+- The README is rewritten in English as a short entry point with the three diagrams, and gains a Brazilian Portuguese mirror in `README.pt-BR.md`; detailed rules now live in the documentation.
+- **BREAKING:** the package is renamed On Track Method. The consumer tree is `on-track/`, commands and skills are `ot-*`, scripts are `on-track-*.sh`, and agent-eval variables use `ON_TRACK_`. `ot-init` refuses a repository that still holds a `fast-track-ai/` tree or managed block and prints the manual steps; no automatic migration is provided.
+- Record every implement review finding in `assets/review.md` and surface fixed and open counts at ship; the review fixes blocking findings and in-scope important ones on every track.
+- Investigate before asking Highway questions, use rounds of up to four with recommendations and delegated decisions, and offer Off Road for more consultation during intent and spec; it ends when the spec is approved, adds no field to any artifact, does not carry across sessions, and changes no artifact or threshold.
+- Highway stages accept plain-text green, yellow, and red signals: `.` proceeds, `x` stops without changing status or undoing work, and other replies revise the current stage.
+- State for every lane that the method never commits, pushes, or deploys on its own: ship only marks the track `shipped`, and a commit, push, or deploy happens only when the user asks for it.
+- Name the edit lanes Express and Highway, with Highway as the default; routing criteria and procedures are unchanged.
 - The generated track table gains a `phase` column (`intent`, `spec`, `implement N/M`, or `-`) beside `status`; consumers that parse the table must account for the extra column.
-- Classify compound requests before allocation: operational parts run without artifacts, and bounded reversible changes use a direct lane without a track. Explicit user lane choices prevail; direct work escalates before a criterion-breaking edit, with a qualifying ADR as its only artifact exception.
+- Classify compound requests before allocation: operational parts run without artifacts, and bounded reversible changes use the Express lane without a track. Explicit user lane choices prevail; Express work escalates before a criterion-breaking edit; its only artifacts are a local crumb and, when one qualifies, an ADR.
 - Reserve auxiliary assessments for system conditions beyond simple file reading or a one-command fact. Record session-verified facts with their path or command in intent, and stop on a verified-fact divergence during implementation.
 - Require both a real weighed choice and costly reversal or an essential recorded reason for ADRs; durability and user preferences alone no longer qualify.
 - Keep intent proportional with constraint provenance, risk-based agent proposals, genuine open questions, empty sections marked `None.`, and conditional summary warnings for proposed constraints and unverified foundations. Existing consumer intents remain valid without the new headings.
-- Consumer projects must reinstall the skills for the new text and rerun `ft-init` to refresh the managed `AGENTS.md` block.
+- Consumer projects must reinstall the skills for the new text and crumb contract and rerun `ot-init` to refresh the managed `AGENTS.md` block and create the local ignored `on-track/crumbs/` folder.
 
 ## [0.0.1] - 2026-10-17
 

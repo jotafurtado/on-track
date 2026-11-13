@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install.sh links the fast-track-ai skills into a harness skills directory
+# install.sh links the on-track skills into a harness skills directory
 # and the command wrappers into a harness commands directory.
 # Usage: install.sh [--agents-dir DIR] [--claude-dir DIR] [--commands-dir DIR]
 # Defaults: ~/.agents/skills, ~/.claude/skills, ~/.claude/commands.
@@ -51,7 +51,7 @@ relpath() {
 }
 
 mkdir -p "$agents_dir"
-for skill in "$method_root"/skills/ft-*; do
+for skill in "$method_root"/skills/ot-*; do
   [ -d "$skill" ] || continue
   ln -sfn "$skill" "$agents_dir/$(basename "$skill")"
   echo "linked $(basename "$skill") -> $agents_dir"
@@ -59,7 +59,7 @@ done
 
 if [ -d "$(dirname "$claude_dir")" ]; then
   mkdir -p "$claude_dir"
-  for skill in "$method_root"/skills/ft-*; do
+  for skill in "$method_root"/skills/ot-*; do
     link="$agents_dir/$(basename "$skill")"
     [ -e "$link" ] || continue
     ln -sfn "$(relpath "$claude_dir" "$link")" "$claude_dir/$(basename "$link")"
@@ -68,7 +68,7 @@ if [ -d "$(dirname "$claude_dir")" ]; then
 fi
 
 mkdir -p "$commands_dir"
-for cmd in "$method_root"/commands/ft-*.md; do
+for cmd in "$method_root"/commands/ot-*.md; do
   [ -f "$cmd" ] || continue
   ln -sfn "$cmd" "$commands_dir/$(basename "$cmd")"
   echo "linked $(basename "$cmd") -> $commands_dir"

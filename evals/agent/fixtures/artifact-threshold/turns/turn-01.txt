@@ -1,1 +1,1 @@
-Use the ft-intent skill in this repository. I want scripts/greet.sh to keep printing each greeting to stdout and also append it to greetings.log in the repository root. I prefer a plain text log with one line per greeting.
+Use the ot-intent skill in this repository. I want scripts/greet.sh to keep printing each greeting to stdout and also append it to greetings.log in the repository root. I prefer a plain text log with one line per greeting.

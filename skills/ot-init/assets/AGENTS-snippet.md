@@ -1,0 +1,36 @@
+<!-- BEGIN MANAGED BLOCK: on-track. Installed by ot-init, idempotent block. -->
+
+## on-track
+
+Active memory lives in `on-track/`. Read `on-track/INDEX.md` before looking for a track or supporting artifact; never scan the whole tree for discovery. The generated index lists tracks with their status and phase, refs, research, assessments, decisions, and active handoffs.
+
+Classify each request, splitting compound requests into parts before allocating anything; handle each part in its own lane. The user's explicit choice wins in both directions: naming `ot-intent` or asking for a track or intent selects the Highway for an edit; asking to do it directly or without a track selects the Express lane.
+
+- **Operational**: running, building, installing, inspecting, or reporting without editing a versioned target-repo file. Execute directly, with no track or artifact; never record it inside a track, including an `assets/` note.
+- **Express**: all five criteria hold: (1) the request states what to build, with no open question that changes it; (2) at most three files change; (3) no public contract (API, CLI flags, schema, consumed file format), persisted data or migration, security control (authentication, authorization, secrets, permissions), or dependency (add, upgrade, remove) changes; (4) reverting the diff alone undoes it, with no data backfill or external side effect; (5) one existing command or one observable check verifies it. Say in one sentence that the change takes the Express lane, implement, run the check, write a crumb, and report the change and result. Apart from the crumb, create no track or file under `on-track/` and do not regenerate the index. The crumb is the note for the maintainer's commit; the method never commits on its own. If a criterion stops holding, stop before the edit that breaks it, name the failed criterion, and start the Highway with `ot-intent`. The sole artifact exception is a qualifying ADR: file only that ADR and regenerate the index.
+- **Highway**: every other edit, and any edit where an Express criterion is uncertain. The Highway runs intent, spec, implement, and ship, and is the default.
+- **Research-only / assessment-only**: route to `ot-research` / `ot-assess` without a track.
+
+Crumb: the local note an Express change leaves for whoever prepares the commit. Write it after the check, pass or fail, at `on-track/crumbs/<YYYY-MM-DD-HHMMSSZ>-<slug>.md`, timestamp in UTC. Frontmatter: `created` (UTC, ISO 8601) and `files` (a YAML block list, one path per line: every path the change touched, a filed ADR included). Body: `## Request` (what the user asked, in one or two sentences), `## Cause` (fixes only: the cause found), `## Changes` (one line per file), `## Verification` (the command or observation and its result). Crumbs stay out of git and out of the index: when `on-track/crumbs/.gitignore` is missing, create it holding the single line `*`. To undo an Express change, reverse your own edits hunk by hunk, so the user's uncommitted work in the same files survives, and delete its crumb. When preparing commits, read the crumbs oldest first, group the diff by each crumb's `files` and `Changes`, write the message from its `Request` and `Cause`, then delete every crumb you consumed and every crumb whose files no longer differ from `HEAD`.
+
+ADR threshold, in every lane: A decision qualifies only when BOTH hold: (1) it was a real choice, with at least one alternative weighed and rejected for a stated reason; (2) getting it wrong is expensive: reversing it takes more than reverting a diff (data migration, coordinated change in consumers, external commitment), or a future reader would likely undo it without the recorded reason. Durability alone, a restated user preference or instruction, and local, easily reversible, or obvious choices do not qualify. A user preference with no weighed alternative is a constraint in the intent, not an ADR.
+
+On the Highway, a change starts as `intent.md`. The `ot-intent` skill drafts `intent.md` only. The `ot-spec` skill drafts `spec.md` and `tasks.md`. Intent approval is not required before those files. Highway implementation requires `spec.md` and `tasks.md` with `status: approved`. Research, assess, and handoff may stop after their artifact and index regeneration without drafting an intent. Intents live in `on-track/tracks/NNN-slug/intent.md`.
+
+Signals: on the Highway, intent, spec, and implement end with a four-bullet summary plus a next-step line, then stop for the user's signal, read as plain text. **Green** is `.`, or a message that only means proceed in the user's language (`go`, `yes`, `continue`, `sim`, `verde`): chain the next skill for the same track without asking for a command. **Red** is `x`, or a message that only means stop (`stop`, `red`, `pare`, `vermelho`): stop, change no `status`, delete nothing, and undo no code; the track stays valid in `draft` and resumes when the user asks for that stage again. **Yellow** is any other message, an ambiguous one included: treat it as an instruction to the current skill, then present the summary again. Green never changes intent `status`; intent stays `draft` until the implement ship sets `shipped`. The signal is text; keep the host's question tool for questions.
+
+Questions: investigate first, and ask only what the repository or a command cannot answer. On the Highway ask only blocking questions, those whose answer changes scope, security, persistence, external integration, architecture, or acceptance: one round per stage, at most four, each naming the decision it unlocks and offering options with your recommendation first. The user may answer any question with "you decide"; record that delegated decision and list it in the summary for veto. **Off Road** is the consulted way onto the Highway, on from the moment the user asks for it until that track's spec is approved: an intent or spec round then also carries the choices you would otherwise settle alone, within the same cap. From the approved spec on the track runs on the Highway, and a spec returned to `draft` does not turn Off Road back on unless the user asks again. Off Road adds no field to any artifact and does not carry across sessions: a new session starts with it off until the user asks again, even when a handoff quotes the earlier request.
+
+Supporting artifact locations:
+
+- A ref lives at `on-track/refs/<slug>.md`.
+- Research lives at `on-track/research/<slug>.md`.
+- An assessment lives at `on-track/assessments/<YYYY-MM-DD>-<slug>.md`.
+- A decision lives at `on-track/decisions/<NNN-slug>.md`.
+- A handoff lives at `on-track/handoffs/<timestamp>-<slug>.md`.
+
+- Track root holds only `intent.md`, `spec.md`, `tasks.md`, and `assets/`. Loose files are forbidden. Auxiliary outputs go under `assets/`.
+- Intent stays `draft` until `shipped`, `dropped`, or `superseded`. `dropped` abandons the work; implementation is not required. `superseded` requires `superseded_by`. Do not invent `superseded_by`. Implement owns `shipped` and asks before writing it.
+- In every lane the method never commits, pushes, or deploys on its own. Ship only marks the track `shipped`; a commit, push, or deploy happens only when the user asks for it, an approved task included.
+
+<!-- END MANAGED BLOCK: on-track -->

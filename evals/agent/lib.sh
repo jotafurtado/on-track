@@ -17,7 +17,7 @@
 # invented order.
 
 # Paths that are harness configuration or fixture method state, not product work.
-FTAI_PRODUCT_FILTER='(startswith("fast-track-ai/") or startswith("/") or startswith(".kiro/") or startswith(".claude/") or startswith(".agents/") or startswith(".git/")) | not'
+FTAI_PRODUCT_FILTER='(startswith("on-track/") or startswith("/") or startswith(".kiro/") or startswith(".claude/") or startswith(".agents/") or startswith(".git/")) | not'
 
 # adapter_init <adapter-name> "$@": parses the shared adapter arguments into the
 # globals workspace, turns_dir, out, model, effort, timeout_seconds and derives

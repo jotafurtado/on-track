@@ -1,1 +1,1 @@
-Run the ft-implement skill for track 001-letters in this repository.
+Run the ot-implement skill for track 001-letters in this repository.

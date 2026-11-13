@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # run-agent-evals.sh runs optional, maintainer-only real-agent evaluations of the
-# fast-track-ai workflow through a harness adapter (Kiro, Claude Code, or Codex)
+# on-track workflow through a harness adapter (Kiro, Claude Code, or Codex)
 # in disposable repositories. It is never called by run-evals.sh and never gates it.
 #
 # Usage: run-agent-evals.sh <selector> [--harness kiro|claude|codex] [--model MODEL]
 #                           [--effort EFFORT] [--timeout SECONDS] [--keep-dir DIR]
-# Selectors: compat revision approval failed-validation material-change resume direct-change compound-request artifact-threshold all
-# Environment defaults: FAST_TRACK_AI_AGENT_MODEL, FAST_TRACK_AI_AGENT_EFFORT,
-#   FAST_TRACK_AI_AGENT_TIMEOUT (seconds per turn, default 900), KIRO_CLI (default
+# Selectors: compat revision approval red-signal failed-validation material-change resume express-change compound-request artifact-threshold all
+# Environment defaults: ON_TRACK_AGENT_MODEL, ON_TRACK_AGENT_EFFORT,
+#   ON_TRACK_AGENT_TIMEOUT (seconds per turn, default 900), KIRO_CLI (default
 #   kiro-cli), CLAUDE_CLI (default claude), CODEX_CLI (default codex).
 #
 # Each scenario prints one line: RESULT: <scenario> <pass|fail|inconclusive|prerequisite-unavailable>: <reason>
@@ -20,26 +20,26 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 agent_dir="$repo_root/evals/agent"
 fixtures="$agent_dir/fixtures"
-init_script="$repo_root/skills/ft-init/scripts/fast-track-ai-init.sh"
-index_script="$repo_root/skills/ft-init/scripts/fast-track-ai-index.sh"
-gate="$repo_root/skills/ft-spec/scripts/fast-track-ai-gate.sh"
+init_script="$repo_root/skills/ot-init/scripts/on-track-init.sh"
+index_script="$repo_root/skills/ot-init/scripts/on-track-index.sh"
+gate="$repo_root/skills/ot-spec/scripts/on-track-gate.sh"
 # shellcheck source=agent/lib.sh
 . "$agent_dir/lib.sh"
 
 harness="kiro"
-model="${FAST_TRACK_AI_AGENT_MODEL:-}"
-effort="${FAST_TRACK_AI_AGENT_EFFORT:-}"
-timeout_seconds="${FAST_TRACK_AI_AGENT_TIMEOUT:-900}"
+model="${ON_TRACK_AGENT_MODEL:-}"
+effort="${ON_TRACK_AGENT_EFFORT:-}"
+timeout_seconds="${ON_TRACK_AGENT_TIMEOUT:-900}"
 keep_dir=""
 selector=""
-all_scenarios="compat revision approval failed-validation material-change resume direct-change compound-request artifact-threshold"
+all_scenarios="compat revision approval red-signal failed-validation material-change resume express-change compound-request artifact-threshold"
 # Scenarios that need a resumed headless session with a subsequent prompt, or a
 # material decision, run only after the compat spike reports `supported`.
-continuation_scenarios="revision approval material-change"
+continuation_scenarios="revision approval red-signal material-change"
 
 usage() {
   echo "ERROR: $1" >&2
-  echo "Usage: run-agent-evals.sh <compat|revision|approval|failed-validation|material-change|resume|direct-change|compound-request|artifact-threshold|all> [--harness kiro|claude|codex] [--model MODEL] [--effort EFFORT] [--timeout SECONDS] [--keep-dir DIR]" >&2
+  echo "Usage: run-agent-evals.sh <compat|revision|approval|red-signal|failed-validation|material-change|resume|express-change|compound-request|artifact-threshold|all> [--harness kiro|claude|codex] [--model MODEL] [--effort EFFORT] [--timeout SECONDS] [--keep-dir DIR]" >&2
   exit 2
 }
 
@@ -83,7 +83,7 @@ if [ -n "$keep_dir" ]; then
   diag_root="$(cd "$keep_dir" && pwd)"
 else
   tmp_base="${TMPDIR:-/tmp}"
-  diag_root="$(mktemp -d "${tmp_base%/}/fast-track-ai-agent-evals.XXXXXX")"
+  diag_root="$(mktemp -d "${tmp_base%/}/on-track-agent-evals.XXXXXX")"
 fi
 
 count_pass=0
@@ -200,21 +200,26 @@ verdict() {
 # stage_turns <scenario>: copies the canonical turn prompts into the scenario
 # directory. The first sentence naming "this repository" gains the discovery
 # location hint of the selected harness; decisions, continuation inputs, and every
-# other prompt stay byte-identical to the fixtures.
+# other prompt stay byte-identical to the fixtures, except red-signal reuses
+# approval with turn 2 replaced by x.
 stage_turns() {
-  local scenario="$1" file
+  local scenario="$1" fixture_scenario="${2:-$1}" file
   turns_staged="$sdir/turns"
   mkdir -p "$turns_staged"
-  for file in "$fixtures/$scenario/turns"/turn-*.txt; do
+  for file in "$fixtures/$fixture_scenario/turns"/turn-*.txt; do
+    if [ "$scenario" = red-signal ] && [ "$(basename "$file")" = turn-02.txt ]; then
+      printf 'x\n' >"$turns_staged/turn-02.txt"
+      continue
+    fi
     awk -v hint="The skill is available under $native_dir/skills/." '
       !done && (i = index($0, " in this repository.")) > 0 { $0 = substr($0, 1, i + 19) " " hint substr($0, i + 20); done = 1 }
       { print }' "$file" >"$turns_staged/$(basename "$file")"
   done
 }
 
-# prepare_workspace <scenario> <method|plain>
+# prepare_workspace <scenario> <method|plain> [fixture-scenario]
 prepare_workspace() {
-  local scenario="$1" kind="$2" skill
+  local scenario="$1" kind="$2" fixture_scenario="${3:-$1}" skill
   sdir="$diag_root/$harness/$scenario"
   rm -rf "$sdir"
   mkdir -p "$sdir"
@@ -222,22 +227,22 @@ prepare_workspace() {
   evidence="$sdir/evidence"
   mkdir -p "$ws"
   : >"$sdir/assertions.log"
-  stage_turns "$scenario"
+  stage_turns "$scenario" "$fixture_scenario"
   if [ "$kind" = "method" ]; then
     "$init_script" "$ws" >/dev/null
-    if [ -d "$fixtures/$scenario/workspace" ]; then
-      rsync -a "$fixtures/$scenario/workspace/" "$ws/"
+    if [ -d "$fixtures/$fixture_scenario/workspace" ]; then
+      rsync -a "$fixtures/$fixture_scenario/workspace/" "$ws/"
     fi
     "$index_script" "$ws" >/dev/null
     mkdir -p "$ws/$native_dir/skills"
-    for skill in "$repo_root"/skills/ft-*; do
+    for skill in "$repo_root"/skills/ot-*; do
       cp -R "$skill" "$ws/$native_dir/skills/"
     done
   fi
   git -C "$ws" init -q
   printf '.kiro/\n.claude/\n.agents/\n' >>"$ws/.git/info/exclude"
   git -C "$ws" add -A
-  git -C "$ws" -c user.name=fast-track-ai-eval -c user.email=eval@example.invalid -c commit.gpgsign=false -c tag.gpgsign=false commit -q --allow-empty -m "fixture baseline"
+  git -C "$ws" -c user.name=on-track-eval -c user.email=eval@example.invalid -c commit.gpgsign=false -c tag.gpgsign=false commit -q --allow-empty -m "fixture baseline"
 }
 
 run_turns() {
@@ -283,7 +288,7 @@ changed_paths() {
     "$(checkpoint_manifest "$1")" "$(checkpoint_manifest "$2")" | LC_ALL=C sort
 }
 
-product_changes() { changed_paths "$1" "$2" | grep -v '^fast-track-ai/' || true; }
+product_changes() { changed_paths "$1" "$2" | grep -v '^on-track/' || true; }
 
 status_at() {
   file="$(checkpoint_dir "$1")/$2"
@@ -314,7 +319,7 @@ uncovered_product_changes() {
 assert_planning_status() {
   checkpoint="$1"; expected="$2"; track="$3"
   for artifact in spec.md tasks.md; do
-    actual="$(status_at "$checkpoint" "fast-track-ai/tracks/$track/$artifact")"
+    actual="$(status_at "$checkpoint" "on-track/tracks/$track/$artifact")"
     if [ "$actual" = "$expected" ]; then
       assert_ok "$artifact is $expected at checkpoint $checkpoint"
     else
@@ -346,7 +351,7 @@ assert_no_product_edit_action() {
 }
 
 assert_no_checked_task() {
-  tasks_path="$(checkpoint_dir "$1")/fast-track-ai/tracks/$2/tasks.md"
+  tasks_path="$(checkpoint_dir "$1")/on-track/tracks/$2/tasks.md"
   if grep -Eq '^[[:space:]]*- \[[xX]\]' "$tasks_path" 2>/dev/null; then
     assert_bad "a task is checked in tasks.md at checkpoint $1"
   else
@@ -355,7 +360,7 @@ assert_no_checked_task() {
 }
 
 assert_not_shipped() {
-  intent_status="$(status_at "$1" "fast-track-ai/tracks/$2/intent.md")"
+  intent_status="$(status_at "$1" "on-track/tracks/$2/intent.md")"
   if [ "$intent_status" = "shipped" ]; then
     assert_bad "intent is shipped at checkpoint $1"
   else
@@ -382,7 +387,7 @@ assert_staged_skill() {
 # task_checkbox <checkpoint> <track> <task label>: prints open, checked, or missing.
 task_checkbox() {
   awk -v label="$3" 'index($0, label) && match($0, /^[[:space:]]*- \[[ xX]\]/) { c = substr($0, RSTART + RLENGTH - 2, 1); print (c == " " ? "open" : "checked"); found = 1; exit } END { if (!found) print "missing" }' \
-    "$(checkpoint_dir "$1")/fast-track-ai/tracks/$2/tasks.md" 2>/dev/null || echo missing
+    "$(checkpoint_dir "$1")/on-track/tracks/$2/tasks.md" 2>/dev/null || echo missing
 }
 
 # ---------------------------------------------------------------------------
@@ -440,8 +445,8 @@ scenario_revision() {
   prepare_workspace revision method
   track=001-greeting
   if run_turns && require_turns 2; then
-    assert_staged_skill ft-spec
-    if [ "$(status_at 1 "fast-track-ai/tracks/$track/spec.md")" = "missing" ] || [ "$(status_at 1 "fast-track-ai/tracks/$track/tasks.md")" = "missing" ]; then
+    assert_staged_skill ot-spec
+    if [ "$(status_at 1 "on-track/tracks/$track/spec.md")" = "missing" ] || [ "$(status_at 1 "on-track/tracks/$track/tasks.md")" = "missing" ]; then
       assert_unknown "turn 1 did not write spec.md and tasks.md"
     else
       assert_planning_status 1 draft "$track"
@@ -461,8 +466,8 @@ scenario_approval() {
   prepare_workspace approval method
   track=001-greeting
   if run_turns && require_turns 2; then
-    assert_staged_skill ft-spec
-    if [ "$(status_at 1 "fast-track-ai/tracks/$track/spec.md")" = "missing" ] || [ "$(status_at 1 "fast-track-ai/tracks/$track/tasks.md")" = "missing" ]; then
+    assert_staged_skill ot-spec
+    if [ "$(status_at 1 "on-track/tracks/$track/spec.md")" = "missing" ] || [ "$(status_at 1 "on-track/tracks/$track/tasks.md")" = "missing" ]; then
       assert_unknown "turn 1 did not write spec.md and tasks.md"
     else
       assert_planning_status 1 draft "$track"
@@ -477,7 +482,7 @@ scenario_approval() {
       elif [ -n "$(uncovered_product_changes 1 2 2)" ]; then
         assert_unknown "product changes without an edit action ($(uncovered_product_changes 1 2 2 | tr '\n' ' ')); approval order not verified"
       else
-        order="$(ftai_approval_order "$(actions_file 2)" "fast-track-ai/tracks/$track/spec.md" "fast-track-ai/tracks/$track/tasks.md")"
+        order="$(ftai_approval_order "$(actions_file 2)" "on-track/tracks/$track/spec.md" "on-track/tracks/$track/tasks.md")"
         case "$order" in
           ok) assert_ok "separate completed approval writes finished before every product edit started";;
           violation) assert_bad "a product edit started before an approval write completed";;
@@ -489,12 +494,51 @@ scenario_approval() {
   verdict approval
 }
 
+scenario_red_signal() {
+  local track_file relative_file intent_status deleted_files
+  reset_assertions
+  prepare_workspace red-signal method approval
+  track=001-greeting
+  if run_turns && require_turns 2; then
+    assert_staged_skill ot-spec
+    if [ "$(status_at 1 "on-track/tracks/$track/spec.md")" = missing ] || [ "$(status_at 1 "on-track/tracks/$track/tasks.md")" = missing ]; then
+      assert_unknown "turn 1 did not write spec.md and tasks.md"
+    else
+      assert_planning_status 1 draft "$track"
+      assert_no_product_change 0 1
+      assert_no_checked_task 1 "$track"
+      assert_planning_status 2 draft "$track"
+      assert_no_product_change 0 2
+      assert_no_product_edit_action 2
+      assert_no_checked_task 2 "$track"
+      intent_status="$(status_at 2 "on-track/tracks/$track/intent.md")"
+      if [ "$intent_status" = draft ]; then
+        assert_ok "intent is draft after red signal"
+      else
+        assert_bad "intent is '$intent_status' after red signal, expected draft"
+      fi
+      deleted_files=false
+      while IFS= read -r track_file; do
+        relative_file="${track_file#"$(checkpoint_dir 1)/"}"
+        if [ ! -e "$(checkpoint_dir 2)/$relative_file" ] && [ ! -L "$(checkpoint_dir 2)/$relative_file" ]; then
+          assert_bad "red signal deleted track file: $relative_file"
+          deleted_files=true
+        fi
+      done < <(find "$(checkpoint_dir 1)/on-track/tracks/$track" \( -type f -o -type l \))
+      if [ "$deleted_files" = false ]; then
+        assert_ok "no track file from turn 1 is missing after red signal"
+      fi
+    fi
+  fi
+  verdict red-signal
+}
+
 scenario_failed_validation() {
   reset_assertions
   prepare_workspace failed-validation method
   track=001-greeting
   if run_turns && require_turns 1; then
-    assert_staged_skill ft-implement
+    assert_staged_skill ot-implement
     if shell_commands 1 | grep -Fq 'check-greeting.sh'; then
       assert_ok "the failing Validate command ran"
     else
@@ -526,7 +570,7 @@ scenario_failed_validation() {
     assert_not_shipped 1 "$track"
     # Ship is offered only when every acceptance row is met, so a durable
     # all-met acceptance record means completion was offered.
-    acceptance="$(checkpoint_dir 1)/fast-track-ai/tracks/$track/assets/acceptance.md"
+    acceptance="$(checkpoint_dir 1)/on-track/tracks/$track/assets/acceptance.md"
     if [ ! -f "$acceptance" ]; then
       assert_ok "no acceptance record, so completion was not offered"
     elif grep -Eiq '\|[[:space:]]*pending[[:space:]]*\|' "$acceptance"; then
@@ -548,7 +592,7 @@ scenario_material_change() {
   prepare_workspace material-change method
   track=001-greeting
   if run_turns && require_turns 1; then
-    assert_staged_skill ft-implement
+    assert_staged_skill ot-implement
     assert_planning_status 1 draft "$track"
     assert_no_product_change 0 1
     assert_no_product_edit_action 1
@@ -563,7 +607,7 @@ scenario_resume() {
   prepare_workspace resume method
   track=001-letters
   if run_turns && require_turns 1; then
-    assert_staged_skill ft-implement
+    assert_staged_skill ot-implement
     validation_execution="$(ftai_validation_execution "$(actions_file 1)" scripts/validate-alpha.sh FTAI_VALIDATION_EXECUTED:resume:alpha "$(cat "$(checkpoint_dir 0)/scripts/validate-alpha.sh")")"
     if [ -e "$(checkpoint_dir 1)/.eval-validate-alpha-ran" ] || [ "$validation_execution" = "executed" ]; then
       assert_bad "the checked Task 1 Validate was rerun"
@@ -614,8 +658,8 @@ new_track_dirs() {
   local checkpoint
   for checkpoint in 0 1; do
     : >"$sdir/tracks-$checkpoint.txt"
-    if [ -d "$(checkpoint_dir "$checkpoint")/fast-track-ai/tracks" ]; then
-      find "$(checkpoint_dir "$checkpoint")/fast-track-ai/tracks" -mindepth 1 -maxdepth 1 -type d \
+    if [ -d "$(checkpoint_dir "$checkpoint")/on-track/tracks" ]; then
+      find "$(checkpoint_dir "$checkpoint")/on-track/tracks" -mindepth 1 -maxdepth 1 -type d \
         -exec basename {} \; | LC_ALL=C sort >"$sdir/tracks-$checkpoint.txt"
     fi
   done
@@ -635,23 +679,24 @@ assert_intent_track() {
     return 1
   fi
   track="$tracks"
-  if [ ! -f "$(checkpoint_dir 1)/fast-track-ai/tracks/$track/intent.md" ]; then
+  if [ ! -f "$(checkpoint_dir 1)/on-track/tracks/$track/intent.md" ]; then
     assert_unknown "the new track has no intent.md"
     return 1
   fi
   assert_ok "exactly one new track with intent.md"
 }
 
-scenario_direct_change() {
+scenario_express_change() {
+  local method_path crumb_path crumb_count unexpected_paths added_directory removed_directory crumb_valid
   reset_assertions
-  prepare_workspace direct-change method
+  prepare_workspace express-change method
   if run_turns && require_turns 1 && assert_single_turn_checkpoints; then
     # Include empty directories and symlink targets, which file manifests omit.
-    method_changes="$(changed_paths 0 1 | grep '^fast-track-ai/' || true)"
+    method_changes="$(changed_paths 0 1 | grep '^on-track/' || true)"
     for checkpoint in 0 1; do
       (cd "$(checkpoint_dir "$checkpoint")"
-        if [ -e fast-track-ai ]; then
-          find fast-track-ai ! -type f | while IFS= read -r entry; do
+        if [ -e on-track ]; then
+          find on-track ! -type f | while IFS= read -r entry; do
             printf '%s' "$entry"
             if [ -L "$entry" ]; then printf ' -> %s' "$(readlink "$entry")"; fi
             printf '\n'
@@ -659,14 +704,95 @@ scenario_direct_change() {
         fi) >"$sdir/method-dirs-$checkpoint.txt"
     done
     directory_changes="$(LC_ALL=C comm -3 "$sdir/method-dirs-0.txt" "$sdir/method-dirs-1.txt")"
-    if [ -n "$method_changes$directory_changes" ]; then
-      assert_bad "direct change modified fast-track-ai paths: $method_changes $directory_changes"
-    elif [ "$(turn_complete 1)" = "true" ]; then
-      assert_ok "no path under fast-track-ai changed"
+    unexpected_paths=""
+    crumb_path=""
+    crumb_count=0
+    while IFS= read -r method_path; do
+      [ -n "$method_path" ] || continue
+      case "$method_path" in
+        on-track/crumbs/.gitignore)
+          if [ -e "$(checkpoint_dir 0)/$method_path" ] || [ ! -f "$(checkpoint_dir 1)/$method_path" ]; then
+            unexpected_paths="$unexpected_paths $method_path"
+          else
+            printf '*\n' >"$sdir/crumbs-gitignore.expected"
+            cmp -s "$sdir/crumbs-gitignore.expected" "$(checkpoint_dir 1)/$method_path" || unexpected_paths="$unexpected_paths $method_path"
+          fi
+          ;;
+        on-track/crumbs/*.md)
+          if [ -e "$(checkpoint_dir 0)/$method_path" ] || [ ! -f "$(checkpoint_dir 1)/$method_path" ] || [[ "${method_path#on-track/crumbs/}" == */* ]]; then
+            unexpected_paths="$unexpected_paths $method_path"
+          else
+            crumb_count=$((crumb_count + 1))
+            crumb_path="$method_path"
+          fi
+          ;;
+        *) unexpected_paths="$unexpected_paths $method_path";;
+      esac
+    done <<< "$method_changes"
+    while IFS= read -r removed_directory; do
+      [ -z "$removed_directory" ] || unexpected_paths="$unexpected_paths $removed_directory"
+    done < <(LC_ALL=C comm -23 "$sdir/method-dirs-0.txt" "$sdir/method-dirs-1.txt")
+    while IFS= read -r added_directory; do
+      case "$added_directory" in
+        ''|on-track/crumbs) ;;
+        *) unexpected_paths="$unexpected_paths $added_directory";;
+      esac
+    done < <(LC_ALL=C comm -13 "$sdir/method-dirs-0.txt" "$sdir/method-dirs-1.txt")
+    if [ -n "$unexpected_paths" ]; then
+      assert_bad "Express change modified unexpected on-track paths:$unexpected_paths"
+    fi
+    crumb_valid=true
+    if [ "$crumb_count" -ne 1 ]; then
+      crumb_valid=false
+      if [ "$crumb_count" -gt 1 ] || { [ "$(turn_complete 1)" = "true" ] && [ -n "$(product_changes 0 1)$method_changes$directory_changes" ]; }; then
+        assert_bad "expected exactly one new crumb, found $crumb_count"
+      fi
+    else
+      if ! printf '%s\n' "${crumb_path#on-track/crumbs/}" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}Z-[a-z0-9-]+\.md$'; then
+        assert_bad "crumb name is not a UTC timestamp and kebab-case slug"
+        crumb_valid=false
+      fi
+      if awk '
+        NR == 1 && $0 != "---" { exit 1 }
+        /^---$/ { section++; next }
+        section == 1 {
+          if ($0 ~ /^created:[[:space:]]*[^[:space:]]/) created = 1
+          if ($0 ~ /^files:/) {
+            files = ($0 ~ /^files:[[:space:]]*$/)
+            if ($0 ~ /^files:[[:space:]]*[^[:space:]]/) inline_files = 1
+          } else if (files && $0 ~ /^[[:space:]]*-[[:space:]]+/) {
+            value = $0; sub(/^[[:space:]]*-[[:space:]]+/, "", value)
+            gsub(/^[[:space:]\042\047]+|[[:space:]\042\047]+$/, "", value)
+            if (value == "greeting.txt") greeting = 1
+          } else if ($0 ~ /^[^[:space:]]/) files = 0
+          next
+        }
+        section == 2 {
+          if ($0 == "## Request") request = 1
+          if ($0 == "## Changes") changes = 1
+          if ($0 == "## Verification") verification = 1
+        }
+        END {
+          if (inline_files) exit 2
+          if (!(section >= 2 && created && greeting && request && changes && verification)) exit 1
+        }
+      ' "$(checkpoint_dir 1)/$crumb_path"; then
+        :
+      else
+        if [ "$?" -eq 2 ]; then
+          assert_bad "crumb files is not a YAML block list"
+        else
+          assert_bad "crumb lacks created, files listing greeting.txt, or required headings"
+        fi
+        crumb_valid=false
+      fi
+    fi
+    if [ "$crumb_valid" = true ] && [ -z "$unexpected_paths" ] && [ "$(turn_complete 1)" = "true" ]; then
+      assert_ok "one well-formed crumb and no other method path changed"
     fi
     if [ ! -f "$(checkpoint_dir 1)/greeting.txt" ] || [ "$(cat "$(checkpoint_dir 1)/greeting.txt")" != 'hello world' ] || [ "$(wc -l <"$(checkpoint_dir 1)/greeting.txt" | tr -d ' ')" -gt 1 ]; then
       if [ -z "$(product_changes 0 1)" ] && [ -z "$method_changes$directory_changes" ]; then
-        assert_unknown "no product or method change; direct lane was not reached"
+        assert_unknown "no product or method change; Express lane was not reached"
       else
         assert_bad "greeting.txt does not hold hello world"
       fi
@@ -674,7 +800,7 @@ scenario_direct_change() {
       assert_ok "greeting.txt holds hello world"
     fi
   fi
-  verdict direct-change
+  verdict express-change
 }
 
 scenario_compound_request() {
@@ -703,7 +829,7 @@ scenario_compound_request() {
     # Inspect every new track, including when allocation itself is wrong.
     while IFS= read -r new_track; do
       [ -n "$new_track" ] || continue
-      track_root="$(checkpoint_dir 1)/fast-track-ai/tracks/$new_track"
+      track_root="$(checkpoint_dir 1)/on-track/tracks/$new_track"
       if [ -e "$track_root/assets" ] || [ -L "$track_root/assets" ]; then
         assert_bad "the compound-request track holds an assets entry"
       else
@@ -729,17 +855,17 @@ scenario_artifact_threshold() {
   reset_assertions
   prepare_workspace artifact-threshold method
   if run_turns && require_turns 1 && assert_single_turn_checkpoints; then
-    assert_staged_skill ft-intent
+    assert_staged_skill ot-intent
     assert_no_product_change 0 1
     assert_no_product_edit_action 1
-    artifacts="$(changed_paths 0 1 | grep -E '^fast-track-ai/(assessments|decisions)/' || true)"
+    artifacts="$(changed_paths 0 1 | grep -E '^on-track/(assessments|decisions)/' || true)"
     if [ -n "$artifacts" ]; then
       assert_bad "a simple preference generated an assessment or decision: $artifacts"
     else
       assert_ok "no assessment or decision file added"
     fi
     if assert_intent_track; then
-      intent="$(checkpoint_dir 1)/fast-track-ai/tracks/$track/intent.md"
+      intent="$(checkpoint_dir 1)/on-track/tracks/$track/intent.md"
       for heading in '### Verified by the agent' '### From the user' '### Proposed by the agent'; do
         if grep -Fxq "$heading" "$intent"; then assert_ok "intent contains $heading"; else assert_bad "intent lacks $heading"; fi
       done
@@ -765,10 +891,11 @@ for selected_scenario in $selected; do
     compat) [ -n "$compat_result" ] || scenario_compat;;
     revision) scenario_revision;;
     approval) scenario_approval;;
+    red-signal) scenario_red_signal;;
     failed-validation) scenario_failed_validation;;
     material-change) scenario_material_change;;
     resume) scenario_resume;;
-    direct-change) scenario_direct_change;;
+    express-change) scenario_express_change;;
     compound-request) scenario_compound_request;;
     artifact-threshold) scenario_artifact_threshold;;
   esac

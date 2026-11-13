@@ -1,0 +1,5 @@
+---
+description: Draft intent for Highway changes or an explicit intent or track request; route operational, Express, research-only, and assessment-only parts without a track.
+---
+
+Run the `ot-intent` skill. Demand comes from the conversation. Split compound requests and classify each part before allocation. Operational and Express parts create no track when routed here without an explicit intent request. Naming this command or asking for a track selects the Highway for an edit; an explicit request to work directly or without a track selects the Express lane. Research-only and assessment-only requests are routed without a track. For Highway change requests, output goes to `on-track/tracks/NNN-slug/intent.md`. Intent `status` may stay `draft`. Do not write `spec.md`. Unanswered `Open questions` stay on the intent for the spec skill to resolve or convert into tasks; each must be a question naming the decision it unlocks. For Highway changes, the skill presents a four-bullet summary and ends with `. para continuar com a spec`; on `.` it chains to the spec skill. `x` stops without changing status; any other reply revises the current stage.

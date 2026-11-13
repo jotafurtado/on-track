@@ -1,1 +1,1 @@
-Follow the fast-track-ai rules in AGENTS.md in this repository. Run scripts/report.sh now and tell me what it prints. Also rename the --name flag of scripts/greet.sh to --recipient. Other teams call this script from their own tooling.
+Follow the on-track rules in AGENTS.md in this repository. Run scripts/report.sh now and tell me what it prints. Also rename the --name flag of scripts/greet.sh to --recipient. Other teams call this script from their own tooling.

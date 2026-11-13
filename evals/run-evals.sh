@@ -3,7 +3,7 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 mode="${1:-all}"
-work="$(mktemp -d "${TMPDIR:-/tmp}/fast-track-ai-skill-standards.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/on-track-skill-standards.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 
 fail() {
@@ -58,8 +58,8 @@ write_intent() {
   root="$1"
   track="$2"
   status="$3"
-  mkdir -p "$root/fast-track-ai/tracks/$track"
-  cat >"$root/fast-track-ai/tracks/$track/intent.md" <<EOF
+  mkdir -p "$root/on-track/tracks/$track"
+  cat >"$root/on-track/tracks/$track/intent.md" <<EOF
 ---
 id: $track
 status: $status
@@ -152,7 +152,7 @@ Verified fixture state.
 - None.
 
 ## Relevant paths and durable artifacts
-- fast-track-ai/INDEX.md
+- on-track/INDEX.md
 
 ## Observed command results
 - Fixture command passed.
@@ -192,7 +192,7 @@ Verified fixture state.
 - None.
 
 ## Relevant paths and durable artifacts
-- fast-track-ai/INDEX.md
+- on-track/INDEX.md
 
 ## Observed command results
 - Fixture command passed.
@@ -202,9 +202,9 @@ Verified fixture state.
 EOF
 }
 
-init_script="$repo_root/skills/ft-init/scripts/fast-track-ai-init.sh"
-index_script="$repo_root/skills/ft-init/scripts/fast-track-ai-index.sh"
-gate="$repo_root/skills/ft-spec/scripts/fast-track-ai-gate.sh"
+init_script="$repo_root/skills/ot-init/scripts/on-track-init.sh"
+index_script="$repo_root/skills/ot-init/scripts/on-track-index.sh"
+gate="$repo_root/skills/ot-spec/scripts/on-track-gate.sh"
 
 # fake_agent is an executable stand-in for a harness CLI. It answers the
 # prerequisite probes, then emits canned native events (FAKE_EVENTS file, or a
@@ -252,8 +252,8 @@ check_agent_runner_prerequisites() {
       bash "$runner" all --harness "$harness_name" >"$out_file" 2>&1 || fail "agent-eval runner without a $cli_label did not exit 0"
     assert_contains "$out_file" "HARNESS: $harness_name"
     assert_contains "$out_file" "RESULT: compat prerequisite-unavailable: $cli_label not found"
-    assert_contains "$out_file" "prerequisite-unavailable=9"
-    [ "$(grep -c '^RESULT: .* prerequisite-unavailable: ' "$out_file")" -eq 9 ] || fail "$harness_name: not all nine selectors reported prerequisite-unavailable"
+    assert_contains "$out_file" "prerequisite-unavailable=10"
+    [ "$(grep -c '^RESULT: .* prerequisite-unavailable: ' "$out_file")" -eq 10 ] || fail "$harness_name: not all ten selectors reported prerequisite-unavailable"
     [ ! -e "$tripwire.called" ] || fail "$harness_name: a CLI was invoked despite a missing prerequisite"
   done
   # Default harness is Kiro.
@@ -305,15 +305,20 @@ check_agent_runner_staging() {
         [ "$(cat "$staged_file")" = "$expected" ] || fail "$harness_name staged prompt differs from the fixture beyond the location hint: $staged_file"
       done
       if [ "$scenario" != "compat" ]; then
-        skill_copy="$keep/$harness_name/$scenario/workspace/$native/skills/ft-spec/SKILL.md"
+        skill_copy="$keep/$harness_name/$scenario/workspace/$native/skills/ot-spec/SKILL.md"
         [ -f "$skill_copy" ] || fail "$harness_name did not stage the package under $native/skills for $scenario"
-        cmp -s "$skill_copy" "$repo_root/skills/ft-spec/SKILL.md" || fail "$harness_name staged skill differs from the package"
-        [ ! -L "$keep/$harness_name/$scenario/workspace/$native/skills/ft-spec" ] || fail "$harness_name staged skill is a symlink into the package"
+        cmp -s "$skill_copy" "$repo_root/skills/ot-spec/SKILL.md" || fail "$harness_name staged skill differs from the package"
+        [ ! -L "$keep/$harness_name/$scenario/workspace/$native/skills/ot-spec" ] || fail "$harness_name staged skill is a symlink into the package"
         for other in .kiro .claude .agents; do
           [ "$other" = "$native" ] || [ ! -e "$keep/$harness_name/$scenario/workspace/$other" ] || fail "$harness_name workspace has an unrelated $other directory"
         done
       fi
     done
+    cmp "$keep/$harness_name/approval/turns/turn-01.txt" "$keep/$harness_name/red-signal/turns/turn-01.txt" || fail "$harness_name red-signal did not reuse the spec prompt"
+    printf 'x\n' >"$work/red-signal-turn.expected"
+    cmp "$work/red-signal-turn.expected" "$keep/$harness_name/red-signal/turns/turn-02.txt" || fail "$harness_name red-signal turn 2 is not x"
+    cmp "$repo_root/evals/agent/fixtures/approval/workspace/on-track/tracks/001-greeting/intent.md" "$keep/$harness_name/red-signal/workspace/on-track/tracks/001-greeting/intent.md" || fail "$harness_name red-signal did not reuse the intent fixture"
+    cmp "$repo_root/skills/ot-spec/SKILL.md" "$keep/$harness_name/red-signal/workspace/$native/skills/ot-spec/SKILL.md" || fail "$harness_name red-signal did not stage the spec skill"
     manifest="$keep/$harness_name/resume/evidence/checkpoints/turn-01.manifest"
     assert_contains "$manifest" "  .eval-validate-alpha-ran"
     assert_contains "$manifest" "  scripts/validate-alpha.sh"
@@ -387,27 +392,27 @@ check_native_event_evidence() {
   mkdir -p "$codex_home_dir"
   mkdir -p "$work/native-ws"
   n_ws="$(cd "$work/native-ws" && pwd)"
-  spec_rel="fast-track-ai/tracks/001-x/spec.md"
-  tasks_rel="fast-track-ai/tracks/001-x/tasks.md"
+  spec_rel="on-track/tracks/001-x/spec.md"
+  tasks_rel="on-track/tracks/001-x/tasks.md"
   approved=$'---\nstatus: approved\n---\n'
 
   # Claude: separate completed approval writes before the product edit are provable.
   { cl_init
-    cl_use r0 Read "$(cl_path "$n_ws/.claude/skills/ft-spec/SKILL.md")"; cl_res r0
+    cl_use r0 Read "$(cl_path "$n_ws/.claude/skills/ot-spec/SKILL.md")"; cl_res r0
     cl_use a1 Write "$(cl_write "$n_ws/$spec_rel" "$approved")"; cl_res a1
     cl_use a2 Write "$(cl_write "$n_ws/$tasks_rel" "$approved")"; cl_res a2
     cl_use p1 Write "$(cl_write "$n_ws/greeting.txt" hello)"; cl_res p1
-    printf '%s\n' "{\"type\":\"user\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":\"Base directory for this skill: $n_ws/.claude/skills/ft-spec\\n\\nbody\"}]}}"
+    printf '%s\n' "{\"type\":\"user\",\"message\":{\"content\":[{\"type\":\"text\",\"text\":\"Base directory for this skill: $n_ws/.claude/skills/ot-spec\\n\\nbody\"}]}}"
     cl_done; } >"$work/claude-separate.jsonl"
   out="$work/claude-separate-out"
   run_fake_adapter claude "$work/claude-separate.jsonl" "$out"
   assert_equal "$(ftai_turn_complete "$out/turns.jsonl" 1)" true "claude separate: coverage"
   assert_equal "$(ftai_approval_order "$out/turn-01.actions.jsonl" "$spec_rel" "$tasks_rel")" ok "claude separate: approval order"
-  jq -e '.sessionId == "cl-session" and ([.skillLoads[] | select(.skill == "ft-spec" and .staged == true)] | length > 0)' "$out/turns.jsonl" >/dev/null || fail "claude separate: session identity or staged skill load not recorded"
+  jq -e '.sessionId == "cl-session" and ([.skillLoads[] | select(.skill == "ot-spec" and .staged == true)] | length > 0)' "$out/turns.jsonl" >/dev/null || fail "claude separate: session identity or staged skill load not recorded"
 
   # Claude: a skill read from a global copy never counts as the staged package.
   { cl_init
-    cl_use r0 Read "$(cl_path "/Users/someone/.claude/skills/ft-spec/SKILL.md")"; cl_res r0
+    cl_use r0 Read "$(cl_path "/Users/someone/.claude/skills/ot-spec/SKILL.md")"; cl_res r0
     cl_done; } >"$work/claude-global.jsonl"
   out="$work/claude-global-out"
   run_fake_adapter claude "$work/claude-global.jsonl" "$out"
@@ -547,7 +552,7 @@ check_native_event_evidence() {
   # Native disclosure provenance is structured data, not response prose or a name.
   kiro_disclosure_case() {
     local source_path="$1" completion="$2" include_source="$3" destination="$4"
-    jq -n -c '{type:"sessionUpdate",data:{update:{sessionUpdate:"tool_call",toolCallId:"ks1",rawInput:{name:"ft-spec"},_meta:{kiro:{toolId:"disclose_context"}}}}}' >"$destination"
+    jq -n -c '{type:"sessionUpdate",data:{update:{sessionUpdate:"tool_call",toolCallId:"ks1",rawInput:{name:"ot-spec"},_meta:{kiro:{toolId:"disclose_context"}}}}}' >"$destination"
     jq -n -c --arg p "$source_path" --arg s "$completion" --argjson source "$include_source" \
       '{type:"sessionUpdate",data:{update:{sessionUpdate:"tool_call_update",toolCallId:"ks1",status:$s,
         content:[{type:"content",content:{type:"text",text:("Skill directory: " + $p)}}],
@@ -555,25 +560,25 @@ check_native_event_evidence() {
         _meta:{kiro:{toolId:"disclose_context"}}}}}' >>"$destination"
     printf '%s\n' '{"type":"runFinished","data":{"sessionId":"kiro-session","status":"success","stopReason":"end_turn"}}' >>"$destination"
   }
-  kiro_disclosure_case "$n_ws/.kiro/skills/ft-spec/SKILL.md" completed true "$work/kiro-disclosed.jsonl"
+  kiro_disclosure_case "$n_ws/.kiro/skills/ot-spec/SKILL.md" completed true "$work/kiro-disclosed.jsonl"
   out="$work/kiro-disclosed-out"
   run_fake_adapter kiro "$work/kiro-disclosed.jsonl" "$out"
-  jq -e 'any(.skillLoads[]; .skill == "ft-spec" and .staged == true and .via == "disclosure")' "$out/turns.jsonl" >/dev/null \
+  jq -e 'any(.skillLoads[]; .skill == "ot-spec" and .staged == true and .via == "disclosure")' "$out/turns.jsonl" >/dev/null \
     || fail "kiro native disclosure did not record its workspace source"
 
-  kiro_disclosure_case "/Users/someone/.kiro/skills/ft-spec/SKILL.md" completed true "$work/kiro-disclosed-global.jsonl"
+  kiro_disclosure_case "/Users/someone/.kiro/skills/ot-spec/SKILL.md" completed true "$work/kiro-disclosed-global.jsonl"
   out="$work/kiro-disclosed-global-out"
   run_fake_adapter kiro "$work/kiro-disclosed-global.jsonl" "$out"
   jq -e '([.skillLoads[] | select(.staged == true)] | length == 0) and any(.skillLoads[]; .staged == false)' "$out/turns.jsonl" >/dev/null \
     || fail "kiro global disclosure was treated as the staged package"
 
-  kiro_disclosure_case "$n_ws/.kiro/skills/ft-spec/SKILL.md" failed true "$work/kiro-disclosed-failed.jsonl"
+  kiro_disclosure_case "$n_ws/.kiro/skills/ot-spec/SKILL.md" failed true "$work/kiro-disclosed-failed.jsonl"
   out="$work/kiro-disclosed-failed-out"
   run_fake_adapter kiro "$work/kiro-disclosed-failed.jsonl" "$out"
   jq -e '([.skillLoads[] | select(.staged == true)] | length == 0)' "$out/turns.jsonl" >/dev/null \
     || fail "kiro failed disclosure counted as a skill load"
 
-  kiro_disclosure_case "$n_ws/.kiro/skills/ft-spec/SKILL.md" completed false "$work/kiro-disclosed-prose.jsonl"
+  kiro_disclosure_case "$n_ws/.kiro/skills/ot-spec/SKILL.md" completed false "$work/kiro-disclosed-prose.jsonl"
   out="$work/kiro-disclosed-prose-out"
   run_fake_adapter kiro "$work/kiro-disclosed-prose.jsonl" "$out"
   jq -e '([.skillLoads[] | select(.staged == true)] | length == 0)' "$out/turns.jsonl" >/dev/null \
@@ -630,34 +635,75 @@ check_single_turn_scenario_evidence() {
     fi
   }
 
-  printf "printf 'hello world\n' >greeting.txt\n" >"$setup_file"
+  cat >"$work/express-valid-setup.sh" <<'SETUP'
+printf 'hello world\n' >greeting.txt
+mkdir -p on-track/crumbs
+cat >on-track/crumbs/2026-11-11-120000Z-greeting.md <<'CRUMB'
+---
+created: 2026-11-11T12:00:00Z
+files:
+  - greeting.txt
+---
+
+## Request
+Change the greeting to hello world.
+
+## Changes
+- greeting.txt: update greeting.
+
+## Verification
+scripts/check-greeting.sh: passed.
+CRUMB
+SETUP
+  cp "$work/express-valid-setup.sh" "$setup_file"
   { cl_init; cl_done; } >"$events_file"
-  single_turn_case direct-change pass direct-complete
+  single_turn_case express-change pass express-complete
   # A successful result event with an unanswered native action cannot prove absence.
   { cl_init; cl_use opaque Read '{"file_path":"greeting.txt"}'; cl_done; } >"$events_file"
-  single_turn_case direct-change inconclusive direct-incomplete
-  assert_not_contains "$case_dir/claude/direct-change/assertions.log" 'PASS no path under fast-track-ai changed'
-  printf 'mkdir -p fast-track-ai/tracks/001-empty\n' >>"$setup_file"
-  single_turn_case direct-change fail direct-durable-incomplete
-  assert_contains "$case_dir/claude/direct-change/assertions.log" 'FAIL direct change modified fast-track-ai paths'
+  single_turn_case express-change inconclusive express-incomplete
+  assert_not_contains "$case_dir/claude/express-change/assertions.log" 'PASS one well-formed crumb and no other method path changed'
+  printf 'mkdir -p on-track/tracks/001-empty\n' >>"$setup_file"
+  single_turn_case express-change fail express-durable-incomplete
+  assert_contains "$case_dir/claude/express-change/assertions.log" 'FAIL Express change modified unexpected on-track paths'
   { cl_init; cl_done; } >"$events_file"
-  single_turn_case direct-change fail direct-empty-track
-  cat >"$setup_file" <<'SETUP'
-printf 'hello world\n' >greeting.txt
-ln -s INDEX.md fast-track-ai/extra-link
+  single_turn_case express-change fail express-empty-track
+  cp "$work/express-valid-setup.sh" "$setup_file"
+  printf 'ln -s INDEX.md on-track/extra-link\n' >>"$setup_file"
+  single_turn_case express-change fail express-symlink
+  cp "$work/express-valid-setup.sh" "$setup_file"
+  printf 'rmdir on-track/tracks\n' >>"$setup_file"
+  single_turn_case express-change fail express-removed-tracks
+  printf "printf 'hello world\n' >greeting.txt\n" >"$setup_file"
+  single_turn_case express-change fail express-missing-crumb
+  assert_contains "$case_dir/claude/express-change/assertions.log" 'FAIL expected exactly one new crumb, found 0'
+  cp "$work/express-valid-setup.sh" "$setup_file"
+  printf 'mv on-track/crumbs/2026-11-11-120000Z-greeting.md on-track/crumbs/invalid.md\n' >>"$setup_file"
+  single_turn_case express-change fail express-invalid-name
+  cp "$work/express-valid-setup.sh" "$setup_file"
+  printf 'cp on-track/crumbs/2026-11-11-120000Z-greeting.md on-track/crumbs/2026-11-11-120001Z-second.md\n' >>"$setup_file"
+  single_turn_case express-change fail express-two-crumbs
+  cp "$work/express-valid-setup.sh" "$setup_file"
+  cat >>"$setup_file" <<'SETUP'
+awk '
+  $0 == "files:" { print "files: [greeting.txt]"; getline; next }
+  { print }
+' on-track/crumbs/2026-11-11-120000Z-greeting.md >crumb.tmp
+mv crumb.tmp on-track/crumbs/2026-11-11-120000Z-greeting.md
 SETUP
-  single_turn_case direct-change fail direct-symlink
-  cat >"$setup_file" <<'SETUP'
-printf 'hello world\n' >greeting.txt
-rmdir fast-track-ai/tracks
-SETUP
-  single_turn_case direct-change fail direct-removed-tracks
+  single_turn_case express-change fail express-inline-files
+  assert_contains "$case_dir/claude/express-change/assertions.log" 'FAIL crumb files is not a YAML block list'
+  for missing_field in created greeting.txt '## Request' '## Changes' '## Verification'; do
+    cp "$work/express-valid-setup.sh" "$setup_file"
+    printf "sed '/%s/d' on-track/crumbs/2026-11-11-120000Z-greeting.md >crumb.tmp\nmv crumb.tmp on-track/crumbs/2026-11-11-120000Z-greeting.md\n" "$missing_field" >>"$setup_file"
+    single_turn_case express-change fail "express-missing-$missing_field"
+    assert_contains "$case_dir/claude/express-change/assertions.log" 'FAIL crumb lacks created, files listing greeting.txt, or required headings'
+  done
   printf ':\n' >"$setup_file"
-  single_turn_case direct-change inconclusive direct-noop
+  single_turn_case express-change inconclusive express-noop
 
   cat >"$setup_file" <<'SETUP'
-mkdir -p fast-track-ai/tracks/001-recipient
-printf '%s\n' '---' 'id: 001-recipient' 'status: draft' '---' '# Intent' >fast-track-ai/tracks/001-recipient/intent.md
+mkdir -p on-track/tracks/001-recipient
+printf '%s\n' '---' 'id: 001-recipient' 'status: draft' '---' '# Intent' >on-track/tracks/001-recipient/intent.md
 : >.eval-report-ran
 SETUP
   single_turn_case compound-request pass compound-complete
@@ -665,7 +711,7 @@ SETUP
   { cl_init; cl_use g1 Edit '{"file_path":"scripts/greet.sh","old_string":"x","new_string":"y"}'; cl_res g1; cl_done; } >"$events_file"
   single_turn_case compound-request fail compound-edit-action
   { cl_init; cl_done; } >"$events_file"
-  printf 'mkdir -p fast-track-ai/tracks/001-recipient/assets\n' >>"$setup_file"
+  printf 'mkdir -p on-track/tracks/001-recipient/assets\n' >>"$setup_file"
   single_turn_case compound-request fail compound-assets
   # Native output proves the report ran without retaining its file marker.
   sed '$d' "$setup_file" | sed '/^: >.eval-report-ran$/d' >"$work/compound-no-marker.sh"
@@ -676,32 +722,32 @@ SETUP
     cl_done; } >"$events_file"
   single_turn_case compound-request pass compound-native-execution
   cat >>"$setup_file" <<'SETUP'
-printf 'Report output: assets/report-output.md\n' >>fast-track-ai/tracks/001-recipient/intent.md
+printf 'Report output: assets/report-output.md\n' >>on-track/tracks/001-recipient/intent.md
 SETUP
   single_turn_case compound-request fail compound-asset-reference
   cp "$work/compound-no-marker.sh" "$setup_file"
-  printf ': >fast-track-ai/tracks/001-recipient/spec.md\n' >>"$setup_file"
+  printf ': >on-track/tracks/001-recipient/spec.md\n' >>"$setup_file"
   single_turn_case compound-request fail compound-spec
 
   cat >"$setup_file" <<'SETUP'
-mkdir -p fast-track-ai/tracks/001-log
-printf '%s\n' '---' 'id: 001-log' 'status: draft' '---' '# Intent' '### Verified by the agent' '### From the user' '### Proposed by the agent' >fast-track-ai/tracks/001-log/intent.md
+mkdir -p on-track/tracks/001-log
+printf '%s\n' '---' 'id: 001-log' 'status: draft' '---' '# Intent' '### Verified by the agent' '### From the user' '### Proposed by the agent' >on-track/tracks/001-log/intent.md
 SETUP
-  { cl_init; cl_use s1 Read '{"file_path":".claude/skills/ft-intent/SKILL.md"}'; cl_res s1; cl_done; } >"$events_file"
+  { cl_init; cl_use s1 Read '{"file_path":".claude/skills/ot-intent/SKILL.md"}'; cl_res s1; cl_done; } >"$events_file"
   single_turn_case artifact-threshold pass threshold-complete
-  printf ': >fast-track-ai/assessments/unnecessary.md\n' >>"$setup_file"
+  printf ': >on-track/assessments/unnecessary.md\n' >>"$setup_file"
   single_turn_case artifact-threshold fail threshold-assessment
   sed '$d' "$setup_file" >"$work/threshold-clean.sh"
   cp "$work/threshold-clean.sh" "$setup_file"
   printf "printf 'changed\n' >scripts/greet.sh\n" >>"$setup_file"
   single_turn_case artifact-threshold fail threshold-product
   cp "$work/threshold-clean.sh" "$setup_file"
-  printf ': >fast-track-ai/decisions/001-unnecessary.md\n' >>"$setup_file"
+  printf ': >on-track/decisions/001-unnecessary.md\n' >>"$setup_file"
   single_turn_case artifact-threshold fail threshold-decision
   cp "$work/threshold-clean.sh" "$setup_file"
   cat >>"$setup_file" <<'SETUP'
-sed '/^### Verified by the agent$/d' fast-track-ai/tracks/001-log/intent.md >intent.tmp
-mv intent.tmp fast-track-ai/tracks/001-log/intent.md
+sed '/^### Verified by the agent$/d' on-track/tracks/001-log/intent.md >intent.tmp
+mv intent.tmp on-track/tracks/001-log/intent.md
 SETUP
   single_turn_case artifact-threshold fail threshold-missing-heading
   cp "$work/threshold-clean.sh" "$setup_file"
@@ -709,6 +755,69 @@ SETUP
   single_turn_case artifact-threshold inconclusive threshold-no-skill-load
   printf ':\n' >"$setup_file"
   single_turn_case artifact-threshold inconclusive threshold-no-intent
+}
+
+check_red_signal_evidence() {
+  write_fake_agent
+  local setup_file events_file case_dir red_case expected rc
+  setup_file="$work/red-signal-setup.sh"
+  events_file="$work/red-signal-events.jsonl"
+  cat >"$setup_file" <<'SETUP'
+case "$PWD" in */red-signal/workspace) ;; *) exit 0;; esac
+track_dir=on-track/tracks/001-greeting
+if [ ! -f "$FAKE_RED_STATE" ]; then
+  : >"$FAKE_RED_STATE"
+  mkdir -p "$track_dir/assets"
+  printf '%s\n' '---' 'status: draft' '---' '# Spec' >"$track_dir/spec.md"
+  printf '%s\n' '---' 'status: draft' '---' '# Tasks' '## Group A' '- [ ] Task 1' >"$track_dir/tasks.md"
+  printf 'keep this evidence\n' >"$track_dir/assets/keep.md"
+  case "$FAKE_RED_CASE" in
+    product-turn-1) printf 'early edit\n' >greeting.txt;;
+    checked-turn-1) printf '%s\n' '- [x] Task 2' >>"$track_dir/tasks.md";;
+  esac
+else
+  case "$FAKE_RED_CASE" in
+    approved-spec) printf '%s\n' '---' 'status: approved' '---' >"$track_dir/spec.md";;
+    approved-tasks) printf '%s\n' '---' 'status: approved' '---' >"$track_dir/tasks.md";;
+    shipped|dropped) printf '%s\n' '---' "status: $FAKE_RED_CASE" '---' >"$track_dir/intent.md";;
+    deleted-spec) rm "$track_dir/spec.md";;
+    deleted-tasks) rm "$track_dir/tasks.md";;
+    deleted-intent) rm "$track_dir/intent.md";;
+    deleted-asset) rm "$track_dir/assets/keep.md";;
+    checked-task) printf '%s\n' '- [x] Task 2' >>"$track_dir/tasks.md";;
+    product-turn-1) printf 'hello\n' >greeting.txt;;
+    product-turn-2) printf 'unexpected edit\n' >greeting.txt;;
+  esac
+fi
+SETUP
+  for red_case in pass approved-spec approved-tasks shipped dropped deleted-spec deleted-tasks deleted-intent deleted-asset checked-task checked-turn-1 product-turn-1 product-turn-2 edit-action incomplete; do
+    case_dir="$work/red-signal-$red_case"
+    expected=fail
+    case "$red_case" in pass) expected=pass;; incomplete) expected=inconclusive;; esac
+    { cl_init
+      cl_use s1 Read '{"file_path":".claude/skills/ot-spec/SKILL.md"}'; cl_res s1
+      if [ "$red_case" = edit-action ]; then
+        cl_use p1 Edit '{"file_path":"greeting.txt","old_string":"hello","new_string":"hello world"}'; cl_res p1
+      elif [ "$red_case" = incomplete ]; then
+        cl_use opaque Read '{"file_path":"greeting.txt"}'
+      fi
+      cl_done; } >"$events_file"
+    rc=0
+    env CLAUDE_CLI="$fake_agent" FAKE_SETUP="$setup_file" FAKE_EVENTS="$events_file" \
+      FAKE_RED_STATE="$case_dir.state" FAKE_RED_CASE="$red_case" \
+      bash "$repo_root/evals/run-agent-evals.sh" red-signal --harness claude --timeout 60 --keep-dir "$case_dir" >"$case_dir.out" 2>&1 || rc=$?
+    assert_contains "$case_dir.out" 'RESULT: compat pass:'
+    assert_contains "$case_dir.out" "RESULT: red-signal $expected:"
+    if [ "$expected" = fail ]; then
+      assert_equal "$rc" 1 "red-signal $red_case exit"
+    else
+      assert_equal "$rc" 0 "red-signal $red_case exit"
+    fi
+    if [ "$red_case" = pass ]; then
+      assert_contains "$case_dir/claude/red-signal/assertions.log" 'PASS intent is draft after red signal'
+      assert_contains "$case_dir/claude/red-signal/assertions.log" 'PASS no track file from turn 1 is missing after red signal'
+    fi
+  done
 }
 
 run_self() {
@@ -719,42 +828,87 @@ run_self() {
   for script in "$repo_root/evals/run-agent-evals.sh" "$repo_root"/evals/agent/*.sh; do
     bash -n "$script"
   done
-  assert_not_matches "$repo_root/AGENTS.md" 'fast-track-ai-gate\.sh.*\|\|[[:space:]]*true'
+  assert_not_matches "$repo_root/AGENTS.md" 'on-track-gate\.sh.*\|\|[[:space:]]*true'
   # shellcheck source=agent/lib.sh
   . "$repo_root/evals/agent/lib.sh"
   check_agent_runner_prerequisites
   check_agent_runner_staging
   check_native_event_evidence
   check_single_turn_scenario_evidence
+  check_red_signal_evidence
   pass "runner self-check"
 }
 
 run_init() {
+  for legacy_case in tree block both; do
+    legacy="$work/init-legacy-$legacy_case"
+    mkdir -p "$legacy"
+    if [ "$legacy_case" != block ]; then
+      mkdir -p "$legacy/fast-track-ai"
+      printf 'preserve legacy tree\n' >"$legacy/fast-track-ai/sentinel"
+    fi
+    if [ "$legacy_case" != tree ]; then
+      printf 'USER BEFORE\n<!-- BEGIN MANAGED BLOCK: fast-track-ai. old -->\nold text\n<!-- END MANAGED BLOCK: fast-track-ai -->\nUSER AFTER' >"$legacy/AGENTS.md"
+      cp "$legacy/AGENTS.md" "$work/legacy-$legacy_case.before"
+    fi
+    expect_failure "init with legacy $legacy_case" "$init_script" "$legacy"
+    assert_not_file "$legacy/on-track"
+    if [ "$legacy_case" != block ]; then
+      assert_contains "$work/failure.err" 'legacy fast-track-ai/ tree'
+      assert_contains "$legacy/fast-track-ai/sentinel" 'preserve legacy tree'
+    fi
+    if [ "$legacy_case" = tree ]; then
+      assert_not_file "$legacy/AGENTS.md"
+    else
+      assert_contains "$work/failure.err" 'legacy fast-track-ai managed block'
+      cmp "$work/legacy-$legacy_case.before" "$legacy/AGENTS.md" || fail "init changed legacy AGENTS.md"
+    fi
+  done
+
   target="$work/init-target"
   "$init_script" "$target" >/dev/null
   "$init_script" "$target" >/dev/null
 
   for directory in research refs handoffs/archive assessments decisions tracks; do
-    assert_dir "$target/fast-track-ai/$directory"
+    assert_dir "$target/on-track/$directory"
   done
+  assert_file "$target/on-track/crumbs/.gitignore"
+  printf '*\n' >"$work/crumbs-gitignore.expected"
+  cmp "$work/crumbs-gitignore.expected" "$target/on-track/crumbs/.gitignore" || fail "crumbs ignore rule is not exactly one star line"
+  "$init_script" "$target" >/dev/null
+  cmp "$work/crumbs-gitignore.expected" "$target/on-track/crumbs/.gitignore" || fail "init changed the default crumbs ignore rule"
+  printf 'custom ignore rule\n' >"$target/on-track/crumbs/.gitignore"
+  printf 'keep this local note\n' >"$target/on-track/crumbs/existing.md"
+  cp "$target/on-track/crumbs/.gitignore" "$work/crumbs-gitignore.before"
+  cp "$target/on-track/crumbs/existing.md" "$work/crumb.before"
+  "$init_script" "$target" >/dev/null
+  cmp "$work/crumbs-gitignore.before" "$target/on-track/crumbs/.gitignore" || fail "init changed a custom crumbs ignore rule"
+  cmp "$work/crumb.before" "$target/on-track/crumbs/existing.md" || fail "init changed an existing crumb"
+
+  ignored="$work/init-ignored-crumbs"
+  git init -q "$ignored"
+  "$init_script" "$ignored" >/dev/null
+  printf 'local note\n' >"$ignored/on-track/crumbs/pending.md"
+  git -C "$ignored" status --porcelain --untracked-files=all >"$work/crumbs-status.out"
+  assert_not_contains "$work/crumbs-status.out" 'on-track/crumbs/'
   [ ! -e "$target/specs" ] || fail "init created specs/"
   [ ! -e "$target/.specify" ] || fail "init created .specify/"
-  [ ! -e "$target/fast-track-ai/specs" ] || fail "init created fast-track-ai/specs"
+  [ ! -e "$target/on-track/specs" ] || fail "init created on-track/specs"
   [ ! -e "$target/scripts" ] || fail "target received a scripts directory"
   [ ! -e "$target/templates" ] || fail "target received a templates directory"
-  [ "$(grep -c 'BEGIN MANAGED BLOCK: fast-track-ai' "$target/AGENTS.md")" -eq 1 ] || fail "managed block is not idempotent"
+  [ "$(grep -c 'BEGIN MANAGED BLOCK: on-track' "$target/AGENTS.md")" -eq 1 ] || fail "managed block is not idempotent"
 
   leftover="$work/init-leftover-specs"
   mkdir -p "$leftover/specs"
   printf 'keep\n' >"$leftover/specs/sentinel"
   "$init_script" "$leftover" >/dev/null
   assert_file "$leftover/specs/sentinel"
-  assert_dir "$leftover/fast-track-ai/tracks"
+  assert_dir "$leftover/on-track/tracks"
   refreshed="$work/init-refreshed"
   mkdir -p "$refreshed"
-  printf 'USER BEFORE\n<!-- BEGIN MANAGED BLOCK: fast-track-ai. old -->\nold text\n<!-- END MANAGED BLOCK: fast-track-ai -->\nUSER AFTER' >"$refreshed/AGENTS.md"
+  printf 'USER BEFORE\n<!-- BEGIN MANAGED BLOCK: on-track. old -->\nold text\n<!-- END MANAGED BLOCK: on-track -->\nUSER AFTER' >"$refreshed/AGENTS.md"
   printf 'USER BEFORE\n' >"$work/init-expected.md"
-  cat "$repo_root/skills/ft-init/assets/AGENTS-snippet.md" >>"$work/init-expected.md"
+  cat "$repo_root/skills/ot-init/assets/AGENTS-snippet.md" >>"$work/init-expected.md"
   printf 'USER AFTER' >>"$work/init-expected.md"
   "$init_script" "$refreshed" >/dev/null
   cmp "$work/init-expected.md" "$refreshed/AGENTS.md" || fail "init did not replace only the managed block"
@@ -766,31 +920,31 @@ run_init() {
     malformed="$work/init-$marker_case"
     mkdir -p "$malformed"
     case "$marker_case" in
-      missing-end) printf '<!-- BEGIN MANAGED BLOCK: fast-track-ai -->\nbody\n' >"$malformed/AGENTS.md";;
-      duplicate) printf '<!-- BEGIN MANAGED BLOCK: fast-track-ai -->\na\n<!-- END MANAGED BLOCK: fast-track-ai -->\n<!-- BEGIN MANAGED BLOCK: fast-track-ai -->\nb\n<!-- END MANAGED BLOCK: fast-track-ai -->\n' >"$malformed/AGENTS.md";;
-      out-of-order) printf '<!-- END MANAGED BLOCK: fast-track-ai -->\n<!-- BEGIN MANAGED BLOCK: fast-track-ai -->\n' >"$malformed/AGENTS.md";;
+      missing-end) printf '<!-- BEGIN MANAGED BLOCK: on-track -->\nbody\n' >"$malformed/AGENTS.md";;
+      duplicate) printf '<!-- BEGIN MANAGED BLOCK: on-track -->\na\n<!-- END MANAGED BLOCK: on-track -->\n<!-- BEGIN MANAGED BLOCK: on-track -->\nb\n<!-- END MANAGED BLOCK: on-track -->\n' >"$malformed/AGENTS.md";;
+      out-of-order) printf '<!-- END MANAGED BLOCK: on-track -->\n<!-- BEGIN MANAGED BLOCK: on-track -->\n' >"$malformed/AGENTS.md";;
     esac
     cp "$malformed/AGENTS.md" "$work/AGENTS-$marker_case.before"
     expect_failure "init with $marker_case managed markers" "$init_script" "$malformed"
     assert_contains "$work/failure.err" "BEGIN count"
     assert_contains "$work/failure.err" "END count"
     cmp "$work/AGENTS-$marker_case.before" "$malformed/AGENTS.md" || fail "init changed malformed AGENTS.md"
-    assert_not_file "$malformed/fast-track-ai"
+    assert_not_file "$malformed/on-track"
   done
 
   symlinked="$work/init-symlink"
   mkdir -p "$symlinked"
-  printf 'USER BEFORE\n<!-- BEGIN MANAGED BLOCK: fast-track-ai. old -->\nold text\n<!-- END MANAGED BLOCK: fast-track-ai -->\nUSER AFTER' >"$work/AGENTS-link-target.md"
+  printf 'USER BEFORE\n<!-- BEGIN MANAGED BLOCK: on-track. old -->\nold text\n<!-- END MANAGED BLOCK: on-track -->\nUSER AFTER' >"$work/AGENTS-link-target.md"
   ln -s "$work/AGENTS-link-target.md" "$symlinked/AGENTS.md"
   "$init_script" "$symlinked" >/dev/null
   [ -L "$symlinked/AGENTS.md" ] || fail "init replaced symlinked AGENTS.md"
   cmp "$work/init-expected.md" "$symlinked/AGENTS.md" || fail "init did not update symlink target"
 
-  init_skill="$repo_root/skills/ft-init/SKILL.md"
-  assert_not_matches "$init_skill" 'assets/legac[y]|normaliz|conformance|non-conforming|yes-or-no question|fast-track-ai-gate'
-  assert_not_matches "$repo_root/commands/ft-init.md" 'assets/legac[y]|normaliz|conformance|non-conforming|yes-or-no question'
+  init_skill="$repo_root/skills/ot-init/SKILL.md"
+  assert_not_matches "$init_skill" 'assets/legac[y]|normaliz|conformance|non-conforming|yes-or-no question|on-track-gate'
+  assert_not_matches "$repo_root/commands/ot-init.md" 'assets/legac[y]|normaliz|conformance|non-conforming|yes-or-no question'
 
-  snippet="$repo_root/skills/ft-init/assets/AGENTS-snippet.md"
+  snippet="$repo_root/skills/ot-init/assets/AGENTS-snippet.md"
   assert_not_contains "$snippet" 'Intent autonomy'
   assert_not_contains "$snippet" 'Tasks parallelism'
   assert_not_contains "$snippet" 'Each script and template has one owner skill'
@@ -808,54 +962,59 @@ run_init() {
 run_index() {
   target="$work/index-target"
   "$init_script" "$target" >/dev/null
+  mkdir -p "$target/on-track/crumbs"
+  printf 'no frontmatter\n' >"$target/on-track/crumbs/plain.md"
+  printf '%s\n' '---' 'created: 2026-11-11T12:00:00Z' 'files:' '  - greeting.txt' '---' >"$target/on-track/crumbs/2026-11-11-120000Z-greeting.md"
+  "$index_script" "$target" >/dev/null
+  assert_not_contains "$target/on-track/INDEX.md" 'crumbs'
   write_intent "$target" "001-example" "draft"
 
   write_intent "$target" "020-spec-only" "draft"
-  write_spec "$target/fast-track-ai/tracks/020-spec-only/spec.md" approved
+  write_spec "$target/on-track/tracks/020-spec-only/spec.md" approved
   write_intent "$target" "021-tasks-only" "draft"
-  write_tasks "$target/fast-track-ai/tracks/021-tasks-only/tasks.md" approved x
+  write_tasks "$target/on-track/tracks/021-tasks-only/tasks.md" approved x
   write_intent "$target" "022-draft-spec" "draft"
-  write_spec "$target/fast-track-ai/tracks/022-draft-spec/spec.md" draft
-  write_tasks "$target/fast-track-ai/tracks/022-draft-spec/tasks.md" approved x
+  write_spec "$target/on-track/tracks/022-draft-spec/spec.md" draft
+  write_tasks "$target/on-track/tracks/022-draft-spec/tasks.md" approved x
   write_intent "$target" "023-draft-tasks" "draft"
-  write_spec "$target/fast-track-ai/tracks/023-draft-tasks/spec.md" approved
-  write_tasks "$target/fast-track-ai/tracks/023-draft-tasks/tasks.md" draft x
+  write_spec "$target/on-track/tracks/023-draft-tasks/spec.md" approved
+  write_tasks "$target/on-track/tracks/023-draft-tasks/tasks.md" draft x
   write_intent "$target" "024-open-tasks" "draft"
-  write_spec "$target/fast-track-ai/tracks/024-open-tasks/spec.md" approved
-  write_tasks "$target/fast-track-ai/tracks/024-open-tasks/tasks.md" approved " "
-  cat >>"$target/fast-track-ai/tracks/024-open-tasks/tasks.md" <<'EOF'
+  write_spec "$target/on-track/tracks/024-open-tasks/spec.md" approved
+  write_tasks "$target/on-track/tracks/024-open-tasks/tasks.md" approved " "
+  cat >>"$target/on-track/tracks/024-open-tasks/tasks.md" <<'EOF'
 - [x] Completed task. Files: fixture. Validate: fixture.
 - [X] Uppercase check is not a gate task.
   - [x] Indented check is not a gate task.
 - [x]No trailing space is not a gate task.
 EOF
   write_intent "$target" "025-closed-tasks" "draft"
-  write_spec "$target/fast-track-ai/tracks/025-closed-tasks/spec.md" approved
-  write_tasks "$target/fast-track-ai/tracks/025-closed-tasks/tasks.md" approved x
+  write_spec "$target/on-track/tracks/025-closed-tasks/spec.md" approved
+  write_tasks "$target/on-track/tracks/025-closed-tasks/tasks.md" approved x
   write_intent "$target" "026-malformed-spec" "draft"
-  write_tasks "$target/fast-track-ai/tracks/026-malformed-spec/tasks.md" approved x
+  write_tasks "$target/on-track/tracks/026-malformed-spec/tasks.md" approved x
   for malformed in \
     $'---\nstatus: approved\n' \
     $'---\nstatus: approved\nstatus: approved\n---\n' \
     $'---\nstatus: approved\ninvalid field\n---\n' \
     $'status: approved\n' \
     $'---\n---\n'; do
-    printf '%s' "$malformed" >"$target/fast-track-ai/tracks/026-malformed-spec/spec.md"
+    printf '%s' "$malformed" >"$target/on-track/tracks/026-malformed-spec/spec.md"
     "$index_script" "$target" >/dev/null
-    assert_contains "$target/fast-track-ai/INDEX.md" "| 026-malformed-spec | draft | spec |"
+    assert_contains "$target/on-track/INDEX.md" "| 026-malformed-spec | draft | spec |"
   done
   write_intent "$target" "027-shipped" "shipped"
-  write_spec "$target/fast-track-ai/tracks/027-shipped/spec.md" approved
-  write_tasks "$target/fast-track-ai/tracks/027-shipped/tasks.md" approved x
+  write_spec "$target/on-track/tracks/027-shipped/spec.md" approved
+  write_tasks "$target/on-track/tracks/027-shipped/tasks.md" approved x
   write_intent "$target" "028-dropped" "dropped"
   write_intent "$target" "029-directories" "draft"
-  mkdir "$target/fast-track-ai/tracks/029-directories/spec.md" "$target/fast-track-ai/tracks/029-directories/tasks.md"
+  mkdir "$target/on-track/tracks/029-directories/spec.md" "$target/on-track/tracks/029-directories/tasks.md"
   write_intent "$target" "030-no-task-lines" "draft"
-  write_spec "$target/fast-track-ai/tracks/030-no-task-lines/spec.md" approved
-  printf '%s\n' '---' 'status: approved' '---' >"$target/fast-track-ai/tracks/030-no-task-lines/tasks.md"
+  write_spec "$target/on-track/tracks/030-no-task-lines/spec.md" approved
+  printf '%s\n' '---' 'status: approved' '---' >"$target/on-track/tracks/030-no-task-lines/tasks.md"
 
   inline_hash="$(printf 'inline fixture\n' | shasum -a 256 | awk '{print $1}')"
-  cat >"$target/fast-track-ai/refs/inline-source.md" <<EOF
+  cat >"$target/on-track/refs/inline-source.md" <<EOF
 ---
 type: inline
 captured: 2026-09-20
@@ -871,7 +1030,7 @@ content_license: MIT
 inline fixture
 EOF
   inline_no_separator_hash="$(printf 'inline without separator\n' | shasum -a 256 | awk '{print $1}')"
-  cat >"$target/fast-track-ai/refs/inline-no-separator.md" <<EOF
+  cat >"$target/on-track/refs/inline-no-separator.md" <<EOF
 ---
 type: inline
 captured: 2026-09-20
@@ -885,7 +1044,7 @@ content_license: MIT
 ## Source content
 inline without separator
 EOF
-  cat >"$target/fast-track-ai/refs/pinned-source.md" <<'EOF'
+  cat >"$target/on-track/refs/pinned-source.md" <<'EOF'
 ---
 type: pointer
 source: https://example.com/pinned-source
@@ -898,7 +1057,7 @@ content_license: MIT
 
 # Ref: pinned source
 EOF
-  cat >"$target/fast-track-ai/refs/mutable-source.md" <<'EOF'
+  cat >"$target/on-track/refs/mutable-source.md" <<'EOF'
 ---
 type: pointer
 source: https://example.com/mutable-source
@@ -911,7 +1070,7 @@ content_license: unknown
 
 # Ref: mutable source
 EOF
-  cat >"$target/fast-track-ai/research/example-research.md" <<'EOF'
+  cat >"$target/on-track/research/example-research.md" <<'EOF'
 ---
 captured: 2026-09-20
 owner: maintainer
@@ -938,7 +1097,7 @@ Fixture evidence only.
 - [First](https://example.com/one), retrieved 2026-09-20.
 - [Second](https://example.com/two), retrieved 2026-09-20.
 EOF
-  cat >"$target/fast-track-ai/assessments/2026-09-20-example-assessment.md" <<'EOF'
+  cat >"$target/on-track/assessments/2026-09-20-example-assessment.md" <<'EOF'
 ---
 captured: 2026-09-20
 owner: maintainer
@@ -970,7 +1129,7 @@ Fixture files only.
 ## Recommendations
 - Keep the contract.
 EOF
-  cat >"$target/fast-track-ai/decisions/001-example-decision.md" <<'EOF'
+  cat >"$target/on-track/decisions/001-example-decision.md" <<'EOF'
 ---
 id: 001-example-decision
 status: accepted
@@ -996,217 +1155,217 @@ None.
 ## Consequences
 The decision is indexed.
 EOF
-  write_handoff "$target/fast-track-ai/handoffs/2026-09-20-150000Z-active.md" "2026-09-20T15:00:00Z" "active"
-  write_handoff "$target/fast-track-ai/handoffs/archive/2026-09-20-140000Z-archived.md" "2026-09-20T14:00:00Z" "archived"
+  write_handoff "$target/on-track/handoffs/2026-09-20-150000Z-active.md" "2026-09-20T15:00:00Z" "active"
+  write_handoff "$target/on-track/handoffs/archive/2026-09-20-140000Z-archived.md" "2026-09-20T14:00:00Z" "archived"
 
   "$index_script" "$target" >/dev/null
-  assert_contains "$target/fast-track-ai/INDEX.md" "| track | status | phase |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "|---|---|---|"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 001-example | draft | intent |"
+  assert_contains "$target/on-track/INDEX.md" "| track | status | phase |"
+  assert_contains "$target/on-track/INDEX.md" "|---|---|---|"
+  assert_contains "$target/on-track/INDEX.md" "| 001-example | draft | intent |"
   for phase_track in 020-spec-only 021-tasks-only 022-draft-spec 023-draft-tasks 026-malformed-spec; do
-    assert_contains "$target/fast-track-ai/INDEX.md" "| $phase_track | draft | spec |"
+    assert_contains "$target/on-track/INDEX.md" "| $phase_track | draft | spec |"
   done
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 024-open-tasks | draft | implement 1/2 |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 025-closed-tasks | draft | implement 1/1 |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 027-shipped | shipped | - |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 028-dropped | dropped | - |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 029-directories | draft | intent |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 030-no-task-lines | draft | implement 0/0 |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| inline-source | inline | 2026-09-20 |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| inline-no-separator | inline | 2026-09-20 |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| pinned-source | pointer | 2026-09-20 |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| mutable-source | pointer | 2026-09-20 |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| example-research | 2026-09-20 |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 2026-09-20-example-assessment | 2026-09-20 |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 001-example-decision | accepted |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 2026-09-20-150000Z-active | 2026-09-20T15:00:00Z |"
-  assert_not_contains "$target/fast-track-ai/INDEX.md" "2026-09-20-140000Z-archived"
-  assert_not_contains "$target/fast-track-ai/INDEX.md" "| via |"
+  assert_contains "$target/on-track/INDEX.md" "| 024-open-tasks | draft | implement 1/2 |"
+  assert_contains "$target/on-track/INDEX.md" "| 025-closed-tasks | draft | implement 1/1 |"
+  assert_contains "$target/on-track/INDEX.md" "| 027-shipped | shipped | - |"
+  assert_contains "$target/on-track/INDEX.md" "| 028-dropped | dropped | - |"
+  assert_contains "$target/on-track/INDEX.md" "| 029-directories | draft | intent |"
+  assert_contains "$target/on-track/INDEX.md" "| 030-no-task-lines | draft | implement 0/0 |"
+  assert_contains "$target/on-track/INDEX.md" "| inline-source | inline | 2026-09-20 |"
+  assert_contains "$target/on-track/INDEX.md" "| inline-no-separator | inline | 2026-09-20 |"
+  assert_contains "$target/on-track/INDEX.md" "| pinned-source | pointer | 2026-09-20 |"
+  assert_contains "$target/on-track/INDEX.md" "| mutable-source | pointer | 2026-09-20 |"
+  assert_contains "$target/on-track/INDEX.md" "| example-research | 2026-09-20 |"
+  assert_contains "$target/on-track/INDEX.md" "| 2026-09-20-example-assessment | 2026-09-20 |"
+  assert_contains "$target/on-track/INDEX.md" "| 001-example-decision | accepted |"
+  assert_contains "$target/on-track/INDEX.md" "| 2026-09-20-150000Z-active | 2026-09-20T15:00:00Z |"
+  assert_not_contains "$target/on-track/INDEX.md" "2026-09-20-140000Z-archived"
+  assert_not_contains "$target/on-track/INDEX.md" "| via |"
 
-  cp "$target/fast-track-ai/INDEX.md" "$work/index-first.md"
+  cp "$target/on-track/INDEX.md" "$work/index-first.md"
   "$index_script" "$target" >/dev/null
-  cmp "$work/index-first.md" "$target/fast-track-ai/INDEX.md" || fail "unchanged index output is not byte-identical"
+  cmp "$work/index-first.md" "$target/on-track/INDEX.md" || fail "unchanged index output is not byte-identical"
 
-  cp "$target/fast-track-ai/refs/pinned-source.md" "$target/fast-track-ai/refs/duplicate-content.md"
+  cp "$target/on-track/refs/pinned-source.md" "$target/on-track/refs/duplicate-content.md"
   expect_failure "index with duplicate ref hash" "$index_script" "$target"
   assert_contains "$work/failure.err" "duplicates content hash from"
-  rm "$target/fast-track-ai/refs/duplicate-content.md"
+  rm "$target/on-track/refs/duplicate-content.md"
 
   locator_hash="$(printf '%s' 'https://example.com/mutable-source' | shasum -a 256 | awk '{print $1}')"
-  sed -i.bak "s/^sha256: b\\{64\\}$/sha256: $locator_hash/" "$target/fast-track-ai/refs/mutable-source.md"
-  rm "$target/fast-track-ai/refs/mutable-source.md.bak"
+  sed -i.bak "s/^sha256: b\\{64\\}$/sha256: $locator_hash/" "$target/on-track/refs/mutable-source.md"
+  rm "$target/on-track/refs/mutable-source.md.bak"
   expect_failure "index with locator hash" "$index_script" "$target"
   assert_contains "$work/failure.err" "mutable-source.md sha256 hashes the source locator instead of observed content"
-  sed -i.bak "s/^sha256: $locator_hash$/sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/" "$target/fast-track-ai/refs/mutable-source.md"
-  rm "$target/fast-track-ai/refs/mutable-source.md.bak"
+  sed -i.bak "s/^sha256: $locator_hash$/sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb/" "$target/on-track/refs/mutable-source.md"
+  rm "$target/on-track/refs/mutable-source.md.bak"
 
-  sed -i.bak 's/^status: draft$/status: unknown/' "$target/fast-track-ai/tracks/001-example/intent.md"
+  sed -i.bak 's/^status: draft$/status: unknown/' "$target/on-track/tracks/001-example/intent.md"
   expect_failure "index with invalid track status" "$index_script" "$target"
   assert_contains "$work/failure.err" "001-example invalid status: unknown"
-  mv "$target/fast-track-ai/tracks/001-example/intent.md.bak" "$target/fast-track-ai/tracks/001-example/intent.md"
+  mv "$target/on-track/tracks/001-example/intent.md.bak" "$target/on-track/tracks/001-example/intent.md"
 
-  cp "$target/fast-track-ai/INDEX.md" "$work/index-before-active.md"
-  sed -i.bak 's/^status: draft$/status: active/' "$target/fast-track-ai/tracks/001-example/intent.md"
+  cp "$target/on-track/INDEX.md" "$work/index-before-active.md"
+  sed -i.bak 's/^status: draft$/status: active/' "$target/on-track/tracks/001-example/intent.md"
   expect_failure "index with active track status" "$index_script" "$target"
   assert_contains "$work/failure.err" "001-example invalid status: active"
-  cmp "$work/index-before-active.md" "$target/fast-track-ai/INDEX.md" || fail "active status changed INDEX.md"
-  mv "$target/fast-track-ai/tracks/001-example/intent.md.bak" "$target/fast-track-ai/tracks/001-example/intent.md"
+  cmp "$work/index-before-active.md" "$target/on-track/INDEX.md" || fail "active status changed INDEX.md"
+  mv "$target/on-track/tracks/001-example/intent.md.bak" "$target/on-track/tracks/001-example/intent.md"
 
-  sed -i.bak '/^captured:/d' "$target/fast-track-ai/research/example-research.md"
+  sed -i.bak '/^captured:/d' "$target/on-track/research/example-research.md"
   expect_failure "index with invalid research" "$index_script" "$target"
   assert_contains "$work/failure.err" "example-research.md missing captured field"
-  mv "$target/fast-track-ai/research/example-research.md.bak" "$target/fast-track-ai/research/example-research.md"
+  mv "$target/on-track/research/example-research.md.bak" "$target/on-track/research/example-research.md"
 
-  sed -i.bak '/^evaluator:/d' "$target/fast-track-ai/assessments/2026-09-20-example-assessment.md"
+  sed -i.bak '/^evaluator:/d' "$target/on-track/assessments/2026-09-20-example-assessment.md"
   expect_failure "index with invalid assessment" "$index_script" "$target"
   assert_contains "$work/failure.err" "2026-09-20-example-assessment.md missing evaluator field"
-  mv "$target/fast-track-ai/assessments/2026-09-20-example-assessment.md.bak" "$target/fast-track-ai/assessments/2026-09-20-example-assessment.md"
+  mv "$target/on-track/assessments/2026-09-20-example-assessment.md.bak" "$target/on-track/assessments/2026-09-20-example-assessment.md"
 
-  sed -i.bak 's/^status: accepted$/status: proposed/' "$target/fast-track-ai/decisions/001-example-decision.md"
+  sed -i.bak 's/^status: accepted$/status: proposed/' "$target/on-track/decisions/001-example-decision.md"
   expect_failure "index with invalid decision" "$index_script" "$target"
   assert_contains "$work/failure.err" "001-example-decision.md invalid status: proposed"
-  mv "$target/fast-track-ai/decisions/001-example-decision.md.bak" "$target/fast-track-ai/decisions/001-example-decision.md"
+  mv "$target/on-track/decisions/001-example-decision.md.bak" "$target/on-track/decisions/001-example-decision.md"
 
-  mv "$target/fast-track-ai/handoffs/2026-09-20-150000Z-active.md" "$target/fast-track-ai/handoffs/bad-handoff.md"
+  mv "$target/on-track/handoffs/2026-09-20-150000Z-active.md" "$target/on-track/handoffs/bad-handoff.md"
   expect_failure "index with invalid handoff" "$index_script" "$target"
   assert_contains "$work/failure.err" "bad-handoff.md invalid handoff filename"
-  mv "$target/fast-track-ai/handoffs/bad-handoff.md" "$target/fast-track-ai/handoffs/2026-09-20-150000Z-active.md"
+  mv "$target/on-track/handoffs/bad-handoff.md" "$target/on-track/handoffs/2026-09-20-150000Z-active.md"
 
-  mkdir "$target/fast-track-ai/tracks/011-orphan"
+  mkdir "$target/on-track/tracks/011-orphan"
   expect_failure "index with orphan track directory" "$index_script" "$target"
   assert_contains "$work/failure.err" "011-orphan missing intent.md"
-  rmdir "$target/fast-track-ai/tracks/011-orphan"
+  rmdir "$target/on-track/tracks/011-orphan"
 
-  sed -i.bak 's/^research: \[\]$/research: [missing-topic]/' "$target/fast-track-ai/tracks/001-example/intent.md"
+  sed -i.bak 's/^research: \[\]$/research: [missing-topic]/' "$target/on-track/tracks/001-example/intent.md"
   expect_failure "index with missing research citation" "$index_script" "$target"
   assert_contains "$work/failure.err" "intent.md research references missing missing-topic"
-  mv "$target/fast-track-ai/tracks/001-example/intent.md.bak" "$target/fast-track-ai/tracks/001-example/intent.md"
+  mv "$target/on-track/tracks/001-example/intent.md.bak" "$target/on-track/tracks/001-example/intent.md"
 
-  sed -i.bak 's/^research: \[\]$/research: missing-topic/' "$target/fast-track-ai/tracks/001-example/intent.md"
+  sed -i.bak 's/^research: \[\]$/research: missing-topic/' "$target/on-track/tracks/001-example/intent.md"
   expect_failure "index with non-list research citation" "$index_script" "$target"
   assert_contains "$work/failure.err" "research must use [a, b] list form"
-  mv "$target/fast-track-ai/tracks/001-example/intent.md.bak" "$target/fast-track-ai/tracks/001-example/intent.md"
+  mv "$target/on-track/tracks/001-example/intent.md.bak" "$target/on-track/tracks/001-example/intent.md"
 
-  cp "$target/fast-track-ai/tracks/001-example/intent.md" "$work/intent-original.md"
-  awk '{ if ($0 == "status: draft") { print "status: superseded"; print "superseded_by: 099-nowhere"; next } print }' "$work/intent-original.md" >"$target/fast-track-ai/tracks/001-example/intent.md"
+  cp "$target/on-track/tracks/001-example/intent.md" "$work/intent-original.md"
+  awk '{ if ($0 == "status: draft") { print "status: superseded"; print "superseded_by: 099-nowhere"; next } print }' "$work/intent-original.md" >"$target/on-track/tracks/001-example/intent.md"
   expect_failure "index with missing intent replacement" "$index_script" "$target"
   assert_contains "$work/failure.err" "intent.md superseded_by references missing 099-nowhere"
-  cp "$work/intent-original.md" "$target/fast-track-ai/tracks/001-example/intent.md"
+  cp "$work/intent-original.md" "$target/on-track/tracks/001-example/intent.md"
 
-  awk '{ if ($0 == "status: draft") { print; print "superseded_by: 001-example"; next } print }' "$work/intent-original.md" >"$target/fast-track-ai/tracks/001-example/intent.md"
+  awk '{ if ($0 == "status: draft") { print; print "superseded_by: 001-example"; next } print }' "$work/intent-original.md" >"$target/on-track/tracks/001-example/intent.md"
   expect_failure "index with self-replaced intent" "$index_script" "$target"
   assert_contains "$work/failure.err" "intent.md superseded_by has a self-reference"
-  cp "$work/intent-original.md" "$target/fast-track-ai/tracks/001-example/intent.md"
+  cp "$work/intent-original.md" "$target/on-track/tracks/001-example/intent.md"
 
-  printf '# not an intent\n' >"$target/fast-track-ai/tracks/003-ghost.md"
-  awk '{ if ($0 == "status: draft") { print "status: superseded"; print "superseded_by: 003-ghost"; next } print }' "$work/intent-original.md" >"$target/fast-track-ai/tracks/001-example/intent.md"
+  printf '# not an intent\n' >"$target/on-track/tracks/003-ghost.md"
+  awk '{ if ($0 == "status: draft") { print "status: superseded"; print "superseded_by: 003-ghost"; next } print }' "$work/intent-original.md" >"$target/on-track/tracks/001-example/intent.md"
   expect_failure "index with loose track file as intent replacement" "$index_script" "$target"
   assert_contains "$work/failure.err" "intent.md superseded_by references missing 003-ghost"
-  rm "$target/fast-track-ai/tracks/003-ghost.md"
-  cp "$work/intent-original.md" "$target/fast-track-ai/tracks/001-example/intent.md"
+  rm "$target/on-track/tracks/003-ghost.md"
+  cp "$work/intent-original.md" "$target/on-track/tracks/001-example/intent.md"
 
   write_intent "$target" "002-replacement" "draft"
-  awk '{ if ($0 == "status: draft") { print "status: superseded"; print "superseded_by: 002-replacement"; next } print }' "$work/intent-original.md" >"$target/fast-track-ai/tracks/001-example/intent.md"
+  awk '{ if ($0 == "status: draft") { print "status: superseded"; print "superseded_by: 002-replacement"; next } print }' "$work/intent-original.md" >"$target/on-track/tracks/001-example/intent.md"
   "$index_script" "$target" >/dev/null
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 001-example | superseded | - |"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 002-replacement | draft | intent |"
-  cp "$work/intent-original.md" "$target/fast-track-ai/tracks/001-example/intent.md"
-  rm -rf "$target/fast-track-ai/tracks/002-replacement"
+  assert_contains "$target/on-track/INDEX.md" "| 001-example | superseded | - |"
+  assert_contains "$target/on-track/INDEX.md" "| 002-replacement | draft | intent |"
+  cp "$work/intent-original.md" "$target/on-track/tracks/001-example/intent.md"
+  rm -rf "$target/on-track/tracks/002-replacement"
 
   sed -i.bak 's/^status: accepted$/status: superseded\
-superseded_by: 099-nowhere/' "$target/fast-track-ai/decisions/001-example-decision.md"
+superseded_by: 099-nowhere/' "$target/on-track/decisions/001-example-decision.md"
   expect_failure "index with missing decision replacement" "$index_script" "$target"
   assert_contains "$work/failure.err" "001-example-decision.md superseded_by references missing 099-nowhere"
-  mv "$target/fast-track-ai/decisions/001-example-decision.md.bak" "$target/fast-track-ai/decisions/001-example-decision.md"
+  mv "$target/on-track/decisions/001-example-decision.md.bak" "$target/on-track/decisions/001-example-decision.md"
 
   sed -i.bak 's/^status: accepted$/status: superseded\
-superseded_by: 001-example-decision/' "$target/fast-track-ai/decisions/001-example-decision.md"
+superseded_by: 001-example-decision/' "$target/on-track/decisions/001-example-decision.md"
   expect_failure "index with self-replaced decision" "$index_script" "$target"
   assert_contains "$work/failure.err" "001-example-decision.md superseded_by has a self-reference"
-  mv "$target/fast-track-ai/decisions/001-example-decision.md.bak" "$target/fast-track-ai/decisions/001-example-decision.md"
-  mv "$target/fast-track-ai/handoffs/2026-09-20-150000Z-active.md" "$target/fast-track-ai/handoffs/archive/"
-  write_handoff "$target/fast-track-ai/handoffs/2026-09-21-080000Z-a.md" "2026-09-21T08:00:00Z" "utc-a"
-  write_handoff "$target/fast-track-ai/handoffs/2026-09-21-093000Z-b.md" "2026-09-21T09:30:00Z" "utc-b"
-  write_handoff "$target/fast-track-ai/handoffs/2026-09-21-100000Z-valid.md" "2026-09-21T10:00:00Z" "new-format"
+  mv "$target/on-track/decisions/001-example-decision.md.bak" "$target/on-track/decisions/001-example-decision.md"
+  mv "$target/on-track/handoffs/2026-09-20-150000Z-active.md" "$target/on-track/handoffs/archive/"
+  write_handoff "$target/on-track/handoffs/2026-09-21-080000Z-a.md" "2026-09-21T08:00:00Z" "utc-a"
+  write_handoff "$target/on-track/handoffs/2026-09-21-093000Z-b.md" "2026-09-21T09:30:00Z" "utc-b"
+  write_handoff "$target/on-track/handoffs/2026-09-21-100000Z-valid.md" "2026-09-21T10:00:00Z" "new-format"
   "$index_script" "$target" >/dev/null
-  a_row="$(grep -nF '| 2026-09-21-080000Z-a |' "$target/fast-track-ai/INDEX.md" | cut -d: -f1)"
-  b_row="$(grep -nF '| 2026-09-21-093000Z-b |' "$target/fast-track-ai/INDEX.md" | cut -d: -f1)"
+  a_row="$(grep -nF '| 2026-09-21-080000Z-a |' "$target/on-track/INDEX.md" | cut -d: -f1)"
+  b_row="$(grep -nF '| 2026-09-21-093000Z-b |' "$target/on-track/INDEX.md" | cut -d: -f1)"
   [ "$a_row" -lt "$b_row" ] || fail "handoff rows are not ordered by captured instant"
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 2026-09-21-100000Z-valid | 2026-09-21T10:00:00Z |"
-  write_handoff "$target/fast-track-ai/handoffs/2026-09-22-100000Z-mismatch.md" "2026-09-22T10:00:01Z" "mismatch"
+  assert_contains "$target/on-track/INDEX.md" "| 2026-09-21-100000Z-valid | 2026-09-21T10:00:00Z |"
+  write_handoff "$target/on-track/handoffs/2026-09-22-100000Z-mismatch.md" "2026-09-22T10:00:01Z" "mismatch"
   expect_failure "index with mismatched new handoff timestamp" "$index_script" "$target"
   assert_contains "$work/failure.err" "filename timestamp does not match captured"
-  rm "$target/fast-track-ai/handoffs/2026-09-22-100000Z-mismatch.md"
-  write_handoff "$target/fast-track-ai/handoffs/2026-09-22-100000Z-fourth.md" "2026-09-22T10:00:00Z" "fourth"
+  rm "$target/on-track/handoffs/2026-09-22-100000Z-mismatch.md"
+  write_handoff "$target/on-track/handoffs/2026-09-22-100000Z-fourth.md" "2026-09-22T10:00:00Z" "fourth"
   expect_failure "index with four active handoffs" "$index_script" "$target"
   assert_contains "$work/failure.err" "more than three handoffs are active"
-  rm "$target/fast-track-ai/handoffs/2026-09-22-100000Z-fourth.md"
+  rm "$target/on-track/handoffs/2026-09-22-100000Z-fourth.md"
 
   # A handoff with ## Next actions is accepted.
-  rm "$target/fast-track-ai/handoffs/2026-09-21-100000Z-valid.md"
-  write_handoff "$target/fast-track-ai/handoffs/2026-09-21-100000Z-nextactions.md" "2026-09-21T10:00:00Z" "next-actions"
+  rm "$target/on-track/handoffs/2026-09-21-100000Z-valid.md"
+  write_handoff "$target/on-track/handoffs/2026-09-21-100000Z-nextactions.md" "2026-09-21T10:00:00Z" "next-actions"
   "$index_script" "$target" >/dev/null
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 2026-09-21-100000Z-nextactions | 2026-09-21T10:00:00Z |"
+  assert_contains "$target/on-track/INDEX.md" "| 2026-09-21-100000Z-nextactions | 2026-09-21T10:00:00Z |"
 
   # A handoff without ## Next actions is rejected and leaves INDEX.md unchanged.
-  cp "$target/fast-track-ai/INDEX.md" "$work/index-before-noactions.md"
-  write_handoff_no_actions "$target/fast-track-ai/handoffs/2026-09-21-100000Z-nextactions.md" "2026-09-21T10:00:00Z" "next-actions"
+  cp "$target/on-track/INDEX.md" "$work/index-before-noactions.md"
+  write_handoff_no_actions "$target/on-track/handoffs/2026-09-21-100000Z-nextactions.md" "2026-09-21T10:00:00Z" "next-actions"
   expect_failure "index with handoff missing next actions" "$index_script" "$target"
   assert_contains "$work/failure.err" "missing heading ## Next actions"
-  cmp "$work/index-before-noactions.md" "$target/fast-track-ai/INDEX.md" || fail "rejected handoff changed INDEX.md"
-  write_handoff "$target/fast-track-ai/handoffs/2026-09-21-100000Z-nextactions.md" "2026-09-21T10:00:00Z" "next-actions"
+  cmp "$work/index-before-noactions.md" "$target/on-track/INDEX.md" || fail "rejected handoff changed INDEX.md"
+  write_handoff "$target/on-track/handoffs/2026-09-21-100000Z-nextactions.md" "2026-09-21T10:00:00Z" "next-actions"
 
-  rm "$target/fast-track-ai/handoffs/2026-09-21-080000Z-a.md" "$target/fast-track-ai/handoffs/2026-09-21-093000Z-b.md"
+  rm "$target/on-track/handoffs/2026-09-21-080000Z-a.md" "$target/on-track/handoffs/2026-09-21-093000Z-b.md"
   "$index_script" "$target" >/dev/null
-  cp "$target/fast-track-ai/INDEX.md" "$work/index-before-retired-handoff.md"
+  cp "$target/on-track/INDEX.md" "$work/index-before-retired-handoff.md"
 
   # Offset names, minute-precision names, offset timestamps, and P0/P1 headings are rejected.
-  retired="$target/fast-track-ai/handoffs/2026-09-21-1000-+0200-offset.md"
+  retired="$target/on-track/handoffs/2026-09-21-1000-+0200-offset.md"
   write_handoff "$retired" "2026-09-21T10:00:00+02:00" "offset"
   expect_failure "index with offset handoff name" "$index_script" "$target"
   assert_contains "$work/failure.err" "2026-09-21-1000-+0200-offset.md invalid handoff filename"
   assert_contains "$work/failure.err" "2026-09-21-1000-+0200-offset.md invalid captured timestamp"
-  cmp "$work/index-before-retired-handoff.md" "$target/fast-track-ai/INDEX.md" || fail "offset handoff name changed INDEX.md"
+  cmp "$work/index-before-retired-handoff.md" "$target/on-track/INDEX.md" || fail "offset handoff name changed INDEX.md"
   rm "$retired"
 
-  retired="$target/fast-track-ai/handoffs/2026-09-21-1000-Z-minute.md"
+  retired="$target/on-track/handoffs/2026-09-21-1000-Z-minute.md"
   write_handoff "$retired" "2026-09-21T10:00:00Z" "minute"
   expect_failure "index with minute-precision handoff name" "$index_script" "$target"
   assert_contains "$work/failure.err" "2026-09-21-1000-Z-minute.md invalid handoff filename"
-  cmp "$work/index-before-retired-handoff.md" "$target/fast-track-ai/INDEX.md" || fail "minute-precision handoff name changed INDEX.md"
+  cmp "$work/index-before-retired-handoff.md" "$target/on-track/INDEX.md" || fail "minute-precision handoff name changed INDEX.md"
   rm "$retired"
 
-  retired="$target/fast-track-ai/handoffs/2026-09-21-080000Z-offcap.md"
+  retired="$target/on-track/handoffs/2026-09-21-080000Z-offcap.md"
   write_handoff "$retired" "2026-09-21T10:00:00+02:00" "offcap"
   expect_failure "index with offset captured timestamp" "$index_script" "$target"
   assert_contains "$work/failure.err" "2026-09-21-080000Z-offcap.md invalid captured timestamp"
-  cmp "$work/index-before-retired-handoff.md" "$target/fast-track-ai/INDEX.md" || fail "offset captured changed INDEX.md"
+  cmp "$work/index-before-retired-handoff.md" "$target/on-track/INDEX.md" || fail "offset captured changed INDEX.md"
   rm "$retired"
 
-  retired="$target/fast-track-ai/handoffs/2026-09-21-090000Z-priority.md"
+  retired="$target/on-track/handoffs/2026-09-21-090000Z-priority.md"
   write_handoff "$retired" "2026-09-21T09:00:00Z" "priority"
   sed -i.bak 's/^## Next actions$/## P0 next actions/' "$retired"
   rm "$retired.bak"
   printf '\n## P1 next actions\n- Fixture.\n\n## First next action\nRun it.\n' >>"$retired"
   expect_failure "index with P0/P1 handoff headings" "$index_script" "$target"
   assert_contains "$work/failure.err" "2026-09-21-090000Z-priority.md missing heading ## Next actions"
-  cmp "$work/index-before-retired-handoff.md" "$target/fast-track-ai/INDEX.md" || fail "P0/P1 handoff changed INDEX.md"
+  cmp "$work/index-before-retired-handoff.md" "$target/on-track/INDEX.md" || fail "P0/P1 handoff changed INDEX.md"
   rm "$retired"
 
   "$index_script" "$target" >/dev/null
-  cp "$target/fast-track-ai/INDEX.md" "$work/index-before-invalid.md"
-  cat >"$target/fast-track-ai/research/invalid-research.md" <<'EOF'
+  cp "$target/on-track/INDEX.md" "$work/index-before-invalid.md"
+  cat >"$target/on-track/research/invalid-research.md" <<'EOF'
 ---
 owner: maintainer
 ---
 EOF
   expect_failure "index does not publish invalid output" "$index_script" "$target"
   assert_contains "$work/failure.err" "INDEX not updated:"
-  cmp "$work/index-before-invalid.md" "$target/fast-track-ai/INDEX.md" || fail "invalid index changed INDEX.md"
-  for temp_index in "$target/fast-track-ai"/.INDEX.md.*; do
+  cmp "$work/index-before-invalid.md" "$target/on-track/INDEX.md" || fail "invalid index changed INDEX.md"
+  for temp_index in "$target/on-track"/.INDEX.md.*; do
     [ ! -e "$temp_index" ] || fail "temporary index was not cleaned up"
   done
-  rm "$target/fast-track-ai/research/invalid-research.md"
+  rm "$target/on-track/research/invalid-research.md"
 
   "$index_script" "$target" >/dev/null
   pass "index"
@@ -1214,51 +1373,51 @@ EOF
 
 run_approval() {
   missing_intent="$work/gate-missing-intent"
-  mkdir -p "$missing_intent/fast-track-ai/tracks/001-example"
-  write_spec "$missing_intent/fast-track-ai/tracks/001-example/spec.md" "approved"
-  write_tasks "$missing_intent/fast-track-ai/tracks/001-example/tasks.md" "approved" "x"
+  mkdir -p "$missing_intent/on-track/tracks/001-example"
+  write_spec "$missing_intent/on-track/tracks/001-example/spec.md" "approved"
+  write_tasks "$missing_intent/on-track/tracks/001-example/tasks.md" "approved" "x"
   expect_failure "gate without intent.md" "$gate" --track 001-example --root "$missing_intent"
 
   short="$work/gate-short"
   write_intent "$short" "001-example" "draft"
-  write_spec "$short/fast-track-ai/tracks/001-example/spec.md" "draft"
-  write_tasks "$short/fast-track-ai/tracks/001-example/tasks.md" "approved" "x"
+  write_spec "$short/on-track/tracks/001-example/spec.md" "draft"
+  write_tasks "$short/on-track/tracks/001-example/tasks.md" "approved" "x"
   expect_failure "gate with unapproved spec" "$gate" --track 001-example --root "$short"
 
-  write_spec "$short/fast-track-ai/tracks/001-example/spec.md" "approved"
-  write_tasks "$short/fast-track-ai/tracks/001-example/tasks.md" "draft" "x"
+  write_spec "$short/on-track/tracks/001-example/spec.md" "approved"
+  write_tasks "$short/on-track/tracks/001-example/tasks.md" "draft" "x"
   expect_failure "gate with unapproved tasks" "$gate" --track 001-example --root "$short"
 
-  write_tasks "$short/fast-track-ai/tracks/001-example/tasks.md" "approved" " "
+  write_tasks "$short/on-track/tracks/001-example/tasks.md" "approved" " "
   expect_failure "gate with open task" "$gate" --track 001-example --root "$short"
 
-  write_spec "$short/fast-track-ai/tracks/001-example/spec.md" "draft"
-  write_tasks "$short/fast-track-ai/tracks/001-example/tasks.md" "draft" " "
+  write_spec "$short/on-track/tracks/001-example/spec.md" "draft"
+  write_tasks "$short/on-track/tracks/001-example/tasks.md" "draft" " "
   structure_output="$("$gate" --mode structure --track 001-example --root "$short")"
   [ "$structure_output" = "PASS: 001-example structure valid" ] || fail "structure mode did not accept a draft with open tasks"
   expect_failure "gate with unknown mode" "$gate" --mode draft --track 001-example --root "$short"
   assert_contains "$work/failure.out" "structure and completion"
 
-  write_spec "$short/fast-track-ai/tracks/001-example/spec.md" "approved"
-  write_tasks "$short/fast-track-ai/tracks/001-example/tasks.md" "approved" "x"
+  write_spec "$short/on-track/tracks/001-example/spec.md" "approved"
+  write_tasks "$short/on-track/tracks/001-example/tasks.md" "approved" "x"
   "$gate" --track 001-example --root "$short" >/dev/null
 
-  write_plan "$short/fast-track-ai/tracks/001-example/plan.md" "approved"
+  write_plan "$short/on-track/tracks/001-example/plan.md" "approved"
   expect_failure "gate with root plan.md" "$gate" --track 001-example --root "$short"
   assert_contains "$work/failure.out" "loose files outside assets/: plan.md"
-  rm "$short/fast-track-ai/tracks/001-example/plan.md"
+  rm "$short/on-track/tracks/001-example/plan.md"
 
-  printf '# Decisions\n' >"$short/fast-track-ai/tracks/001-example/decisions.md"
+  printf '# Decisions\n' >"$short/on-track/tracks/001-example/decisions.md"
   expect_failure "gate with root decisions.md" "$gate" --track 001-example --root "$short"
   assert_contains "$work/failure.out" "loose files outside assets/: decisions.md"
-  rm "$short/fast-track-ai/tracks/001-example/decisions.md"
+  rm "$short/on-track/tracks/001-example/decisions.md"
 
-  mkdir "$short/fast-track-ai/tracks/001-example/spec"
+  mkdir "$short/on-track/tracks/001-example/spec"
   expect_failure "gate with spec directory" "$gate" --track 001-example --root "$short"
   assert_contains "$work/failure.out" "loose files outside assets/: spec"
-  rmdir "$short/fast-track-ai/tracks/001-example/spec"
+  rmdir "$short/on-track/tracks/001-example/spec"
 
-  cat >"$short/fast-track-ai/tracks/001-example/tasks.md" <<'EOF'
+  cat >"$short/on-track/tracks/001-example/tasks.md" <<'EOF'
 ---
 status: approved
 ---
@@ -1277,7 +1436,7 @@ assert_installed_layout() {
   claude_dir="$2"
   commands_dir="$3"
   count=0
-  for skill in "$repo_root"/skills/ft-*; do
+  for skill in "$repo_root"/skills/ot-*; do
     name="$(basename "$skill")"
     [ -d "$agents_dir/$name" ] || fail "agent skill does not resolve: $agents_dir/$name"
     [ -d "$claude_dir/$name" ] || fail "Claude mirror does not resolve: $claude_dir/$name"
@@ -1287,7 +1446,7 @@ assert_installed_layout() {
   [ ! -e "$agents_dir/shared" ] || fail "shared link was installed"
   [ ! -e "$claude_dir/shared" ] || fail "shared Claude mirror was installed"
   cmd_count=0
-  for cmd in "$repo_root"/commands/ft-*.md; do
+  for cmd in "$repo_root"/commands/ot-*.md; do
     name="$(basename "$cmd")"
     [ -e "$commands_dir/$name" ] || fail "command does not resolve: $commands_dir/$name"
     cmd_count=$((cmd_count + 1))
@@ -1308,7 +1467,7 @@ check_installed_resources() {
   local dir skill name rel count
   for dir in "$1" "$2"; do
     count=0
-    for skill in "$dir"/ft-*; do
+    for skill in "$dir"/ot-*; do
       [ -d "$skill" ] || continue
       name="$(basename "$skill")"
       [ -r "$skill/SKILL.md" ] || { echo "installed skill metadata is unreadable: $skill/SKILL.md"; return 1; }
@@ -1322,7 +1481,7 @@ check_installed_resources() {
         [ -f "$skill/$rel" ] || { echo "installed owner resource does not resolve: $skill/$rel"; return 1; }
         case "$rel" in *.sh) [ -x "$skill/$rel" ] || { echo "installed owner script is not executable: $skill/$rel"; return 1; };; esac
       done
-      for rel in $(grep -oE '\.\./ft-[a-z]+/(scripts|assets)/[A-Za-z0-9_-]+\.(sh|md)' "$skill/SKILL.md" | sort -u); do
+      for rel in $(grep -oE '\.\./ot-[a-z]+/(scripts|assets)/[A-Za-z0-9_-]+\.(sh|md)' "$skill/SKILL.md" | sort -u); do
         [ -f "$skill/$rel" ] || { echo "installed sibling resource does not resolve: $skill/$rel"; return 1; }
         case "$rel" in *.sh) [ -x "$skill/$rel" ] || { echo "installed sibling script is not executable: $skill/$rel"; return 1; };; esac
       done
@@ -1336,9 +1495,9 @@ check_installed_resources() {
 # the installed owner scripts against a disposable target.
 run_installed_scripts() {
   local t="$work/installed-run-$1" base="$2" track first
-  local i_init="$2/ft-init/scripts/fast-track-ai-init.sh"
-  local i_index="$2/ft-init/scripts/fast-track-ai-index.sh"
-  local i_gate="$2/ft-spec/scripts/fast-track-ai-gate.sh"
+  local i_init="$2/ot-init/scripts/on-track-init.sh"
+  local i_index="$2/ot-init/scripts/on-track-index.sh"
+  local i_gate="$2/ot-spec/scripts/on-track-gate.sh"
   rm -rf "$t"
   mkdir -p "$t"
   "$i_init" "$t" >/dev/null || fail "installed init failed through $base"
@@ -1346,28 +1505,28 @@ run_installed_scripts() {
   "$i_init" "$t" >/dev/null || fail "installed init rerun failed through $base"
   [ "$first" = "$(tree_fingerprint "$t")" ] || fail "installed init rerun changed the target through $base"
   for track in research refs handoffs/archive assessments decisions tracks; do
-    assert_dir "$t/fast-track-ai/$track"
+    assert_dir "$t/on-track/$track"
   done
-  assert_file "$t/fast-track-ai/INDEX.md"
+  assert_file "$t/on-track/INDEX.md"
   assert_file "$t/AGENTS.md"
 
   write_intent "$t" 001-valid draft
-  write_spec "$t/fast-track-ai/tracks/001-valid/spec.md" approved
-  write_tasks "$t/fast-track-ai/tracks/001-valid/tasks.md" approved x
+  write_spec "$t/on-track/tracks/001-valid/spec.md" approved
+  write_tasks "$t/on-track/tracks/001-valid/tasks.md" approved x
   write_intent "$t" 002-open draft
-  write_spec "$t/fast-track-ai/tracks/002-open/spec.md" approved
-  write_tasks "$t/fast-track-ai/tracks/002-open/tasks.md" approved " "
+  write_spec "$t/on-track/tracks/002-open/spec.md" approved
+  write_tasks "$t/on-track/tracks/002-open/tasks.md" approved " "
   write_intent "$t" 003-unapproved draft
-  write_spec "$t/fast-track-ai/tracks/003-unapproved/spec.md" draft
-  write_tasks "$t/fast-track-ai/tracks/003-unapproved/tasks.md" approved x
+  write_spec "$t/on-track/tracks/003-unapproved/spec.md" draft
+  write_tasks "$t/on-track/tracks/003-unapproved/tasks.md" approved x
 
   "$i_index" "$t" >/dev/null || fail "installed index failed through $base"
-  assert_contains "$t/fast-track-ai/INDEX.md" "| 001-valid | draft | implement 1/1 |"
-  assert_contains "$t/fast-track-ai/INDEX.md" "| 002-open | draft | implement 0/1 |"
-  assert_contains "$t/fast-track-ai/INDEX.md" "| 003-unapproved | draft | spec |"
-  cp "$t/fast-track-ai/INDEX.md" "$t/index.first"
+  assert_contains "$t/on-track/INDEX.md" "| 001-valid | draft | implement 1/1 |"
+  assert_contains "$t/on-track/INDEX.md" "| 002-open | draft | implement 0/1 |"
+  assert_contains "$t/on-track/INDEX.md" "| 003-unapproved | draft | spec |"
+  cp "$t/on-track/INDEX.md" "$t/index.first"
   "$i_index" "$t" >/dev/null || fail "installed index rerun failed through $base"
-  cmp -s "$t/index.first" "$t/fast-track-ai/INDEX.md" || fail "installed index rerun changed INDEX.md through $base"
+  cmp -s "$t/index.first" "$t/on-track/INDEX.md" || fail "installed index rerun changed INDEX.md through $base"
 
   [ "$("$i_gate" --track 001-valid --root "$t")" = "PASS: 001-valid cycle intact" ] || fail "installed gate did not accept the valid closed track through $base"
   expect_failure "installed gate with an open task through $base" "$i_gate" --track 002-open --root "$t"
@@ -1403,81 +1562,118 @@ run_install() {
   for item in skills commands install.sh; do
     cp -R "$repo_root/$item" "$broken/pkg/$item"
   done
-  rm "$broken/pkg/skills/ft-spec/scripts/fast-track-ai-gate.sh"
+  rm "$broken/pkg/skills/ot-spec/scripts/on-track-gate.sh"
   "$broken/pkg/install.sh" --agents-dir "$broken/agents/skills" --claude-dir "$broken/claude/skills" >/dev/null
   if broken_message="$(check_installed_resources "$broken/agents/skills" "$broken/claude/skills")"; then
     fail "installation validation passed with a broken installed sibling"
   fi
   case "$broken_message" in
-    *ft-spec/scripts/fast-track-ai-gate.sh*) ;;
+    *ot-spec/scripts/on-track-gate.sh*) ;;
     *) fail "broken sibling was not reported at its location: $broken_message";;
   esac
   pass "install"
 }
 
-run_resources() {
-  init_skill="$repo_root/skills/ft-init/SKILL.md"
-  intent_skill="$repo_root/skills/ft-intent/SKILL.md"
-  spec_skill="$repo_root/skills/ft-spec/SKILL.md"
-  assess_skill="$repo_root/skills/ft-assess/SKILL.md"
-  research_skill="$repo_root/skills/ft-research/SKILL.md"
-  handoff_skill="$repo_root/skills/ft-handoff/SKILL.md"
+run_readme_checks() {
+  local english="$repo_root/README.md" portuguese="$repo_root/README.pt-BR.md" page language diagram english_headings portuguese_headings
+  assert_file "$english"
+  assert_file "$portuguese"
+  assert_contains "$english" '](README.pt-BR.md)'
+  assert_contains "$portuguese" '](README.md)'
+  english_headings="$(awk '/^## / { count++ } END { print count + 0 }' "$english")"
+  portuguese_headings="$(awk '/^## / { count++ } END { print count + 0 }' "$portuguese")"
+  [ "$english_headings" -eq "$portuguese_headings" ] || fail "README second-level heading counts differ"
+  for language in en pt; do
+    case "$language" in
+      en) page="$english" ;;
+      pt) page="$portuguese" ;;
+    esac
+    for diagram in lanes workflow support-context; do
+      assert_contains "$page" "](docs/images/$language/$diagram.png)"
+    done
+    if grep -Ein 'normaliz|spec/|plan[.]md|openspec|(^|[^[:alpha:]])ft-(init|intent|spec|implement|research|assess|handoff)([^[:alnum:]_]|$)|(^|[^[:alpha:]])ft-\*|—' "$page"; then
+      fail "$page contains retired README wording or an em dash"
+    fi
+  done
+}
 
-  for resource in './scripts/fast-track-ai-init.sh' './scripts/fast-track-ai-index.sh' './assets/AGENTS-snippet.md'; do
+run_resources() {
+  run_readme_checks
+  legacy_files="$(cd "$repo_root" && grep -rl 'fast-track-ai' skills commands install.sh AGENTS.md | LC_ALL=C sort)"
+  expected_legacy_files="$(printf '%s\n' 'skills/ot-init/SKILL.md' 'skills/ot-init/scripts/on-track-init.sh')"
+  [ "$legacy_files" = "$expected_legacy_files" ] || fail "unexpected legacy-name files: $legacy_files"
+  # A preceding letter excludes unrelated words such as draft-status.
+  old_command_pattern='(^|[^[:alpha:]])ft-(init|intent|spec|implement|research|assess|handoff)([^[:alnum:]_]|$)|(^|[^[:alpha:]])ft-\*'
+  if grep -rEn "$old_command_pattern" "$repo_root/skills" "$repo_root/commands" "$repo_root/install.sh" "$repo_root/AGENTS.md" "$repo_root/README.md" "$repo_root/README.pt-BR.md"; then
+    fail "old command name remains in the package"
+  fi
+  skill_count="$(find "$repo_root/skills" -mindepth 1 -maxdepth 1 -type d -name 'ot-*' | wc -l | tr -d ' ')"
+  command_count="$(find "$repo_root/commands" -mindepth 1 -maxdepth 1 -type f -name 'ot-*.md' | wc -l | tr -d ' ')"
+  [ "$skill_count" -eq 7 ] || fail "expected seven ot-* skill directories, got $skill_count"
+  [ "$command_count" -eq 7 ] || fail "expected seven ot-*.md command files, got $command_count"
+
+  init_skill="$repo_root/skills/ot-init/SKILL.md"
+  intent_skill="$repo_root/skills/ot-intent/SKILL.md"
+  spec_skill="$repo_root/skills/ot-spec/SKILL.md"
+  assess_skill="$repo_root/skills/ot-assess/SKILL.md"
+  research_skill="$repo_root/skills/ot-research/SKILL.md"
+  handoff_skill="$repo_root/skills/ot-handoff/SKILL.md"
+
+  for resource in './scripts/on-track-init.sh' './scripts/on-track-index.sh' './assets/AGENTS-snippet.md'; do
     assert_contains "$init_skill" "$resource"
   done
   for resource in './assets/intent.md' './assets/ref.md'; do
     assert_contains "$intent_skill" "$resource"
   done
-  for resource in './assets/spec.md' './assets/tasks.md' './assets/decisions.md' './scripts/fast-track-ai-gate.sh'; do
+  for resource in './assets/spec.md' './assets/tasks.md' './assets/decisions.md' './scripts/on-track-gate.sh'; do
     assert_contains "$spec_skill" "$resource"
   done
   assert_contains "$assess_skill" './assets/assessment.md'
   assert_contains "$research_skill" './assets/research.md'
   assert_contains "$handoff_skill" './assets/handoff.md'
 
-  for resource in './scripts/fast-track-ai-init.sh' './scripts/fast-track-ai-index.sh' './assets/AGENTS-snippet.md' './assets/intent.md' './assets/ref.md' './assets/spec.md' './assets/tasks.md' './assets/decisions.md' './scripts/fast-track-ai-gate.sh' './assets/assessment.md' './assets/research.md' './assets/handoff.md'; do
-    owner_count="$(grep -Fl "$resource" "$repo_root"/skills/ft-*/SKILL.md | wc -l | tr -d ' ')"
+  for resource in './scripts/on-track-init.sh' './scripts/on-track-index.sh' './assets/AGENTS-snippet.md' './assets/intent.md' './assets/ref.md' './assets/spec.md' './assets/tasks.md' './assets/decisions.md' './scripts/on-track-gate.sh' './assets/assessment.md' './assets/research.md' './assets/handoff.md'; do
+    owner_count="$(grep -Fl "$resource" "$repo_root"/skills/ot-*/SKILL.md | wc -l | tr -d ' ')"
     [ "$owner_count" -eq 1 ] || fail "$resource has $owner_count owner skill references; expected 1"
   done
 
-  assert_not_file "$repo_root/skills/ft-init/assets/assessment.md"
-  assert_not_file "$repo_root/skills/ft-init/assets/refs.md"
-  for skill_file in "$repo_root"/skills/ft-*/SKILL.md; do
-    assert_not_contains "$skill_file" 'ft-init/assets/assessment.md'
-    assert_not_contains "$skill_file" 'ft-init/assets/refs.md'
+  assert_not_file "$repo_root/skills/ot-init/assets/assessment.md"
+  assert_not_file "$repo_root/skills/ot-init/assets/refs.md"
+  for skill_file in "$repo_root"/skills/ot-*/SKILL.md; do
+    assert_not_contains "$skill_file" 'ot-init/assets/assessment.md'
+    assert_not_contains "$skill_file" 'ot-init/assets/refs.md'
   done
-  for skill_file in "$repo_root"/skills/ft-*/SKILL.md; do
-    assert_contains "$skill_file" "resolve from this skill's installed directory, and \`fast-track-ai/\` paths resolve from the target repository root"
+  for skill_file in "$repo_root"/skills/ot-*/SKILL.md; do
+    assert_contains "$skill_file" "resolve from this skill's installed directory, and \`on-track/\` paths resolve from the target repository root"
   done
   pass "resource guidance"
 }
 
 run_workflows() {
-  intent_skill="$repo_root/skills/ft-intent/SKILL.md"
+  intent_skill="$repo_root/skills/ot-intent/SKILL.md"
   assert_contains "$intent_skill" 'reading the relevant files does not settle'
   assert_contains "$intent_skill" 'behavior measured'
   assert_contains "$intent_skill" 'evidence weighed across several subsystems'
   assert_contains "$intent_skill" 'material counterevidence'
   assert_contains "$intent_skill" 'reading files or running one command do not justify an assessment'
 
-  assess_skill="$repo_root/skills/ft-assess/SKILL.md"
-  research_skill="$repo_root/skills/ft-research/SKILL.md"
-  handoff_skill="$repo_root/skills/ft-handoff/SKILL.md"
-  assess_template="$repo_root/skills/ft-assess/assets/assessment.md"
-  research_template="$repo_root/skills/ft-research/assets/research.md"
-  handoff_template="$repo_root/skills/ft-handoff/assets/handoff.md"
+  assess_skill="$repo_root/skills/ot-assess/SKILL.md"
+  research_skill="$repo_root/skills/ot-research/SKILL.md"
+  handoff_skill="$repo_root/skills/ot-handoff/SKILL.md"
+  assess_template="$repo_root/skills/ot-assess/assets/assessment.md"
+  research_template="$repo_root/skills/ot-research/assets/research.md"
+  handoff_template="$repo_root/skills/ot-handoff/assets/handoff.md"
 
   for workflow in assess research handoff; do
-    assert_file "$repo_root/commands/ft-$workflow.md"
-    assert_file "$repo_root/skills/ft-$workflow/SKILL.md"
-    assert_contains "$repo_root/commands/ft-$workflow.md" "\`ft-$workflow\`"
+    assert_file "$repo_root/commands/ot-$workflow.md"
+    assert_file "$repo_root/skills/ot-$workflow/SKILL.md"
+    assert_contains "$repo_root/commands/ot-$workflow.md" "\`ot-$workflow\`"
   done
 
   assert_not_matches "$research_skill" 'base `research`|base research skill|Run the base'
   assert_not_matches "$handoff_skill" 'base `handoff`|base handoff skill|Run the base'
-  assert_not_matches "$repo_root/commands/ft-research.md" 'base research skill|Run the base'
-  assert_not_matches "$repo_root/commands/ft-handoff.md" 'base handoff skill|Run the base'
+  assert_not_matches "$repo_root/commands/ot-research.md" 'base research skill|Run the base'
+  assert_not_matches "$repo_root/commands/ot-handoff.md" 'base handoff skill|Run the base'
 
   for field_name in captured owner; do
     assert_contains "$research_template" "$field_name:"
@@ -1504,7 +1700,7 @@ run_workflows() {
   assert_not_matches "$handoff_template" '^status:'
   assert_not_matches "$handoff_template" '^## (P0|P1) next actions$|^## First next action$'
 
-  for package_file in "$repo_root"/skills/ft-*/SKILL.md "$repo_root"/commands/ft-*.md; do
+  for package_file in "$repo_root"/skills/ot-*/SKILL.md "$repo_root"/commands/ot-*.md; do
     assert_not_matches "$package_file" 'Jhony Walker|jhonywalkeer|Guia Completo sobre Architecture'
   done
 
@@ -1519,9 +1715,9 @@ run_workflows() {
 }
 
 run_refs() {
-  template="$repo_root/skills/ft-intent/assets/ref.md"
-  intent_skill="$repo_root/skills/ft-intent/SKILL.md"
-  intent_template="$repo_root/skills/ft-intent/assets/intent.md"
+  template="$repo_root/skills/ot-intent/assets/ref.md"
+  intent_skill="$repo_root/skills/ot-intent/SKILL.md"
+  intent_template="$repo_root/skills/ot-intent/assets/intent.md"
   assert_file "$template"
   for contract_text in 'content_license' 'Normalize it to UTF-8' 'observed at capture time' 'never the URL' 'Use `pin` when' 'retrieved_at'; do
     assert_contains "$intent_skill" "$contract_text"
@@ -1539,7 +1735,7 @@ run_refs() {
   unavailable="$work/unavailable-ref"
   "$init_script" "$unavailable" >/dev/null
   write_intent "$unavailable" "001-unavailable-source" "draft"
-  cat >>"$unavailable/fast-track-ai/tracks/001-unavailable-source/intent.md" <<'EOF'
+  cat >>"$unavailable/on-track/tracks/001-unavailable-source/intent.md" <<'EOF'
 
 # Intent: unavailable source
 
@@ -1549,9 +1745,9 @@ The source payload was not available.
 ## Open questions
 - Maintainer: provide the source URL, file, or text.
 EOF
-  assert_not_file "$unavailable/fast-track-ai/refs/unavailable-source.md"
+  assert_not_file "$unavailable/on-track/refs/unavailable-source.md"
   "$index_script" "$unavailable" >/dev/null
-  existing="$unavailable/fast-track-ai/refs/existing-source.md"
+  existing="$unavailable/on-track/refs/existing-source.md"
   candidate_payload='captured source payload'
   candidate_hash="$(printf '%s' "$candidate_payload" | shasum -a 256 | awk '{print $1}')"
   cat >"$existing" <<EOF
@@ -1570,26 +1766,26 @@ EOF
   existing_slug="$(basename "$existing" .md)"
   [ "$candidate_hash" = "$(frontmatter_field "$existing" sha256)" ] || fail "candidate hash did not match existing ref"
   assert_contains "$intent_skill" 'reuses the existing slug'
-  assert_not_file "$unavailable/fast-track-ai/refs/duplicate-source.md"
+  assert_not_file "$unavailable/on-track/refs/duplicate-source.md"
   "$index_script" "$unavailable" >/dev/null
-  assert_contains "$unavailable/fast-track-ai/INDEX.md" "| $existing_slug | pointer | 2026-09-20 |"
+  assert_contains "$unavailable/on-track/INDEX.md" "| $existing_slug | pointer | 2026-09-20 |"
   pass "ref capture contract"
 }
 
 run_decisions() {
-  intent_skill="$repo_root/skills/ft-intent/SKILL.md"
-  spec_skill="$repo_root/skills/ft-spec/SKILL.md"
-  implement_skill="$repo_root/skills/ft-implement/SKILL.md"
-  template="$repo_root/skills/ft-spec/assets/decisions.md"
+  intent_skill="$repo_root/skills/ot-intent/SKILL.md"
+  spec_skill="$repo_root/skills/ot-spec/SKILL.md"
+  implement_skill="$repo_root/skills/ot-implement/SKILL.md"
+  template="$repo_root/skills/ot-spec/assets/decisions.md"
 
-  for decision_skill in "$intent_skill" "$spec_skill" "$implement_skill" "$repo_root/skills/ft-init/assets/AGENTS-snippet.md"; do
+  for decision_skill in "$intent_skill" "$spec_skill" "$implement_skill" "$repo_root/skills/ot-init/assets/AGENTS-snippet.md"; do
     for contract_text in 'only when BOTH hold' 'at least one alternative weighed and rejected for a stated reason' 'reversing it takes more than reverting a diff' 'a future reader would likely undo it without the recorded reason' 'Durability alone' 'a restated user preference or instruction' 'local, easily reversible, or obvious choices do not qualify' 'A user preference with no weighed alternative is a constraint in the intent'; do
       assert_contains "$decision_skill" "$contract_text"
     done
   done
   adr_contract="$(sed -n 's/.*\(A decision qualifies only when BOTH hold:.*not an ADR\.\).*/\1/p' "$intent_skill")"
   [ -n "$adr_contract" ] || fail "missing ADR qualification text"
-  for decision_skill in "$spec_skill" "$implement_skill" "$repo_root/skills/ft-init/assets/AGENTS-snippet.md"; do
+  for decision_skill in "$spec_skill" "$implement_skill" "$repo_root/skills/ot-init/assets/AGENTS-snippet.md"; do
     assert_contains "$decision_skill" "$adr_contract"
   done
   assert_contains "$intent_skill" 'the user makes a decision in the conversation'
@@ -1605,7 +1801,7 @@ run_decisions() {
   write_intent "$replacement" "001-replacement-fixture" "draft"
   original_payload_hash="$(printf '%s' 'mutable payload v1' | shasum -a 256 | awk '{print $1}')"
   replacement_payload_hash="$(printf '%s' 'mutable payload v2' | shasum -a 256 | awk '{print $1}')"
-  cat >"$replacement/fast-track-ai/refs/mutable-v1.md" <<EOF
+  cat >"$replacement/on-track/refs/mutable-v1.md" <<EOF
 ---
 type: pointer
 source: https://example.com/mutable
@@ -1618,8 +1814,8 @@ content_license: unknown
 
 # Ref: mutable v1
 EOF
-  cp "$replacement/fast-track-ai/refs/mutable-v1.md" "$work/mutable-v1.before"
-  cat >"$replacement/fast-track-ai/refs/mutable-v2.md" <<EOF
+  cp "$replacement/on-track/refs/mutable-v1.md" "$work/mutable-v1.before"
+  cat >"$replacement/on-track/refs/mutable-v2.md" <<EOF
 ---
 type: pointer
 source: https://example.com/mutable
@@ -1632,7 +1828,7 @@ content_license: unknown
 
 # Ref: mutable v2
 EOF
-  cat >"$replacement/fast-track-ai/decisions/001-original.md" <<'EOF'
+  cat >"$replacement/on-track/decisions/001-original.md" <<'EOF'
 ---
 id: 001-original
 status: superseded
@@ -1659,8 +1855,8 @@ Use the replacement path immediately.
 ## Consequences
 The original decision remains historical.
 EOF
-  cp "$replacement/fast-track-ai/decisions/001-original.md" "$work/001-original.before"
-  cat >"$replacement/fast-track-ai/decisions/002-replacement.md" <<'EOF'
+  cp "$replacement/on-track/decisions/001-original.md" "$work/001-original.before"
+  cat >"$replacement/on-track/decisions/002-replacement.md" <<'EOF'
 ---
 id: 002-replacement
 status: accepted
@@ -1687,83 +1883,83 @@ Keep the original path.
 New work follows the replacement decision.
 EOF
   "$index_script" "$replacement" >/dev/null
-  cmp "$work/mutable-v1.before" "$replacement/fast-track-ai/refs/mutable-v1.md" || fail "mutable original ref changed"
-  cmp "$work/001-original.before" "$replacement/fast-track-ai/decisions/001-original.md" || fail "original ADR content changed"
-  assert_contains "$replacement/fast-track-ai/INDEX.md" "| mutable-v1 | pointer | 2026-09-20 |"
-  assert_contains "$replacement/fast-track-ai/INDEX.md" "| mutable-v2 | pointer | 2026-09-20 |"
-  assert_contains "$replacement/fast-track-ai/INDEX.md" "| 001-original | superseded |"
-  assert_contains "$replacement/fast-track-ai/INDEX.md" "| 002-replacement | accepted |"
-  assert_contains "$replacement/fast-track-ai/decisions/001-original.md" "superseded_by: 002-replacement"
+  cmp "$work/mutable-v1.before" "$replacement/on-track/refs/mutable-v1.md" || fail "mutable original ref changed"
+  cmp "$work/001-original.before" "$replacement/on-track/decisions/001-original.md" || fail "original ADR content changed"
+  assert_contains "$replacement/on-track/INDEX.md" "| mutable-v1 | pointer | 2026-09-20 |"
+  assert_contains "$replacement/on-track/INDEX.md" "| mutable-v2 | pointer | 2026-09-20 |"
+  assert_contains "$replacement/on-track/INDEX.md" "| 001-original | superseded |"
+  assert_contains "$replacement/on-track/INDEX.md" "| 002-replacement | accepted |"
+  assert_contains "$replacement/on-track/decisions/001-original.md" "superseded_by: 002-replacement"
   pass "decision capture contract"
 }
 
 run_handoff() {
   target="$work/handoff-target"
   "$init_script" "$target" >/dev/null
-  write_handoff "$target/fast-track-ai/handoffs/2026-09-20-080000Z-first.md" "2026-09-20T08:00:00Z" "first"
-  write_handoff "$target/fast-track-ai/handoffs/2026-09-20-090000Z-second.md" "2026-09-20T09:00:00Z" "second"
-  write_handoff "$target/fast-track-ai/handoffs/2026-09-20-100000Z-third.md" "2026-09-20T10:00:00Z" "third"
-  write_handoff "$target/fast-track-ai/handoffs/2026-09-20-110000Z-fourth.md" "2026-09-20T11:00:00Z" "fourth"
-  mv "$target/fast-track-ai/handoffs/2026-09-20-080000Z-first.md" "$target/fast-track-ai/handoffs/archive/"
+  write_handoff "$target/on-track/handoffs/2026-09-20-080000Z-first.md" "2026-09-20T08:00:00Z" "first"
+  write_handoff "$target/on-track/handoffs/2026-09-20-090000Z-second.md" "2026-09-20T09:00:00Z" "second"
+  write_handoff "$target/on-track/handoffs/2026-09-20-100000Z-third.md" "2026-09-20T10:00:00Z" "third"
+  write_handoff "$target/on-track/handoffs/2026-09-20-110000Z-fourth.md" "2026-09-20T11:00:00Z" "fourth"
+  mv "$target/on-track/handoffs/2026-09-20-080000Z-first.md" "$target/on-track/handoffs/archive/"
 
-  active_handoffs=("$target"/fast-track-ai/handoffs/*.md)
+  active_handoffs=("$target"/on-track/handoffs/*.md)
   [ "${#active_handoffs[@]}" -eq 3 ] || fail "handoff fixture did not retain exactly three active files"
-  assert_file "$target/fast-track-ai/handoffs/archive/2026-09-20-080000Z-first.md"
-  assert_contains "$target/fast-track-ai/handoffs/archive/2026-09-20-080000Z-first.md" '> Preserve this exact instruction.'
-  assert_not_matches "$repo_root/skills/ft-handoff/SKILL.md" 'base `handoff`|base handoff skill|Run the base'
-  handoff_skill="$repo_root/skills/ft-handoff/SKILL.md"
+  assert_file "$target/on-track/handoffs/archive/2026-09-20-080000Z-first.md"
+  assert_contains "$target/on-track/handoffs/archive/2026-09-20-080000Z-first.md" '> Preserve this exact instruction.'
+  assert_not_matches "$repo_root/skills/ot-handoff/SKILL.md" 'base `handoff`|base handoff skill|Run the base'
+  handoff_skill="$repo_root/skills/ot-handoff/SKILL.md"
   collision_line="$(grep -n 'Before writing, check that this path exists in neither' "$handoff_skill" | cut -d: -f1)"
   write_line="$(grep -n 'Write the final document directly to that path' "$handoff_skill" | cut -d: -f1)"
   validate_line="$(grep -n 'Validate the new handoff before touching any other handoff' "$handoff_skill" | cut -d: -f1)"
-  archive_line="$(grep -n 'Move each older handoff to `fast-track-ai/handoffs/archive/`' "$handoff_skill" | cut -d: -f1)"
-  index_line="$(grep -n 'run `../ft-init/scripts/fast-track-ai-index.sh' "$handoff_skill" | cut -d: -f1)"
+  archive_line="$(grep -n 'Move each older handoff to `on-track/handoffs/archive/`' "$handoff_skill" | cut -d: -f1)"
+  index_line="$(grep -n 'run `../ot-init/scripts/on-track-index.sh' "$handoff_skill" | cut -d: -f1)"
   [ -n "$collision_line" ] && [ -n "$write_line" ] && [ -n "$validate_line" ] && [ -n "$archive_line" ] && [ -n "$index_line" ] || fail "handoff skill lacks a collision, write, validate, archive, or index step"
   [ "$collision_line" -lt "$write_line" ] && [ "$write_line" -lt "$validate_line" ] || fail "handoff skill does not check collision, then write, then validate"
   [ "$validate_line" -lt "$archive_line" ] && [ "$archive_line" -lt "$index_line" ] || fail "handoff skill does not validate, then archive, then index"
   "$index_script" "$target" >/dev/null
-  assert_not_contains "$target/fast-track-ai/INDEX.md" '2026-09-20-080000Z-first'
-  second_row="$(grep -nF '| 2026-09-20-090000Z-second |' "$target/fast-track-ai/INDEX.md" | cut -d: -f1)"
-  third_row="$(grep -nF '| 2026-09-20-100000Z-third |' "$target/fast-track-ai/INDEX.md" | cut -d: -f1)"
-  fourth_row="$(grep -nF '| 2026-09-20-110000Z-fourth |' "$target/fast-track-ai/INDEX.md" | cut -d: -f1)"
+  assert_not_contains "$target/on-track/INDEX.md" '2026-09-20-080000Z-first'
+  second_row="$(grep -nF '| 2026-09-20-090000Z-second |' "$target/on-track/INDEX.md" | cut -d: -f1)"
+  third_row="$(grep -nF '| 2026-09-20-100000Z-third |' "$target/on-track/INDEX.md" | cut -d: -f1)"
+  fourth_row="$(grep -nF '| 2026-09-20-110000Z-fourth |' "$target/on-track/INDEX.md" | cut -d: -f1)"
   [ "$second_row" -lt "$third_row" ] && [ "$third_row" -lt "$fourth_row" ] || fail "handoffs are not ordered by captured instant"
 
   # A handoff without ## Next actions is rejected without changing INDEX.
   "$index_script" "$target" >/dev/null
-  assert_contains "$target/fast-track-ai/INDEX.md" "| 2026-09-20-100000Z-third | 2026-09-20T10:00:00Z |"
-  cp "$target/fast-track-ai/INDEX.md" "$work/handoff-index-before.md"
-  write_handoff_no_actions "$target/fast-track-ai/handoffs/2026-09-20-100000Z-third.md" "2026-09-20T10:00:00Z" "third-new"
+  assert_contains "$target/on-track/INDEX.md" "| 2026-09-20-100000Z-third | 2026-09-20T10:00:00Z |"
+  cp "$target/on-track/INDEX.md" "$work/handoff-index-before.md"
+  write_handoff_no_actions "$target/on-track/handoffs/2026-09-20-100000Z-third.md" "2026-09-20T10:00:00Z" "third-new"
   expect_failure "handoff missing next actions" "$index_script" "$target"
   assert_contains "$work/failure.err" "missing heading ## Next actions"
-  cmp "$work/handoff-index-before.md" "$target/fast-track-ai/INDEX.md" || fail "rejected handoff changed INDEX.md"
+  cmp "$work/handoff-index-before.md" "$target/on-track/INDEX.md" || fail "rejected handoff changed INDEX.md"
   pass "handoff active window"
 }
 
 run_spec() {
   missing="$work/spec-missing"
   write_intent "$missing" "001-example" "draft"
-  write_tasks "$missing/fast-track-ai/tracks/001-example/tasks.md" "approved" "x"
+  write_tasks "$missing/on-track/tracks/001-example/tasks.md" "approved" "x"
   expect_failure "gate without spec.md" "$gate" --track 001-example --root "$missing"
 
   leftover="$work/spec-leftover-dir"
   write_intent "$leftover" "002-example" "draft"
-  mkdir -p "$leftover/fast-track-ai/tracks/002-example/spec"
-  printf '# Spec\n' >"$leftover/fast-track-ai/tracks/002-example/spec/spec.md"
-  write_tasks "$leftover/fast-track-ai/tracks/002-example/spec/tasks.md" "approved" "x"
+  mkdir -p "$leftover/on-track/tracks/002-example/spec"
+  printf '# Spec\n' >"$leftover/on-track/tracks/002-example/spec/spec.md"
+  write_tasks "$leftover/on-track/tracks/002-example/spec/tasks.md" "approved" "x"
   expect_failure "gate with spec/ and no root spec.md" "$gate" --track 002-example --root "$leftover"
   assert_contains "$work/failure.out" "loose files outside assets/: spec"
 
   ok="$work/spec-ok"
   write_intent "$ok" "003-example" "draft"
-  write_spec "$ok/fast-track-ai/tracks/003-example/spec.md" "approved"
-  write_tasks "$ok/fast-track-ai/tracks/003-example/tasks.md" "approved" "x"
+  write_spec "$ok/on-track/tracks/003-example/spec.md" "approved"
+  write_tasks "$ok/on-track/tracks/003-example/tasks.md" "approved" "x"
   "$gate" --track 003-example --root "$ok" >/dev/null
 
-  sed -i.bak 's/^id: 003-example$/id: 004-other/' "$ok/fast-track-ai/tracks/003-example/intent.md"
+  sed -i.bak 's/^id: 003-example$/id: 004-other/' "$ok/on-track/tracks/003-example/intent.md"
   expect_failure "gate with mismatched intent id" "$gate" --mode structure --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "intent id mismatch: 004-other"
-  mv "$ok/fast-track-ai/tracks/003-example/intent.md.bak" "$ok/fast-track-ai/tracks/003-example/intent.md"
+  mv "$ok/on-track/tracks/003-example/intent.md.bak" "$ok/on-track/tracks/003-example/intent.md"
 
-  cat >"$ok/fast-track-ai/tracks/003-example/spec.md" <<'EOF'
+  cat >"$ok/on-track/tracks/003-example/spec.md" <<'EOF'
 ---
 status: draft
 ---
@@ -1773,8 +1969,8 @@ EOF
   expect_failure "gate with no spec phases" "$gate" --mode structure --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "spec has no ### Phase section"
 
-  write_spec "$ok/fast-track-ai/tracks/003-example/spec.md" "draft"
-  cat >>"$ok/fast-track-ai/tracks/003-example/spec.md" <<'EOF'
+  write_spec "$ok/on-track/tracks/003-example/spec.md" "draft"
+  cat >>"$ok/on-track/tracks/003-example/spec.md" <<'EOF'
 
 ### Phase 2: empty accept
 Done: fixture done
@@ -1784,8 +1980,8 @@ EOF
   expect_failure "gate with empty second phase Accept" "$gate" --mode structure --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "Phase 2: empty accept missing or empty Accept:"
 
-  write_spec "$ok/fast-track-ai/tracks/003-example/spec.md" "draft"
-  cat >"$ok/fast-track-ai/tracks/003-example/tasks.md" <<'EOF'
+  write_spec "$ok/on-track/tracks/003-example/spec.md" "draft"
+  cat >"$ok/on-track/tracks/003-example/tasks.md" <<'EOF'
 ---
 status: draft
 ---
@@ -1795,14 +1991,14 @@ EOF
   expect_failure "gate with no task lines" "$gate" --mode structure --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "tasks file has no task lines"
 
-  write_tasks "$ok/fast-track-ai/tracks/003-example/tasks.md" "draft" " "
-  cat >>"$ok/fast-track-ai/tracks/003-example/tasks.md" <<'EOF'
+  write_tasks "$ok/on-track/tracks/003-example/tasks.md" "draft" " "
+  cat >>"$ok/on-track/tracks/003-example/tasks.md" <<'EOF'
 - [ ] Missing Validate. Files: fixture
 EOF
   expect_failure "gate with task missing Validate" "$gate" --mode structure --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "line 9 task missing or empty Validate:"
 
-  cat >"$ok/fast-track-ai/tracks/003-example/tasks.md" <<'EOF'
+  cat >"$ok/on-track/tracks/003-example/tasks.md" <<'EOF'
 ---
 status: draft
 ---
@@ -1812,7 +2008,7 @@ EOF
   expect_failure "gate with unknown group dependency" "$gate" --mode structure --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "group A has unknown dependency Missing"
 
-  cat >"$ok/fast-track-ai/tracks/003-example/tasks.md" <<'EOF'
+  cat >"$ok/on-track/tracks/003-example/tasks.md" <<'EOF'
 ---
 status: draft
 ---
@@ -1822,7 +2018,7 @@ EOF
   expect_failure "gate with self-dependent group" "$gate" --mode structure --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "group A depends on itself"
 
-  cat >"$ok/fast-track-ai/tracks/003-example/tasks.md" <<'EOF'
+  cat >"$ok/on-track/tracks/003-example/tasks.md" <<'EOF'
 ---
 status: draft
 ---
@@ -1834,7 +2030,7 @@ EOF
   expect_failure "gate with duplicate group names" "$gate" --mode structure --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "duplicate group name A"
 
-  cat >"$ok/fast-track-ai/tracks/003-example/tasks.md" <<'EOF'
+  cat >"$ok/on-track/tracks/003-example/tasks.md" <<'EOF'
 ---
 status: draft
 ---
@@ -1846,7 +2042,7 @@ EOF
   expect_failure "gate with dependency cycle" "$gate" --mode structure --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "dependency cycle involving"
 
-  cat >"$ok/fast-track-ai/tracks/003-example/tasks.md" <<'EOF'
+  cat >"$ok/on-track/tracks/003-example/tasks.md" <<'EOF'
 ---
 status: draft
 ---
@@ -1857,7 +2053,7 @@ EOF
   expect_failure "gate with task before first group" "$gate" --mode structure --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "task appears before first group header"
 
-  cat >"$ok/fast-track-ai/tracks/003-example/tasks.md" <<'EOF'
+  cat >"$ok/on-track/tracks/003-example/tasks.md" <<'EOF'
 ---
 status: draft
 ---
@@ -1868,15 +2064,15 @@ EOF
   expect_failure "gate completion with ungrouped tasks" "$gate" --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "tasks.md has no group header"
 
-  write_tasks "$ok/fast-track-ai/tracks/003-example/tasks.md" "draft" "x"
+  write_tasks "$ok/on-track/tracks/003-example/tasks.md" "draft" "x"
   "$gate" --mode structure --track 003-example --root "$ok" >/dev/null
 
-  write_plan "$ok/fast-track-ai/tracks/003-example/plan.md" "approved"
+  write_plan "$ok/on-track/tracks/003-example/plan.md" "approved"
   expect_failure "gate with root plan.md" "$gate" --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "loose files outside assets/: plan.md"
-  rm "$ok/fast-track-ai/tracks/003-example/plan.md"
+  rm "$ok/on-track/tracks/003-example/plan.md"
 
-  root_dir="$ok/fast-track-ai/tracks/003-example"
+  root_dir="$ok/on-track/tracks/003-example"
   for hidden_name in .notes .DS_Store; do
     printf 'hidden\n' >"$root_dir/$hidden_name"
     expect_failure "gate with hidden root entry $hidden_name" "$gate" --mode structure --track 003-example --root "$ok"
@@ -1910,9 +2106,9 @@ EOF
   expect_failure "gate with root decisions.md" "$gate" --mode structure --track 003-example --root "$ok"
   assert_contains "$work/failure.out" "loose files outside assets/: decisions.md"
   rm "$root_dir/decisions.md"
-  spec_skill="$repo_root/skills/ft-spec/SKILL.md"
-  spec_template="$repo_root/skills/ft-spec/assets/spec.md"
-  tasks_template="$repo_root/skills/ft-spec/assets/tasks.md"
+  spec_skill="$repo_root/skills/ot-spec/SKILL.md"
+  spec_template="$repo_root/skills/ot-spec/assets/spec.md"
+  tasks_template="$repo_root/skills/ot-spec/assets/tasks.md"
   assert_contains "$spec_skill" 'Done:'
   assert_contains "$spec_skill" 'Accept:'
   assert_contains "$spec_skill" '(Phase N)'
@@ -1926,7 +2122,7 @@ EOF
 
   from_template="$work/spec-from-template"
   write_intent "$from_template" "005-template" "draft"
-  base_dir="$from_template/fast-track-ai/tracks/005-template"
+  base_dir="$from_template/on-track/tracks/005-template"
   sed 's/NNN-slug/005-template/g' "$spec_template" >"$base_dir/spec.md"
   sed -i.bak $'s/^Done:$/Done: phase two delivered state/; s/^Files:$/Files: fixture/; s/^Accept:$/Accept: run true, expect exit 0/' "$base_dir/spec.md"
   rm -f "$base_dir/spec.md.bak"
@@ -1936,13 +2132,63 @@ EOF
 }
 
 run_flow() {
-  intent_skill="$repo_root/skills/ft-intent/SKILL.md"
-  spec_skill="$repo_root/skills/ft-spec/SKILL.md"
-  implement_skill="$repo_root/skills/ft-implement/SKILL.md"
-  tasks_template="$repo_root/skills/ft-spec/assets/tasks.md"
+  intent_skill="$repo_root/skills/ot-intent/SKILL.md"
+  spec_skill="$repo_root/skills/ot-spec/SKILL.md"
+  implement_skill="$repo_root/skills/ot-implement/SKILL.md"
+  tasks_template="$repo_root/skills/ot-spec/assets/tasks.md"
+  signal_snippet="$repo_root/skills/ot-init/assets/AGENTS-snippet.md"
+  for signal_file in "$signal_snippet" "$intent_skill" "$spec_skill" "$implement_skill"; do
+    for contract_text in 'read as plain text' 'a message that only means proceed' 'a message that only means stop' 'an ambiguous one included'; do
+      assert_contains "$signal_file" "$contract_text"
+    done
+    assert_not_contains "$signal_file" "pode continuar"
+  done
+  assert_contains "$signal_snippet" 'change no `status`, delete nothing, and undo no code'
+  assert_contains "$signal_snippet" 'resumes when the user asks for that stage again'
+  assert_contains "$signal_snippet" "keep the host's question tool for questions"
+  assert_contains "$signal_snippet" 'In every lane the method never commits, pushes, or deploys on its own'
+  assert_contains "$signal_snippet" 'Ship only marks the track `shipped`'
+  assert_contains "$signal_snippet" 'happens only when the user asks for it, an approved task included'
+  assert_contains "$intent_skill" 'Change no `status` and delete nothing'
+  assert_contains "$spec_skill" 'Leave `spec.md` and `tasks.md` in `draft` and delete nothing'
+  assert_contains "$implement_skill" 'keep the implemented code'
+  for contract_text in 'investigate first' 'ask only blocking questions' 'one round per stage, at most four' 'your recommendation first' '"you decide"' '**Off Road** is the consulted way onto the Highway' "until that track's spec is approved" 'does not turn Off Road back on unless the user asks again' 'within the same cap' 'Off Road adds no field to any artifact and does not carry across sessions' 'a new session starts with it off until the user asks again' 'even when a handoff quotes the earlier request'; do
+    assert_contains "$signal_snippet" "$contract_text"
+  done
+  assert_not_contains "$signal_snippet" 'until the conversation ends'
+  assert_not_contains "$signal_snippet" 'the implement review asks before fixing'
+  for contract_text in 'Ask every blocking question in one round, at most four' 'names the decision it unlocks' 'your recommendation first' 'marked `(delegated)`' 'There is one round in this stage' 'In Off Road' "until that track's spec is approved" 'A decision the user delegated is the other entry allowed there' 'Off Road adds no field to any artifact and does not carry across sessions' 'a new session starts with it off until the user asks again' 'even when a handoff quotes the earlier request'; do
+    assert_contains "$intent_skill" "$contract_text"
+  done
+  assert_not_contains "$intent_skill" 'until the conversation ends'
+  for contract_text in 'ask in rounds of at most four' 'marked `(delegated)`' 'Without delegation, do not invent answers to either kind' 'list delegated decisions so the user can veto them' 'In Off Road' 'until this spec is approved' 'Approval ends Off Road' 'Off Road adds no field to any artifact and does not carry across sessions' 'a new session starts with it off until the user asks again' 'even when a handoff quotes the earlier request'; do
+    assert_contains "$spec_skill" "$contract_text"
+  done
+  assert_not_contains "$spec_skill" 'until the conversation ends'
+  for mode_free_file in "$repo_root/skills/ot-intent/assets/intent.md" "$repo_root/skills/ot-spec/assets/spec.md" "$repo_root/skills/ot-spec/assets/tasks.md" "$repo_root/skills/ot-handoff/SKILL.md"; do
+    assert_not_contains "$mode_free_file" 'Off Road'
+  done
+  while IFS= read -r mode_free_file; do
+    assert_not_contains "$mode_free_file" 'Off Road'
+  done < <(find "$repo_root/skills/ot-handoff/assets" -type f)
+  for question_file in "$intent_skill" "$spec_skill"; do
+    assert_not_contains "$question_file" 'three focused questions'
+    assert_not_contains "$question_file" 'at most three per pass'
+  done
+  while IFS= read -r question_file; do
+    assert_not_contains "$question_file" 'three focused questions'
+    assert_not_contains "$question_file" 'at most three per pass'
+  done < <(find "$repo_root/commands" -type f)
   assert_contains "$intent_skill" ". para continuar com a spec"
   assert_contains "$spec_skill" ". para implementar"
   assert_contains "$implement_skill" ". para ship"
+  assert_contains "$implement_skill" 'Ship ends there: do not commit, push, or deploy unless the user asks'
+  for contract_text in 'whose fix stays within the spec Files' 'leave every other finding open' 'assets/review.md' 'Severity | Finding | Location | Disposition' '`fixed` or `open`' 'naming each open `[important]`'; do
+    assert_contains "$implement_skill" "$contract_text"
+  done
+  assert_not_contains "$implement_skill" 'finding or list it as open'
+  assert_not_contains "$implement_skill" 'Off Road'
+  assert_not_contains "$implement_skill" 'fix only the ones the user chooses'
   assert_contains "$implement_skill" "Delegate proportionally"
   assert_contains "$implement_skill" "each delegated task gets its own subagent"
   assert_not_contains "$implement_skill" "one task per agent"
@@ -1957,21 +2203,30 @@ run_flow() {
   assert_not_contains "$implement_skill" "pointer; do not vendor"
   assert_contains "$tasks_template" "## Group"
   assert_contains "$tasks_template" "(depends:"
-  for routing_file in "$intent_skill" "$repo_root/skills/ft-init/assets/AGENTS-snippet.md"; do
-    for contract_text in 'splitting compound requests' 'before allocating anything' 'handle each part in its own lane' 'naming `ft-intent` or asking for a track or intent selects the full cycle' 'asking to do it directly or without a track selects the direct lane' 'the request states what to build, with no open question that changes it' 'explicit choice wins in both directions' 'at most three files' 'no public contract (API, CLI flags, schema, consumed file format)' 'persisted data or migration' 'security control (authentication, authorization, secrets, permissions)' 'dependency (add, upgrade, remove)' 'reverting the diff alone' 'no data backfill or external side effect' 'Say in one sentence that the change takes the direct lane' 'implement, run the check, and report the change and result' 'any edit where a direct criterion is uncertain' 'one existing command or one observable check' 'stop before the edit that breaks it' 'name the failed criterion' 'start the full cycle with `ft-intent`' 'never record it inside a track' 'Create no track or file under' 'do not regenerate the index' 'file only that ADR and regenerate the index' 'method never commits on its own'; do
+  for routing_file in "$intent_skill" "$repo_root/skills/ot-init/assets/AGENTS-snippet.md"; do
+    for contract_text in 'splitting compound requests' 'before allocating anything' 'handle each part in its own lane' 'naming `ot-intent` or asking for a track or intent selects the Highway' 'asking to do it directly or without a track selects the Express lane' 'the request states what to build, with no open question that changes it' 'explicit choice wins in both directions' 'at most three files' 'no public contract (API, CLI flags, schema, consumed file format)' 'persisted data or migration' 'security control (authentication, authorization, secrets, permissions)' 'dependency (add, upgrade, remove)' 'reverting the diff alone' 'no data backfill or external side effect' 'Say in one sentence that the change takes the Express lane' 'implement, run the check, write a crumb, and report the change and result' 'any edit where an Express criterion is uncertain' 'one existing command or one observable check' 'stop before the edit that breaks it' 'name the failed criterion' 'start the Highway with `ot-intent`' 'never record it inside a track' 'Apart from the crumb, create no track or file under' 'do not regenerate the index' 'file only that ADR and regenerate the index' 'method never commits on its own' 'The Highway runs intent, spec, implement, and ship, and is the default'; do
       assert_contains "$routing_file" "$contract_text"
     done
   done
-  assert_contains "$repo_root/commands/ft-intent.md" 'Split compound requests'
+  for routing_file in "$intent_skill" "$repo_root/skills/ot-init/assets/AGENTS-snippet.md"; do
+    for contract_text in 'The crumb is the note for the maintainer' 'a YAML block list, one path per line' 'on-track/crumbs/<YYYY-MM-DD-HHMMSSZ>-<slug>.md' 'Write it after the check, pass or fail' 'Frontmatter: `created` (UTC, ISO 8601) and `files`' '## Request' '## Cause' '## Changes' '## Verification' 'create it holding the single line `*`' 'reverse your own edits hunk by hunk' 'delete its crumb' 'read the crumbs oldest first' 'no longer differ from `HEAD`'; do
+      assert_contains "$routing_file" "$contract_text"
+    done
+  done
+  for routing_file in "$intent_skill" "$repo_root/skills/ot-init/assets/AGENTS-snippet.md" "$repo_root/commands/ot-intent.md"; do
+    assert_not_contains "$routing_file" 'direct lane'
+    assert_not_contains "$routing_file" 'full cycle'
+  done
+  assert_contains "$repo_root/commands/ot-intent.md" 'Split compound requests'
   assert_contains "$intent_skill" 'If reached without the user naming this skill'
-  assert_contains "$repo_root/skills/ft-init/assets/AGENTS-snippet.md" 'before looking for a track or supporting artifact'
-  assert_contains "$repo_root/skills/ft-init/assets/AGENTS-snippet.md" 'never scan the whole tree for discovery'
-  assert_contains "$repo_root/skills/ft-init/assets/AGENTS-snippet.md" 'Full-cycle implementation requires'
+  assert_contains "$repo_root/skills/ot-init/assets/AGENTS-snippet.md" 'before looking for a track or supporting artifact'
+  assert_contains "$repo_root/skills/ot-init/assets/AGENTS-snippet.md" 'never scan the whole tree for discovery'
+  assert_contains "$repo_root/skills/ot-init/assets/AGENTS-snippet.md" 'Highway implementation requires'
   assert_contains "$intent_skill" 'exactly one of four lists'
-  assert_contains "$repo_root/skills/ft-intent/assets/intent.md" 'each with the path or command that showed it'
+  assert_contains "$repo_root/skills/ot-intent/assets/intent.md" 'each with the path or command that showed it'
   assert_contains "$implement_skill" 'and `Verified by the agent` fact as given'
   assert_contains "$implement_skill" 'a verified fact'
-  intent_template="$repo_root/skills/ft-intent/assets/intent.md"
+  intent_template="$repo_root/skills/ot-intent/assets/intent.md"
   for heading in '### From the user' '### Proposed by the agent'; do
     assert_contains "$intent_template" "$heading"
   done
@@ -1992,7 +2247,7 @@ run_flow() {
 
 check_no_live_active() {
   package_root="$1"
-  for live_file in "$package_root"/skills/ft-*/SKILL.md "$package_root"/skills/ft-*/assets/* "$package_root"/commands/ft-*.md; do
+  for live_file in "$package_root"/skills/ot-*/SKILL.md "$package_root"/skills/ot-*/assets/* "$package_root"/commands/ot-*.md; do
     [ -f "$live_file" ] || continue
     assert_not_contains "$live_file" 'status: active'
   done
@@ -2005,12 +2260,12 @@ run_active() {
   "$init_script" "$active_target" >/dev/null
   write_intent "$active_target" "001-example" "draft"
   "$index_script" "$active_target" >/dev/null
-  cp "$active_target/fast-track-ai/INDEX.md" "$work/index-before-active-intent.md"
+  cp "$active_target/on-track/INDEX.md" "$work/index-before-active-intent.md"
   write_intent "$active_target" "001-example" "active"
   expect_failure "index with active intent" "$index_script" "$active_target"
   assert_contains "$work/failure.err" "001-example invalid status: active"
   assert_contains "$work/failure.err" "INDEX not updated"
-  cmp "$work/index-before-active-intent.md" "$active_target/fast-track-ai/INDEX.md" || fail "active intent changed INDEX.md"
+  cmp "$work/index-before-active-intent.md" "$active_target/on-track/INDEX.md" || fail "active intent changed INDEX.md"
   pass "active status rejected"
 }
 
@@ -2019,7 +2274,7 @@ expect_index_frontmatter_rejection() {
   expected="$2"
   expect_failure "index rejecting frontmatter: $expected" "$index_script" "$target_root"
   assert_contains "$work/failure.err" "$expected"
-  cmp "$work/frontmatter-index.before" "$target_root/fast-track-ai/INDEX.md" || fail "frontmatter rejection changed INDEX.md"
+  cmp "$work/frontmatter-index.before" "$target_root/on-track/INDEX.md" || fail "frontmatter rejection changed INDEX.md"
 }
 
 expect_gate_frontmatter_rejection() {
@@ -2032,12 +2287,12 @@ expect_gate_frontmatter_rejection() {
 run_frontmatter() {
   target="$work/frontmatter-target"
   "$init_script" "$target" >/dev/null
-  track_dir="$target/fast-track-ai/tracks/001-front"
+  track_dir="$target/on-track/tracks/001-front"
   intent="$track_dir/intent.md"
   write_intent "$target" "001-front" "draft"
   write_spec "$track_dir/spec.md" "draft"
   write_tasks "$track_dir/tasks.md" "draft" " "
-  research="$target/fast-track-ai/research/front-research.md"
+  research="$target/on-track/research/front-research.md"
   cat >"$research" <<'EOF'
 ---
 captured: 2026-09-20
@@ -2063,12 +2318,12 @@ Fixture.
 EOF
   "$index_script" "$target" >/dev/null
   "$gate" --mode structure --track 001-front --root "$target" >/dev/null
-  cp "$target/fast-track-ai/INDEX.md" "$work/frontmatter-index.before"
+  cp "$target/on-track/INDEX.md" "$work/frontmatter-index.before"
   cp "$intent" "$work/frontmatter-intent.good"
   cp "$research" "$work/frontmatter-research.good"
   cp "$track_dir/spec.md" "$work/frontmatter-spec.good"
   cp "$track_dir/tasks.md" "$work/frontmatter-tasks.good"
-  gate_intent="fast-track-ai/tracks/001-front/intent.md"
+  gate_intent="on-track/tracks/001-front/intent.md"
 
   printf -- '---\nid: 001-front\nstatus: draft\n' >"$intent"
   expect_index_frontmatter_rejection "$target" "001-front/intent.md frontmatter not closed"
@@ -2092,40 +2347,176 @@ EOF
   cp "$work/frontmatter-research.good" "$research"
 
   awk '{ print } $0 == "status: draft" { print "status: approved" }' "$work/frontmatter-spec.good" >"$track_dir/spec.md"
-  expect_gate_frontmatter_rejection "$target" "FAIL: fast-track-ai/tracks/001-front/spec.md duplicate frontmatter field status"
+  expect_gate_frontmatter_rejection "$target" "FAIL: on-track/tracks/001-front/spec.md duplicate frontmatter field status"
   cp "$work/frontmatter-spec.good" "$track_dir/spec.md"
 
   printf -- '---\nstatus: draft\n' >"$track_dir/tasks.md"
-  expect_gate_frontmatter_rejection "$target" "FAIL: fast-track-ai/tracks/001-front/tasks.md frontmatter not closed"
+  expect_gate_frontmatter_rejection "$target" "FAIL: on-track/tracks/001-front/tasks.md frontmatter not closed"
   cp "$work/frontmatter-tasks.good" "$track_dir/tasks.md"
 
   "$index_script" "$target" >/dev/null
   "$gate" --mode structure --track 001-front --root "$target" >/dev/null
 
   template_count=0
-  for template in "$repo_root"/skills/ft-*/assets/*; do
+  for template in "$repo_root"/skills/ot-*/assets/*; do
     [ -f "$template" ] || continue
     [ "$(head -n 1 "$template")" = "---" ] || continue
     template_count=$((template_count + 1))
-    cp "$template" "$target/fast-track-ai/research/template-check.md"
+    cp "$template" "$target/on-track/research/template-check.md"
     "$index_script" "$target" >/dev/null 2>"$work/template-check.err" || true
     if grep -Eq 'frontmatter not closed|duplicate frontmatter field|frontmatter line [0-9]+ is not a key: value field' "$work/template-check.err"; then
       fail "template frontmatter violates the canonical subset: $template"
     fi
   done
-  rm "$target/fast-track-ai/research/template-check.md"
+  rm "$target/on-track/research/template-check.md"
   [ "$template_count" -gt 0 ] || fail "no frontmatter templates found"
   pass "frontmatter subset"
+}
+
+# Check inline Markdown destinations without traversing generated documentation trees.
+check_markdown_targets() {
+  local page="$1" root="$2" images_only="$3" link target
+  while IFS= read -r link; do
+    case "$link" in
+      ''|'#'*|//*|[[:alpha:]][[:alnum:]+.-]*:*) continue ;;
+    esac
+    target="${link%%#*}"
+    target="${target%%\?*}"
+    case "$target" in
+      /*) target="$root$target" ;;
+      *) target="$(dirname "$page")/$target" ;;
+    esac
+    [ -f "$target" ] || fail "$page has unresolved relative reference: $link"
+  done < <(awk -v images_only="$images_only" '
+    {
+      line = $0
+      pattern = images_only ? "!\\[[^]]*\\]\\([^)]*\\)" : "\\][(][^)]*[)]"
+      while (match(line, pattern)) {
+        link = substr(line, RSTART, RLENGTH)
+        sub(/^.*\][(]/, "", link)
+        sub(/[)]$/, "", link)
+        sub(/[[:space:]]+[\042\047].*$/, "", link)
+        sub(/^</, "", link)
+        sub(/>$/, "", link)
+        print link
+        line = substr(line, RSTART + RLENGTH)
+      }
+    }
+  ' "$page")
+}
+
+run_docs() {
+  local docs_root="$repo_root/docs"
+  local page relative_path field value link target
+  if [ ! -d "$docs_root" ]; then
+    echo "SKIP: docs (no docs directory)"
+    return 0
+  fi
+
+  local language image_file
+  for language in en pt; do
+    assert_dir "$docs_root/images/$language"
+    printf '%s\n' lanes.png lanes.svg support-context.png support-context.svg workflow.png workflow.svg >"$work/images-expected.paths"
+    find "$docs_root/images/$language" -type f | sed "s|^$docs_root/images/$language/||" | LC_ALL=C sort >"$work/images-actual.paths"
+    diff -u "$work/images-expected.paths" "$work/images-actual.paths" || fail "unexpected diagram files for $language"
+    for image_file in "$docs_root/images/$language/"*.svg; do
+      assert_not_matches "$image_file" 'Fast Track AI|fast-track-ai|/ft-'
+    done
+  done
+  image_file="$(find "$docs_root/images" -maxdepth 1 -type f \( -iname '*.svg' -o -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.gif' -o -iname '*.webp' -o -iname '*.avif' -o -iname '*.bmp' -o -iname '*.ico' -o -iname '*.tif' -o -iname '*.tiff' \))"
+  [ -z "$image_file" ] || fail "image files remain at docs/images/ root: $image_file"
+  check_markdown_targets "$repo_root/README.md" "$repo_root" 0
+  assert_file "$repo_root/README.pt-BR.md"
+  check_markdown_targets "$repo_root/README.pt-BR.md" "$repo_root" 0
+
+  assert_not_file "$docs_root/technical-guide.md"
+  assert_dir "$docs_root/pt"
+  assert_file "$docs_root/.vitepress/config.ts"
+  (
+    cd "$docs_root"
+    find . \( -path './pt' -o -path './node_modules' -o -path './.vitepress' -o -path './images' \) -prune -o -type f -name '*.md' -print | LC_ALL=C sort
+  ) >"$work/docs-en.paths"
+  (
+    cd "$docs_root/pt"
+    find . \( -path './node_modules' -o -path './.vitepress' -o -path './images' \) -prune -o -type f -name '*.md' -print | LC_ALL=C sort
+  ) >"$work/docs-pt.paths"
+  if ! diff -u "$work/docs-en.paths" "$work/docs-pt.paths"; then
+    fail "docs page parity differs between English and pt-BR"
+  fi
+
+  while IFS= read -r relative_path; do
+    for page in "$docs_root/${relative_path#./}" "$docs_root/pt/${relative_path#./}"; do
+      check_markdown_targets "$page" "$docs_root" 1
+      # Require an opening and closing delimiter before reading scalar fields.
+      awk 'NR == 1 && $0 != "---" { exit 1 } NR > 1 && $0 == "---" { closed = 1; exit } END { if (!closed) exit 1 }' "$page" || fail "$page has missing or unclosed frontmatter"
+      for field in title description; do
+        value="$(frontmatter_field "$page" "$field")"
+        value="$(printf '%s\n' "$value" | sed 's/[[:space:]]*#.*$//; s/^[[:space:]]*//; s/[[:space:]]*$//')"
+        case "$value" in
+          ''|'""'|"''"|'null'|'~'|'|'|'>') fail "$page has empty frontmatter field: $field" ;;
+        esac
+      done
+      assert_not_matches "$page" 'ft-(init|intent|spec|implement|research|assess|handoff)|—'
+      assert_not_matches "$page" '^files: \['
+      case "${relative_path#./}" in
+        getting-started/migrating.md|getting-started/installation.md) ;;
+        *) assert_not_contains "$page" 'fast-track-ai' ;;
+      esac
+
+      # Inspect inline Markdown destinations, including optional fragments.
+      while IFS= read -r link; do
+        case "$link" in
+          //*|[[:alpha:]][[:alnum:]+.-]*:*) continue ;;
+        esac
+        target="${link%%#*}"
+        case "$target" in
+          /*) target="$docs_root$target" ;;
+          *) target="$(dirname "$page")/$target" ;;
+        esac
+        [ -f "$target" ] || fail "$page has unresolved Markdown link: $link"
+      done < <(awk '
+        {
+          line = $0
+          while (match(line, /\]\([^)]*\.md(#[^)]*)?\)/)) {
+            print substr(line, RSTART + 2, RLENGTH - 3)
+            line = substr(line, RSTART + RLENGTH)
+          }
+        }
+      ' "$page")
+    done
+  done <"$work/docs-en.paths"
+
+  while IFS= read -r link; do
+    target="${link%%#*}"
+    case "$target" in
+      */) target="${target}index.md" ;;
+      *.md) ;;
+      *) target="${target}.md" ;;
+    esac
+    [ -f "$docs_root$target" ] || fail "docs/.vitepress/config.ts has unresolved link: $link"
+  done < <(awk '
+    {
+      line = $0
+      while (match(line, /link:[[:space:]]*\047\/[^\047]*\047/)) {
+        link = substr(line, RSTART, RLENGTH)
+        sub(/^[^\047]*\047/, "", link)
+        sub(/\047$/, "", link)
+        print link
+        line = substr(line, RSTART + RLENGTH)
+      }
+    }
+  ' "$docs_root/.vitepress/config.ts")
+  pass "docs"
 }
 
 run_isolation() {
   iso="$work/isolation"
   mkdir -p "$iso"
-  for item in skills commands install.sh AGENTS.md README.md evals; do
+  for item in skills commands install.sh AGENTS.md README.md README.pt-BR.md evals; do
     cp -R "$repo_root/$item" "$iso/$item"
   done
-  [ ! -e "$iso/fast-track-ai" ] || fail "isolation copy unexpectedly contains fast-track-ai/"
-  FAST_TRACK_AI_ISOLATION_GUARD=1 bash "$iso/evals/run-evals.sh" all >/dev/null
+  [ ! -e "$iso/on-track" ] || fail "isolation copy unexpectedly contains on-track/"
+  ON_TRACK_ISOLATION_GUARD=1 bash "$iso/evals/run-evals.sh" all >/dev/null
   pass "isolation"
 }
 
@@ -2145,14 +2536,15 @@ run_case() {
     flow) run_flow ;;
     active) run_active ;;
     frontmatter) run_frontmatter ;;
+    docs) run_docs ;;
     isolation) run_isolation ;;
     *) fail "unknown eval: $1" ;;
   esac
 }
 
 if [ "$mode" = "all" ]; then
-  for eval_name in self init index approval install resources workflows refs decisions handoff spec flow active frontmatter isolation; do
-    if [ "$eval_name" = "isolation" ] && [ "${FAST_TRACK_AI_ISOLATION_GUARD:-}" = "1" ]; then
+  for eval_name in self init index approval install resources workflows refs decisions handoff spec flow active frontmatter docs isolation; do
+    if [ "$eval_name" = "isolation" ] && [ "${ON_TRACK_ISOLATION_GUARD:-}" = "1" ]; then
       continue
     fi
     run_case "$eval_name"

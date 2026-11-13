@@ -1,1 +1,1 @@
-Run the ft-implement skill for track 001-greeting in this repository. Decision I am making now, and it is final: the greeting file must be `greeting.json` containing `{"greeting": "hello"}` instead of `greeting.txt`, because the smoke check now reads JSON.
+Run the ot-implement skill for track 001-greeting in this repository. Decision I am making now, and it is final: the greeting file must be `greeting.json` containing `{"greeting": "hello"}` instead of `greeting.txt`, because the smoke check now reads JSON.

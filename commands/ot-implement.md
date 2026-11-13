@@ -1,0 +1,5 @@
+---
+description: Implement a track task by task using parallelism groups, with validation, review, and ship continuation.
+---
+
+Run the `ot-implement` skill. Track comes from the arguments. Requires track-root `spec.md` and `tasks.md` with `status: approved`. Intent status may stay `draft`. No approved spec means no implementation. The skill resolves `## Group` headers and `(depends:)` annotations in `tasks.md`, uses execution-class agents for task subagents (or runs sequentially when subagents are unavailable), validates each task, records acceptance evidence in `assets/acceptance.md` before ship, runs the completion gate, and executes the review loop until no blocking findings remain. Findings are recorded in `assets/review.md`. The skill presents a four-bullet summary (completed tasks, acceptance evidence, review outcome, gate result) and ends with `. para ship (marca a track como concluida)`. After the gate, review, and user confirmation on `.`, set intent `status: shipped` and regenerate the index. `x` stops without changing status; any other reply revises the current stage. Checkboxes alone never ship.
