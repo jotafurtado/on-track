@@ -13,6 +13,7 @@ On Track Method (package `on-track`), a lightweight agent-driven SDLC. Binding n
 - `openspec/` - local-only maintainer specs and change history; ignored by Git, not part of the published package
 - `docs/` - public documentation site source: English at the root, pt-BR mirror under `pt/`, VitePress config under `.vitepress/`, images under `images/`; `README.md` is the short user entry point in English, with `README.pt-BR.md` as its Brazilian Portuguese mirror
 - `.archive/` - frozen history of how the package was first built; nothing live reads it
+- `.github/workflows/docs.yml` - builds the VitePress site and publishes it to GitHub Pages (`https://jotafurtado.github.io/on-track/`) on every push to `main` that touches `docs/`
 - `evals/` - the self-contained maintainer eval suite (`run-evals.sh`, `evals.md`) plus the optional Kiro, Claude Code, and Codex agent-eval runner (`run-agent-evals.sh`, `agent/`); not shipped by `install.sh`
 
 Skills run against the target repo `on-track/` tree using scripts and templates bundled in this package. No machine-fixed paths. Only `ot-init` installs anything, through its own script path.

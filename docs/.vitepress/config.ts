@@ -101,8 +101,10 @@ const portugueseNav: DefaultTheme.NavItem[] = [
 export default defineConfig({
   title: 'On Track Method',
   description: 'A lightweight, agent-driven software development life cycle.',
+  base: '/on-track/',
   srcExclude: ['**/node_modules/**'],
   themeConfig: {
+    socialLinks: [{ icon: 'github', link: 'https://github.com/jotafurtado/on-track' }],
     search: {
       provider: 'local',
       options: {
