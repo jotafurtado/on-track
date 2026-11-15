@@ -5,7 +5,7 @@ date: YYYY-MM-DD
 owner: maintainer
 ---
 
-# ADR: NNN-slug
+# ADR: short title
 
 ## Context
 What was at stake.

@@ -4,12 +4,13 @@ On Track Method (package `on-track`), a lightweight agent-driven SDLC. Binding n
 
 ## Map
 
-- `commands/` - slash commands, 1 file per command (`ot-init`, `ot-intent`, `ot-spec`, `ot-implement`, `ot-research`, `ot-assess`, `ot-handoff`)
+- `commands/` - slash commands, 1 file per command (`ot-init`, `ot-intent`, `ot-spec`, `ot-implement`, `ot-research`, `ot-assess`, `ot-handoff`, `ot-doctor`)
 - `skills/ot-*/SKILL.md` - procedure each command runs
 - `skills/ot-init/` - SKILL.md plus `scripts/` (`on-track-init.sh`, `on-track-index.sh`) plus `assets/AGENTS-snippet.md`
 - `skills/ot-intent/` - SKILL.md plus `assets/` (`intent.md`, `ref.md`)
 - `skills/ot-spec/` - SKILL.md plus `scripts/on-track-gate.sh` plus `assets/` (`spec.md`, `tasks.md`, `decisions.md`)
 - `skills/ot-assess/`, `skills/ot-research/`, and `skills/ot-handoff/` - each owns its SKILL.md and artifact template; `skills/ot-implement/` owns SKILL.md only
+- `skills/ot-doctor/` - SKILL.md plus `scripts/on-track-doctor.sh`, a read-only diagnosis of a target project; fixes run only after the user confirms. The managed block marker in `skills/ot-init/assets/AGENTS-snippet.md` carries the package version: bump it in every release that changes the block
 - `openspec/` - local-only maintainer specs and change history; ignored by Git, not part of the published package
 - `docs/` - public documentation site source: English at the root, pt-BR mirror under `pt/`, VitePress config under `.vitepress/`, images under `images/`; `README.md` is the short user entry point in English, with `README.pt-BR.md` as its Brazilian Portuguese mirror
 - `.archive/` - frozen history of how the package was first built; nothing live reads it

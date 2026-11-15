@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install the seven On Track Method skills with npx skills or from a checkout, and keep them up to date.
+description: Install the eight On Track Method skills with npx skills or from a checkout, and keep them up to date.
 ---
 
 # Installation
@@ -63,7 +63,7 @@ That directory receives links to the same checkout, not an independent copy.
 
 ## What gets installed
 
-Seven skills, each with the procedure an agent follows and the resources it owns:
+Eight skills, each with the procedure an agent follows and the resources it owns:
 
 | Skill | Owns |
 |---|---|
@@ -74,8 +74,9 @@ Seven skills, each with the procedure an agent follows and the resources it owns
 | `ot-research` | `assets/research.md` |
 | `ot-assess` | `assets/assessment.md` |
 | `ot-handoff` | `assets/handoff.md` |
+| `ot-doctor` | `scripts/on-track-doctor.sh` |
 
-The checkout installation also links seven command wrappers, `commands/ot-init.md` through `commands/ot-handoff.md`. Each one tells the agent to run the skill of the same name. The `ot-*` names are the skill names, not aliases.
+The checkout installation also links eight command wrappers, `commands/ot-init.md` through `commands/ot-doctor.md`. Each one tells the agent to run the skill of the same name. The `ot-*` names are the skill names, not aliases.
 
 The checkout installer writes links to the configured harness directories. Run `ot-init` in a target project to create its `on-track/` tree, managed block, and index (see [Your first track](first-track.md)).
 
@@ -84,6 +85,4 @@ The checkout installer writes links to the configured harness directories. Run `
 - With `npx skills`, run the same `npx skills add` command again to install the current version.
 - With a checkout, pull the repository; the links already point at it. Run `./install.sh` again when skills or commands were added or renamed.
 
-After an update that changes the managed block, run `ot-init` again in each project to refresh the block in `AGENTS.md`. It is idempotent and never duplicates the block.
-
-If you used an older release with other skill names, remove those entries from your harness after reinstalling. Projects created before the rename need the steps in [Migrating from fast-track-ai](migrating.md).
+After an update, the first skill that regenerates the index in a project warns when its managed block in `AGENTS.md` differs from the installed package, for example `project v0.1.0, package v0.2.0`. Then run `ot-doctor` in that project: it lists what is out of date (the block, new folders, files in an old layout), proposes the fixes, and applies them once you confirm.

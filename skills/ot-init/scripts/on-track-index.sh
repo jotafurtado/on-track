@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # on-track-index.sh generates on-track/INDEX.md from frontmatter and validates.
-# Usage: on-track-index.sh [repo-root]. Fails with an objective message on invalid input.
+# Usage: on-track-index.sh [--check] [repo-root]. Fails with an objective message on invalid input.
+# --check validates and reports without writing INDEX.md.
+# A WARN: line on stderr reports a managed block in AGENTS.md that differs from the installed
+# snippet; it never fails the run.
 # Frontmatter uses a canonical subset, not general YAML: line 1 is exactly `---`, the next line
 # that is exactly `---` closes the block, each non-blank line between them is one `key: value`
 # field (key matches [a-z][a-z0-9_]*, value may be empty, a flow list [a, b] is one value), and
@@ -9,14 +12,21 @@ set -euo pipefail
 
 export LC_ALL=C
 
+check_only=no
+if [ "${1:-}" = "--check" ]; then
+  check_only=yes
+  shift
+fi
 root="${1:-.}"
 ai="$root/on-track"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 errors=0
 track_rows=""
 ref_rows=""
 research_rows=""
 assessment_rows=""
 decision_rows=""
+decision_numbers=""
 handoff_rows=""
 
 fail() { echo "ERROR: $1" >&2; errors=$((errors + 1)); }
@@ -105,8 +115,16 @@ validate_flow_list() {
       continue
     fi
     target="$ai/$category/$slug.md"
+    if [ "$category" = "decisions" ] && [ ! -f "$target" ]; then
+      target="$ai/decisions/archive/$slug.md"
+    fi
     [ -f "$target" ] || fail "$(basename "$file") $key references missing $slug"
   done
+}
+
+decision_title() {
+  awk 'NR == 1 && $0 == "---" { fm=1; next } fm && $0 == "---" { fm=0; next } fm { next }
+    /^# ADR: / { sub(/^# ADR: /, ""); gsub(/\|/, "\\|"); print; exit }' "$1"
 }
 
 validate_superseded() {
@@ -129,6 +147,9 @@ validate_superseded() {
     target="$ai/tracks/$replacement/intent.md"
   else
     target="$ai/$category/$replacement.md"
+    if [ "$category" = "decisions" ] && [ ! -f "$target" ]; then
+      target="$ai/decisions/archive/$replacement.md"
+    fi
   fi
   [ -f "$target" ] || fail "$(basename "$file") superseded_by references missing $replacement"
 }
@@ -330,18 +351,40 @@ if [ -d "$ai/decisions" ]; then
     [ -n "$owner" ] || fail "$name missing owner field"
     [ -z "$id" ] || [ "$id" = "$stem" ] || fail "$name id mismatch: $id"
     case "$status" in
-      accepted|superseded) ;;
+      accepted) ;;
+      superseded) fail "$name is superseded; move it to decisions/archive/";;
       *) fail "$name invalid status: ${status:-missing}";;
     esac
-    validate_superseded "$decision" decisions "$stem" "$([ "$status" = "superseded" ] && echo yes || echo no)"
+    validate_superseded "$decision" decisions "$stem" no
     require_heading "$decision" "## Context"
     require_heading "$decision" "## Decision"
     require_heading "$decision" "## Rationale"
     require_heading "$decision" "## Alternatives considered"
     require_heading "$decision" "## Consequences"
-    decision_rows="$decision_rows| $stem | $status |"$'\n'
+    decision_numbers="$decision_numbers${name:0:3}"$'\n'
+    decision_rows="$decision_rows| $stem | $(decision_title "$decision") |"$'\n'
   done
 fi
+
+if [ -d "$ai/decisions/archive" ]; then
+  for decision in "$ai"/decisions/archive/*; do
+    [ -f "$decision" ] || continue
+    name="$(basename "$decision")"
+    stem="${name%.md}"
+    frontmatter_ok "$decision" "archive/$name" || continue
+    id="$(field "$decision" id || true)"
+    status="$(field "$decision" status || true)"
+    [[ "$name" =~ ^[0-9]{3}-[a-z0-9]+(-[a-z0-9]+)*\.md$ ]] || fail "archive/$name invalid decision filename; expected NNN-slug.md"
+    [ -z "$id" ] || [ "$id" = "$stem" ] || fail "archive/$name id mismatch: $id"
+    [ "$status" = "superseded" ] || fail "archive/$name must have status: superseded"
+    validate_superseded "$decision" decisions "$stem" yes
+    decision_numbers="$decision_numbers${name:0:3}"$'\n'
+  done
+fi
+
+while IFS= read -r number; do
+  [ -n "$number" ] && fail "decision number $number is used more than once across decisions/ and decisions/archive/"
+done < <(printf '%s' "$decision_numbers" | grep -E '^[0-9]{3}$' | sort | uniq -d)
 
 captured_epoch() {
   awk -v value="$1" 'BEGIN {
@@ -419,13 +462,41 @@ fi
   printf '\n| ref | type | captured |\n|---|---|---|\n%s' "$ref_rows"
   printf '\n| research | captured |\n|---|---|\n%s' "$research_rows"
   printf '\n| assessment | captured |\n|---|---|\n%s' "$assessment_rows"
-  printf '\n| decision | status |\n|---|---|\n%s' "$decision_rows"
+  printf '\n| decision | title |\n|---|---|\n%s' "$decision_rows"
   printf '\n| handoff | captured |\n|---|---|\n%s' "$handoff_rows"
 } > "$tmp_index"
+
+block_version() {
+  sed -n '1s/^<!-- BEGIN MANAGED BLOCK: on-track \(v[0-9][0-9.]*\)\..*/\1/p'
+}
+
+warn_managed_block() {
+  local agents="$root/AGENTS.md"
+  local snippet="$script_dir/../assets/AGENTS-snippet.md"
+  local block project_version package_version
+  [ -f "$snippet" ] || return 0
+  package_version="$(block_version < "$snippet")"
+  if [ ! -f "$agents" ] || ! grep -q '^<!-- BEGIN MANAGED BLOCK: on-track' "$agents"; then
+    echo "WARN: AGENTS.md has no on-track managed block. Run ot-doctor." >&2
+    return 0
+  fi
+  block="$(awk '/^<!-- BEGIN MANAGED BLOCK: on-track/ { on=1 } on { print } on && /^<!-- END MANAGED BLOCK: on-track -->/ { exit }' "$agents")"
+  [ "$block" = "$(cat "$snippet")" ] && return 0
+  project_version="$(printf '%s\n' "$block" | block_version)"
+  echo "WARN: the on-track managed block in AGENTS.md is outdated (project: ${project_version:-no version}, package: ${package_version:-unknown}). Run ot-doctor to update it." >&2
+}
+
+warn_managed_block
 
 if [ "$errors" -gt 0 ]; then
   echo "INDEX not updated: $errors error(s)." >&2
   exit 1
+fi
+
+if [ "$check_only" = "yes" ]; then
+  rm -f "$tmp_index"
+  echo "INDEX valid at $ai/INDEX.md (check only, not written)"
+  exit 0
 fi
 
 mv "$tmp_index" "$ai/INDEX.md"

@@ -1,9 +1,9 @@
 ---
-title: Por que On Track
+title: Por que On Track?
 description: O problema que o On Track Method resolve, o registro proporcional, a divisão entre decisão humana e execução do agente, e a metáfora por trás dos nomes.
 ---
 
-# Por que On Track
+# Por que On Track?
 
 Esta página responde por que o método existe e por que tem esta forma. As regras estão nas páginas de [Referência](../reference/request-classes.md).
 
@@ -37,7 +37,7 @@ O humano define o rumo e responde os sinais. O agente documenta, planeja, implem
 
 Essa divisão aparece em três lugares:
 
-- **Perguntas.** O agente investiga primeiro e faz só perguntas bloqueadoras, aquelas cuja resposta muda escopo, segurança, persistência, integração externa, arquitetura ou aceite, com a recomendação dele primeiro. O usuário pode delegar qualquer pergunta com "decida você", e toda decisão delegada volta no resumo para veto. Quando o usuário quer mais voz, o Off Road também leva a ele as escolhas do próprio agente, até a spec ser aprovada.
+- **Perguntas.** O agente pergunta só o que o pedido e o contexto do projeto ainda não resolvem, e só perguntas bloqueadoras, aquelas cuja resposta muda escopo, segurança, persistência, integração externa, arquitetura ou aceite, com a recomendação dele primeiro. O usuário pode delegar qualquer pergunta com "decida você", e toda decisão delegada volta no resumo para veto. Em terreno desconhecido, o Off Road também leva ao usuário as escolhas de design do agente, até a spec ser aprovada.
 - **Sinais.** Cada etapa do Highway termina numa parada em que o usuário responde em texto: siga, ajuste ou pare. Nada é aprovado por silêncio nem por verificação que passou. Veja [Sinais](../reference/signals.md).
 - **Commits.** O método nunca faz commit. O commit é do mantenedor.
 
@@ -50,9 +50,7 @@ O nome diz para que serve o método: manter o trabalho do agente nos trilhos, co
 O vocabulário segue uma estrada:
 
 - **Express** é a faixa curta para a mudança que não precisa de paradas.
-- **Highway** é a estrada principal por onde passa toda outra mudança, com três paradas até o ship.
-- **Off Road** é o acesso consultado ao Highway, para pedido que depende de mais decisões do usuário. Ele volta ao Highway quando a spec é aprovada.
+- **Highway** é a estrada principal por onde passa toda outra mudança, com três paradas até a entrega, o ship.
+- **Off Road** é a estrada sem pavimento: o acesso consultado ao Highway para terreno ainda não mapeado, onde se vai mais devagar e se para mais vezes. Ele volta ao Highway quando a spec é aprovada.
 - **Sinais** são verde, amarelo e vermelho, como um semáforo.
 - **Crumbs** são a trilha que uma mudança Express deixa para o commit achar o caminho de volta.
-
-Os motivos por trás de cada uma dessas escolhas estão em [Escolhas de desenho](design-choices.md).

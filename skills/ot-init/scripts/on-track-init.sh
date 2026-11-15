@@ -15,11 +15,11 @@ end_line=0
 
 legacy_found=0
 if [ -e "$target/fast-track-ai" ] || [ -L "$target/fast-track-ai" ]; then
-  echo "FAIL: legacy fast-track-ai/ tree found in $target. Rename it to on-track/, replace fast-track-ai/ with on-track/ in the paths inside its files, then rerun." >&2
+  echo "FAIL: legacy fast-track-ai/ tree found in $target. Rename it to on-track/, replace fast-track-ai/ with on-track/ in the paths inside its files, then rerun, or use the ot-doctor skill to migrate it." >&2
   legacy_found=1
 fi
 if [ -f "$agents" ] && grep -q '^<!-- BEGIN MANAGED BLOCK: fast-track-ai' "$agents"; then
-  echo "FAIL: legacy fast-track-ai managed block found in $target/AGENTS.md. Delete everything from its BEGIN marker to its END marker, then rerun." >&2
+  echo "FAIL: legacy fast-track-ai managed block found in $target/AGENTS.md. Delete everything from its BEGIN marker to its END marker, then rerun, or use the ot-doctor skill to migrate it." >&2
   legacy_found=1
 fi
 if [ "$legacy_found" -eq 1 ]; then
@@ -62,7 +62,7 @@ fi
 
 mkdir -p "$target/on-track/research" "$target/on-track/refs" \
   "$target/on-track/handoffs/archive" "$target/on-track/assessments" \
-  "$target/on-track/decisions" "$target/on-track/tracks"
+  "$target/on-track/decisions" "$target/on-track/decisions/archive" "$target/on-track/tracks"
 
 mkdir -p "$target/on-track/crumbs"
 if [ ! -e "$target/on-track/crumbs/.gitignore" ]; then

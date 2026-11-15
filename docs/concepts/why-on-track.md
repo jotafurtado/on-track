@@ -1,9 +1,9 @@
 ---
-title: Why On Track
+title: Why On Track?
 description: The problem On Track Method addresses, proportional record keeping, the split between human decisions and agent execution, and the metaphor behind the names.
 ---
 
-# Why On Track
+# Why On Track?
 
 This page answers why the method exists and why it is shaped the way it is. The rules themselves are in the [Reference](../reference/request-classes.md) pages.
 
@@ -37,7 +37,7 @@ The human sets the direction and answers the signals. The agent documents, plans
 
 That split shows up in three places:
 
-- **Questions.** The agent investigates first and asks only blocking questions, those whose answer changes scope, security, persistence, external integration, architecture, or acceptance, with its recommendation first. The user can delegate any question with "you decide", and every delegated decision comes back in the summary for veto. When the user wants a bigger say, Off Road also brings the agent's own choices to the user, until the spec is approved.
+- **Questions.** The agent asks only what the request and the project context do not already settle, and only blocking questions, those whose answer changes scope, security, persistence, external integration, architecture, or acceptance, with its recommendation first. The user can delegate any question with "you decide", and every delegated decision comes back in the summary for veto. On unknown terrain, Off Road also brings the agent's design choices to the user, until the spec is approved.
 - **Signals.** Each Highway stage ends at a stop where the user answers in plain text: proceed, adjust, or stop. Nothing is approved by silence or by a passing check. See [Signals](../reference/signals.md).
 - **Commits.** The method never commits. The commit belongs to the maintainer.
 
@@ -51,8 +51,6 @@ The vocabulary follows a road:
 
 - **Express** is the short lane for a change that needs no stops.
 - **Highway** is the main road every other change takes, with three stops on the way to ship.
-- **Off Road** is the consulted way onto the Highway, for a request that depends on more of the user's decisions. It rejoins the Highway once the spec is approved.
+- **Off Road** is the unpaved road: the consulted way onto the Highway for terrain not mapped yet, where you go slower and stop more often. It rejoins the Highway once the spec is approved.
 - **Signals** are green, yellow, and red, like traffic lights.
 - **Crumbs** are the trail an Express change leaves behind so the commit can find its way back.
-
-The reasons behind each of these choices are in [Design choices](design-choices.md).

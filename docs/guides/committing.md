@@ -24,8 +24,6 @@ Each Express change writes one crumb under `on-track/crumbs/`, after its check, 
 
 The crumb also records under `## Verification` the check the agent ran and its result.
 
-A crumb records an Express change for commit preparation. Check its files against `HEAD` before using it; stale crumbs must be deleted.
-
 ## Preparing commits from crumbs
 
 Whoever prepares the commits, a person or an agent:
@@ -41,8 +39,6 @@ on-track/crumbs/
   2026-11-10-143205Z-footer-typo.md      files: [src/partials/footer.html]
   2026-11-10-151840Z-signup-button.md    files: [src/styles/button.css, tests/button.snap]
 ```
-
-Read these two crumbs in timestamp order and use their `files` and `Changes` to group the diff. Use `Request` and `Cause` to prepare the commit messages.
 
 ## Crumbs are local
 

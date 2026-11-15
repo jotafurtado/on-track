@@ -1,6 +1,6 @@
 ---
 title: Instalação
-description: Instale as sete skills do On Track Method com npx skills ou a partir de um checkout, e mantenha-as atualizadas.
+description: Instale as oito skills do On Track Method com npx skills ou a partir de um checkout, e mantenha-as atualizadas.
 ---
 
 # Instalação
@@ -63,7 +63,7 @@ Esse diretório recebe links para o mesmo checkout, não uma cópia independente
 
 ## O que é instalado
 
-Sete skills, cada uma com o procedimento que o agente segue e os recursos que ela possui:
+Oito skills, cada uma com o procedimento que o agente segue e os recursos que ela possui:
 
 | Skill | Possui |
 |---|---|
@@ -74,8 +74,9 @@ Sete skills, cada uma com o procedimento que o agente segue e os recursos que el
 | `ot-research` | `assets/research.md` |
 | `ot-assess` | `assets/assessment.md` |
 | `ot-handoff` | `assets/handoff.md` |
+| `ot-doctor` | `scripts/on-track-doctor.sh` |
 
-A instalação pelo checkout também cria links para sete wrappers de comando, de `commands/ot-init.md` a `commands/ot-handoff.md`. Cada um manda o agente executar a skill de mesmo nome. Os nomes `ot-*` são os nomes das skills, não aliases.
+A instalação pelo checkout também cria links para oito wrappers de comando, de `commands/ot-init.md` a `commands/ot-doctor.md`. Cada um manda o agente executar a skill de mesmo nome. Os nomes `ot-*` são os nomes das skills, não aliases.
 
 O instalador do checkout grava links nos diretórios configurados do harness. Execute `ot-init` em um projeto de destino para criar a árvore `on-track/`, o bloco gerenciado e o índice dele (veja [Sua primeira track](first-track.md)).
 
@@ -84,6 +85,4 @@ O instalador do checkout grava links nos diretórios configurados do harness. Ex
 - Com `npx skills`, rode de novo o mesmo comando `npx skills add` para instalar a versão atual.
 - Com um checkout, atualize o repositório com pull; os links já apontam para ele. Rode `./install.sh` de novo quando skills ou comandos forem adicionados ou renomeados.
 
-Depois de uma atualização que muda o bloco gerenciado, rode `ot-init` de novo em cada projeto para renovar o bloco no `AGENTS.md`. Ele é idempotente e nunca duplica o bloco.
-
-Se você usava uma versão anterior com outros nomes de skill, remova essas entradas do seu harness depois de reinstalar. Projetos criados antes da renomeação precisam dos passos de [Migração do fast-track-ai](migrating.md).
+Depois de uma atualização, a primeira skill que regenera o índice num projeto avisa quando o bloco gerenciado do `AGENTS.md` difere do pacote instalado, por exemplo `project v0.1.0, package v0.2.0`. Aí rode `ot-doctor` nesse projeto: ele lista o que está desatualizado (o bloco, pastas novas, arquivos num layout antigo), propõe as correções e as aplica depois da sua confirmação.

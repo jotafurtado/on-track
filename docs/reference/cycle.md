@@ -24,7 +24,7 @@ Each of the first three stages ends with a four-bullet summary and a next-step l
 
 `ot-intent` classifies the request (see [Request classes](request-classes.md)), finds the next free number under `on-track/tracks/`, and drafts `on-track/tracks/NNN-slug/intent.md` from its template. The track id is three digits and a kebab-case slug of what was asked, for example `007-lp-v2`.
 
-Before drafting, the agent investigates and asks only blocking questions, in one round of at most four. Blocking questions beyond the cap go under `Open questions` for the spec stage. See [Questions and delegation](../guides/questions-and-delegation.md). It also checks whether a research, ref, ADR, or assessment is warranted, says so in one sentence, and writes it without asking permission. See [Supporting artifacts](../guides/supporting-artifacts.md) and [Thresholds](thresholds.md).
+Before drafting, the agent checks what is already settled and asks only the blocking questions still open, in one round of at most four on the Highway. Blocking questions beyond the cap go under `Open questions` for the spec stage. Off Road also asks design choices, in as many rounds as needed. See [Questions and delegation](../guides/questions-and-delegation.md). It also checks whether a research, ref, ADR, or assessment is warranted, says so in one sentence, and writes it without asking permission. See [Supporting artifacts](../guides/supporting-artifacts.md) and [Thresholds](thresholds.md).
 
 The intent stage never writes `spec.md`. The skill regenerates the index and reports any validation error instead of presenting the summary as complete.
 
@@ -41,7 +41,7 @@ The summary also lists generated artifacts (research, refs, ADRs, assessments), 
 
 It classifies every unanswered item under `Open questions`:
 
-- **Blocking question**: its answer changes scope, security, data persistence, external integration, architecture, or acceptance. Every blocking question is resolved before the summary, in as many rounds of at most four as needed. The agent withholds the summary and does not offer `. para implementar` while any remains unanswered.
+- **Blocking question**: its answer changes scope, security, data persistence, external integration, architecture, or acceptance. Every blocking question is resolved before the summary, in rounds of at most four: up to three rounds on the Highway, after which the agent lists what is left and suggests Off Road; as many as needed in Off Road. The agent withholds the summary and does not offer `. para implementar` while any remains unanswered.
 - **Deferrable question**: its answer does not block overall architecture or scope. It becomes a bounded task whose `Validate:` names the expected answer or artifact, in a group that dependent groups list in `(depends: ...)`.
 
 Without delegation, the agent does not invent answers to either kind.
@@ -81,7 +81,7 @@ On green after the implement summary, the agent sets intent `status: shipped` an
 |---|---|---|
 | `intent.md` | `draft`, `shipped`, `dropped`, `superseded` | Created `draft` by `ot-intent`. `shipped` only by `ot-implement` after green at the ship stop. `dropped` and `superseded` only when the maintainer abandons or replaces the track |
 | `spec.md`, `tasks.md` | `draft`, `approved` | Created `draft` by `ot-spec`. `approved` only by green at the spec stop. Back to `draft` on a material change after approval |
-| ADR (`on-track/decisions/`) | `accepted`, `superseded` | Created `accepted`. `superseded` when a replacement ADR is filed |
+| ADR (`on-track/decisions/`) | `accepted`, `superseded` | Created `accepted`. `superseded` when a replacement ADR is filed; the superseded ADR moves to `on-track/decisions/archive/` |
 
 Rules that apply to these values:
 
@@ -116,7 +116,7 @@ Method administration files change only through named transitions during impleme
 - files under the track's `assets/`;
 - `on-track/INDEX.md`, through the index script;
 - intent `status: shipped`, after the ship confirmation;
-- new ADRs under `on-track/decisions/`;
+- new ADRs under `on-track/decisions/`, and a replaced ADR moved to `on-track/decisions/archive/`;
 - returning `spec.md` and `tasks.md` to `draft` on a material change.
 
 ## Task groups and dependencies
@@ -129,7 +129,7 @@ Method administration files change only through named transitions during impleme
 - When a prerequisite task's `Validate:` fails, the agent stops before every dependent group and reports the failure.
 - The same file is never edited in parallel.
 
-Delegation is proportional. When the harness offers subagents, a task goes to its own subagent only when it warrants its own context: more than one file, or a `Validate:` that runs beyond a single quick check. A trivial task runs in the main agent. Task subagents use an execution-class agent from the harness; the session model keeps planning, integration, shared files, review, and final validation. When the harness cannot run subagents, the tasks of each group run sequentially, preserving group order. Project-wide checks, such as a full test suite, a build, or a typechecker, wait until every task of the current group has returned.
+Tasks of one group may run in parallel when the harness offers subagents; without them, they run in sequence, keeping group order. Project-wide checks, such as a full test suite or a build, wait until every task of the current group has returned.
 
 A task is never checked on an untested change. If `Validate:` fails, the checkbox stays open.
 
@@ -137,4 +137,4 @@ A task is never checked on an untested change. If `Validate:` fails, the checkbo
 
 A track stopped at any stop stays valid in `draft` and resumes when the user asks for that stage again.
 
-On resume, implement treats each `- [x]` task as already validated and continues from the first open task in dependency order. It does not rerun a checked task's `Validate:` unless a later change touches that task's `Files:`; in that case it reruns that `Validate:` before offering ship. This rule also selects task-scoped project checks, including scripts used for final project validation: a task's `Validate:` remains task-scoped even when it is the project's only check script.
+On resume, implement treats each `- [x]` task as already validated and continues from the first open task in dependency order. It does not rerun a checked task's `Validate:` unless a later change touches that task's `Files:`; in that case it reruns that `Validate:` before offering ship.

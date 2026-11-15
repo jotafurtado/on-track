@@ -73,15 +73,14 @@ An assessment evaluates something inside the project.
 - Criteria are stated before the conclusion. Evidence for and against is gathered; material counterevidence goes under `Evidence against conclusion`.
 - Each finding states the problem, its evidence, its consequence, and a recommendation. Recommendations are inputs for later work; the assessment implements nothing.
 - The file records the evaluator (provider and model when known) and the tracks it evaluates. There is no `status`. An existing assessment is rewritten only when you ask to redo it.
-- Use the local calendar date in the assessment filename. If that path already exists and you did not request a redo, choose a distinct slug.
-- When provider and model are unknown, record the available stable agent identity. For a delegated assessment, record the delegated evaluator, not the coordinator; use `tracks: []` when no track is evaluated.
 
 ## Decisions (ADRs)
 
 An ADR records a choice that was real and costly to get wrong; the full threshold is in [Thresholds](../reference/thresholds.md).
 
 - Status is `accepted` or `superseded` only.
-- To replace an ADR, the agent files the replacement as the next numbered `accepted` ADR, sets the original to `superseded` with `superseded_by`, and leaves the original's text unchanged.
+- `on-track/decisions/` holds only the decisions in force. To replace an ADR, the agent files the replacement as the next numbered `accepted` ADR, sets the original to `superseded` with `superseded_by`, and moves it, with its text unchanged, to `on-track/decisions/archive/`. Numbers are never reused: a new ADR takes the number after the highest one in both folders.
+- `INDEX.md` lists the decisions in force with their titles, so it doubles as the summary of what is decided. Archived ADRs stay out of it; open them only to follow a citation or a `superseded_by` chain.
 - Supporting refs, research, assessments, URLs, or repository paths are cited in the `## Evidence` section.
 
 ## Handoffs
@@ -90,4 +89,4 @@ A handoff lets another session pick up the work. Use it when switching harness o
 
 - It keeps every active instruction of yours verbatim, separates verified completed work from next actions, and references other artifacts by path instead of copying them. Secrets and unnecessary personal data are omitted, and each omission is disclosed.
 - The file name and its `captured` field use the same UTC instant. The agent never overwrites an existing handoff.
-- Before writing, check the final filename in both the active directory and the archive; stop and report any collision. Validate the new handoff before touching older ones; on failure, fix it or stop without archiving. Order valid active handoffs by `captured`, keep the newest three, and archive older ones only if their destination does not exist. Stop and report destination collisions without overwriting. Regenerate the index only after archiving; the index excludes archived handoffs. Agents ignore the archive.
+- The newest three handoffs stay active; older ones move to `on-track/handoffs/archive/`, which agents and the index ignore.

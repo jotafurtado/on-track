@@ -1,6 +1,6 @@
 ---
 title: Validation
-description: What the index generator checks, the gate in structure and completion modes, acceptance evidence, the implement review, and the package eval suite.
+description: What the index generator checks, the gate in structure and completion modes, acceptance evidence, and the implement review.
 ---
 
 # Validation
@@ -11,6 +11,8 @@ This page answers what checks the method runs, what makes each one fail, and wha
 
 `skills/ot-init/scripts/on-track-index.sh [repo-root]` reads frontmatter under `on-track/` and writes only `on-track/INDEX.md`. It builds the whole index in a temporary file and replaces `INDEX.md` only when validation reports no errors. Collected artifact-validation errors produce `ERROR:` lines followed by `INDEX not updated: N error(s).`, exit 1, and leave `INDEX.md` unchanged. If `on-track/tracks` is missing, the script exits 1 after a single `ERROR:` line without that final summary. On success it prints `INDEX ok at <path>`.
 
+With `--check` before the root, the generator validates and reports the same errors but never writes `INDEX.md`; `ot-doctor` uses it. On every run it also compares the managed block in `AGENTS.md` with the installed package and prints a `WARN:` line when they differ or the block is missing. A warning never fails the run; the skill relays it and suggests `ot-doctor`.
+
 Every skill that writes an artifact regenerates the index and reports any validation error instead of presenting its result as complete. The table layout is in [Artifacts](artifacts.md#index-md).
 
 The generator fails when:
@@ -20,12 +22,12 @@ The generator fails when:
 | Setup | `on-track/tracks` is missing |
 | Frontmatter | A block is not closed, a line is not a `key: value` field, or a key repeats |
 | Tracks | A track folder has no `intent.md`; the folder name is not `NNN-slug`; `id` or `status` is missing; `id` differs from the folder name; `status` is not `draft`, `shipped`, `dropped`, or `superseded` |
-| Citations | A non-empty `research`, `assessments`, `refs`, or `decisions` value is not a `[a, b]` list, contains an empty parsed slug, or names a file that does not exist. Missing or empty fields are skipped |
-| Replacement | `superseded` without `superseded_by`; `superseded_by` pointing at itself or at a missing track or ADR |
+| Citations | A non-empty `research`, `assessments`, `refs`, or `decisions` value is not a `[a, b]` list, contains an empty parsed slug, or names a file that does not exist; a `decisions` slug may name an archived ADR. Missing or empty fields are skipped |
+| Replacement | `superseded` without `superseded_by`; `superseded_by` pointing at itself or at a missing track or ADR (an ADR may be in `decisions/` or `decisions/archive/`) |
 | Refs | Bad file name; file over 500 KB; missing `captured`, `owner`, or `content_license`; `sha256` not 64 lowercase hex characters; a `status` field; an invalid `type`; an `inline` ref with `source`, `pin`, or `retrieved_at`, or whose `sha256` does not match its normalized `## Source content`; a `pointer` ref without `source`, with both or neither of `pin` and `retrieved_at`, or whose `sha256` is the hash of its `source` locator; a `sha256` that duplicates an earlier ref |
 | Research | Bad file name; missing `captured` or `owner`; a `status` or singular `source` field; a missing required heading |
 | Assessments | File name not `YYYY-MM-DD-slug.md`; a missing `captured`, `owner`, `scope`, `evaluator`, or `tracks`; a `status` field; `captured` different from the file name date; a missing required heading |
-| Decisions | File name not `NNN-slug.md`; a missing `id`, `status`, `date`, or `owner`; `id` different from the file name; `status` not `accepted` or `superseded`; a missing required heading |
+| Decisions | File name not `NNN-slug.md`; a missing `id`, `status`, `date`, or `owner`; `id` different from the file name; `status` not `accepted` (a `superseded` ADR must move to `decisions/archive/`); a missing required heading. In `decisions/archive/`: a bad file name, `status` other than `superseded`, or a missing or unresolved `superseded_by`. Across both folders: a number used twice |
 | Handoffs | File name not `YYYY-MM-DD-HHmmssZ-slug.md`; `captured` not `YYYY-MM-DDTHH:MM:SSZ` or not the file name instant; a missing `owner` or `focus`; a `status` field; a missing required heading; more than three active handoffs |
 
 A missing or malformed `spec.md` or `tasks.md` never fails the index; it only counts as not approved when the phase is derived. `crumbs/` and `handoffs/archive/` are never read.
@@ -94,7 +96,3 @@ Every finding is recorded in `on-track/tracks/NNN-slug/assets/review.md`:
 ```
 
 When the review finds nothing, the file holds the header and one row saying so. The implement summary counts `fixed` and `open` findings and names each open `[important]`. To have an open finding fixed, answer yellow at the ship stop. `assets/review.md` is evidence of the review, not an extra gate requirement.
-
-## Package eval suite
-
-The package itself is checked by a deterministic suite that runs installation, resources, and scripts against disposable projects without calling any model: `bash evals/run-evals.sh all` from the package repository root. Optional sessions with real agents exist, but they never approve the package on their own. Selectors, contracts, and results are listed in `evals/evals.md` in the package repository (see [Installation](../getting-started/installation.md) for where the repository lives).

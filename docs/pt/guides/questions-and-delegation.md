@@ -1,19 +1,28 @@
 ---
 title: Perguntas e delegação
-description: Quando o agente pergunta no Highway, como funciona uma rodada de perguntas e como delegar uma decisão com "decida você".
+description: O que o agente pergunta, como funciona uma rodada de perguntas no Highway e no Off Road e como delegar uma decisão com "decida você".
 ---
 
 # Perguntas e delegação
 
-Esta página responde quando o agente pergunta algo no Highway, qual é o formato de uma rodada de perguntas, como as etapas de intent e spec diferem e o que acontece quando você responde "decida você".
+Esta página responde o que o agente pergunta durante o intent e a spec, qual é o formato de uma rodada de perguntas, quantas rodadas cada rota tem e o que acontece quando você responde "decida você".
 
-## Investigar primeiro
+## O que nunca é perguntado
 
-O agente investiga antes de perguntar. Ele nunca pergunta o que o repositório ou um comando podem responder: lê os arquivos, faz a inspeção de que precisa e registra o que encontrou. No intent, um fato que ele confirmou vai para `Assumed state` > `Verified by the agent`, com o caminho ou o comando que o mostrou.
+O agente pergunta só o que ainda está em aberto. Antes de perguntar, ele verifica se o ponto já está resolvido por uma destas fontes:
+
+- o seu pedido,
+- o contexto que ele já tem: o `AGENTS.md` e os arquivos lidos na sessão,
+- uma ferramenta de consulta que o seu projeto indica para isso, como um grafo de código ou um servidor de memória,
+- uma leitura pontual: um manifesto, o `.env.example`, `on-track/decisions/`.
+
+Se o seu `AGENTS.md` já diz onde o sistema é hospedado, você não vai ser perguntado sobre onde ele vai ser hospedado. O fato resolvido entra no artefato com a fonte: no intent, em `Assumed state` > `Verified by the agent`.
+
+Para se poupar de perguntas, escreva os fatos estáveis do projeto (stack, hospedagem, convenções) no `AGENTS.md` ou num documento que ele aponte.
 
 ## Perguntas bloqueadoras
 
-No Highway o agente faz só perguntas bloqueadoras. Uma pergunta é bloqueadora quando a resposta muda um destes:
+Uma pergunta é bloqueadora quando a resposta muda um destes:
 
 - escopo,
 - segurança,
@@ -22,11 +31,17 @@ No Highway o agente faz só perguntas bloqueadoras. Uma pergunta é bloqueadora 
 - arquitetura,
 - aceitação.
 
-Toda outra escolha o agente resolve sozinho, ou registra como pergunta em aberto no intent, ou transforma em tarefa na spec. Para ser consultado também sobre essas escolhas, use o [Off Road](off-road.md).
+Perguntas bloqueadoras são feitas tanto no Highway quanto no [Off Road](off-road.md). As rotas diferem só no que perguntam além delas.
+
+## As perguntas servem ao seu pedido
+
+Cada pergunta esclarece o que você pediu ou propõe um caminho para chegar lá. O agente não abre frentes novas que você não pediu.
+
+Uma decisão já registrada, num ADR ou numa escolha documentada, fica como está. Uma escolha que só está em uso, sem razão registrada, pode receber uma sugestão quando existe opção claramente melhor que serve ao seu pedido, como uma biblioteca mais consolidada que se encaixa no projeto. A sugestão ocupa uma das vagas da rodada e vem com a recomendação do agente.
 
 ## A rodada
 
-Uma rodada tem no máximo quatro perguntas, feitas pela ferramenta de perguntas do host quando ela existe. Cada pergunta:
+Uma rodada tem no máximo quatro perguntas, feitas pela ferramenta de perguntas do host quando ela existe, todas sobre um tema: modelo de dados numa rodada, bibliotecas na seguinte, infraestrutura depois. Cada pergunta:
 
 - nomeia a decisão que destrava,
 - oferece opções,
@@ -41,24 +56,29 @@ Armazenamento dos cadastros (destrava: persistência dos envios do formulário)
 
 Sinais não são perguntas. A parada no fim de cada etapa é lida como texto simples, nunca pela ferramenta de perguntas (veja [Sinais do Highway](highway-signals.md)).
 
-## Intent: uma rodada
+## Quantas rodadas
 
-A etapa de intent tem uma rodada. O agente faz nela todas as perguntas bloqueadoras, até quatro, e escreve cada resposta no corpo do intent.
+| Rota | Intent | Spec |
+|---|---|---|
+| Highway | Uma rodada, só perguntas bloqueadoras | Até três rodadas, só perguntas bloqueadoras |
+| Off Road | Quantas forem necessárias, bloqueadoras e escolhas de design | Quantas forem necessárias, bloqueadoras e escolhas de design |
 
-- Uma pergunta bloqueadora além do limite vai para `Open questions`, para a etapa de spec resolver.
-- Qualquer outra pergunta o agente resolve sozinho ou deixa em `Open questions`.
-- Cada entrada em `Open questions` é uma pergunta de verdade: termina com ponto de interrogação e nomeia a decisão que destrava, com um responsável quando houver.
+No Highway:
 
-## Spec: quantas rodadas forem necessárias
+- No intent, uma pergunta bloqueadora além do limite vai para `Open questions`, para a spec resolver. Qualquer outra pergunta o agente resolve sozinho ou deixa ali.
+- Na spec, se sobrarem perguntas bloqueadoras depois da terceira rodada, o agente para, lista as que faltam e sugere o Off Road. O resumo e `. para implementar` ficam retidos até cada uma ser respondida ou delegada.
+- Se o seu pedido está vago demais para o intent e as fontes acima não o resolvem, o agente sugere o Off Road e segue no Highway, a menos que você aceite a sugestão.
 
-A etapa de spec lê as `Open questions` do intent e classifica cada uma:
+## Perguntas em aberto na spec
+
+A spec lê as `Open questions` do intent e classifica cada uma:
 
 | Tipo | O que acontece |
 |---|---|
-| Bloqueadora | Resolvida antes do resumo, em quantas rodadas de até quatro forem necessárias. O resumo e `. para implementar` ficam retidos enquanto qualquer pergunta bloqueadora estiver sem resposta. |
+| Bloqueadora | Resolvida antes do resumo, dentro dos limites de rodada acima. |
 | Adiável | A resposta não bloqueia a arquitetura geral nem o escopo. Vira uma tarefa delimitada cujo `Validate` nomeia a resposta ou o artefato esperado, em um grupo que os grupos dependentes listam em `(depends: ...)`. |
 
-Sem delegação, o agente não inventa resposta para nenhum dos dois tipos.
+Cada entrada em `Open questions` é uma pergunta de verdade: termina com ponto de interrogação e nomeia a decisão que destrava, com um responsável quando houver. Sem delegação, o agente não inventa resposta para nenhum dos dois tipos.
 
 ## "Decida você"
 
@@ -76,4 +96,13 @@ Você pode responder qualquer pergunta com "decida você". Isso é uma delegaç�
 
 ## Vetar uma decisão delegada
 
-As decisões delegadas aparecem no resumo da etapa, antes da localização da track e da linha de próximo passo. Para vetar uma, responda com a mudança que você quer em vez de `.`: qualquer resposta assim é um sinal amarelo, então o agente revisa o intent ou a spec e mostra o resumo de novo. No resumo do intent, as outras restrições que o agente propôs por conta própria são listadas do mesmo jeito, para o mesmo veto. Uma restrição proposta pelo agente só é permitida quando omiti-la traz risco de perda de dados, problema de segurança ou quebra do resultado pedido. Ela deve nomear esse risco e não pode ampliar o resultado. Decisões delegadas, marcadas `(delegated)`, são as outras entradas permitidas.
+As decisões delegadas aparecem no resumo da etapa, antes da localização da track e da linha de próximo passo. Para vetar uma, responda com a mudança que você quer em vez de `.`: qualquer resposta assim é um sinal amarelo, então o agente revisa o intent ou a spec e mostra o resumo de novo. No resumo do intent, as outras restrições que o agente propôs por conta própria são listadas do mesmo jeito, para o mesmo veto. Uma restrição proposta pelo agente só é permitida quando omiti-la traz risco de perda de dados, problema de segurança ou quebra do resultado pedido. Ela deve nomear esse risco e não pode ampliar o resultado.
+
+## Quando a ideia ainda não está clara
+
+O intent começa quando você sabe o que quer construir. Se a ideia ainda está se formando, trabalhe nela antes do intent:
+
+- Peça uma research (`/ot-research`) sobre o tema, leia e depois abra o intent.
+- Ou faça antes uma sessão de grilling. A skill [`grill-me`](https://github.com/mattpocock/skills/tree/main/skills/productivity/grill-me), de Matt Pocock, é uma opção; ela não faz parte deste pacote.
+
+Se o agente percebe que responder ao seu pedido exigiria explorar alternativas ao próprio pedido, ele avisa e sugere uma research.

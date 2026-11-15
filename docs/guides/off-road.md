@@ -7,30 +7,41 @@ description: When to ask for Off Road, what it changes in the intent and spec ro
 
 This page answers when to ask for Off Road, what it changes, where it ends, and what stays exactly as on the Highway.
 
+The Highway is the paved road: the request is clear, the terrain is known, and the agent drives with few stops. Off Road is the unpaved road: the terrain is not mapped yet, so you go slower and stop more often to look at the way ahead.
+
 Off Road is not a lane and not a request class. It is the consulted way onto the Highway: the same track, the same stages, the same artifacts, with more of the early decisions brought to you.
 
 ## When to ask for it
 
-On the Highway the agent asks only blocking questions; other questions may be settled during intent or left under `Open questions`, and deferrable questions become bounded tasks during spec (see [Questions and delegation](questions-and-delegation.md)). Ask for Off Road when the request still depends on decisions you want to make yourself: a layout you have opinions about, naming, the order of the work, which of two reasonable approaches to take.
+Most work runs on the Highway or the Express lane. Ask for Off Road when the request leads into terrain you do not know yet, or when you want to make the design choices yourself:
+
+| Request | Route |
+|---|---|
+| Build a REST API in this Laravel project. | Highway: the stack is known and the request says what to build. |
+| Build an API with Rust as the engine. We have never used Rust here. | Off Road: the libraries, structure, and trade-offs are still open. |
 
 Ask for it in plain words, at the start or at any point during the intent or the spec:
 
 ```text
-/ot-intent Redesign the pricing page. Go Off Road, I want to weigh in on the choices.
+/ot-intent Build the billing API with Rust as the engine. Go Off Road, this is new ground for us.
 ```
 
 ```text
 Switch to Off Road for the rest of this spec.
 ```
 
+The agent may also suggest Off Road on the Highway: when your request is too vague to draft, or when blocking questions remain after the third spec round. It only suggests; the route changes when you ask.
+
 ## What changes
 
-While Off Road is on, each intent and spec round of questions also carries the choices the agent would otherwise settle alone. Nothing else about the round changes:
+While Off Road is on:
 
-- At most four questions per round.
-- Each question names the decision it unlocks and offers options, with the agent's recommendation first.
-- You may answer any question with "you decide"; the agent records the delegated decision and lists it in the summary for veto.
-- The intent stage still has one round; the spec stage still uses as many rounds as needed to resolve its blocking questions.
+- Each round also carries the design choices the agent would otherwise settle alone, besides the blocking questions.
+- Rounds have no fixed count, in the intent or in the spec. The agent runs as many as the open points need, one theme each, and stops when none is left.
+- Before each round, the agent surveys the established options for that theme (libraries, approaches) and presents them with their trade-offs and its recommendation.
+- When the terrain needs study beyond the track, the agent suggests a research.
+
+What stays the same in every round: at most four questions, one theme, each naming the decision it unlocks with the recommendation first, and "you decide" to delegate. Settled points are still not asked. See [Questions and delegation](questions-and-delegation.md).
 
 ## Where it ends
 
@@ -53,3 +64,7 @@ If a material change returns an approved spec to `draft`, Off Road does not turn
 ## A new session
 
 Off Road is not written to any file: no frontmatter field and no artifact records it. In a new session, while the spec is not yet approved, ask for Off Road again if you want it. This also holds when you resume from a handoff that quotes your earlier request: the quote does not turn Off Road on.
+
+## Off Road or research first
+
+Off Road covers unknown terrain for a request you already have. If the idea itself is still forming, start before the intent with a research or a grilling session (see [When the idea is not clear yet](questions-and-delegation.md#when-the-idea-is-not-clear-yet)).

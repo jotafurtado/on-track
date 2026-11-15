@@ -1,4 +1,4 @@
-<!-- BEGIN MANAGED BLOCK: on-track. Installed by ot-init, idempotent block. -->
+<!-- BEGIN MANAGED BLOCK: on-track v0.2.0. Installed by ot-init, idempotent block. -->
 
 ## on-track
 
@@ -19,14 +19,14 @@ On the Highway, a change starts as `intent.md`. The `ot-intent` skill drafts `in
 
 Signals: on the Highway, intent, spec, and implement end with a four-bullet summary plus a next-step line, then stop for the user's signal, read as plain text. **Green** is `.`, or a message that only means proceed in the user's language (`go`, `yes`, `continue`, `sim`, `verde`): chain the next skill for the same track without asking for a command. **Red** is `x`, or a message that only means stop (`stop`, `red`, `pare`, `vermelho`): stop, change no `status`, delete nothing, and undo no code; the track stays valid in `draft` and resumes when the user asks for that stage again. **Yellow** is any other message, an ambiguous one included: treat it as an instruction to the current skill, then present the summary again. Green never changes intent `status`; intent stays `draft` until the implement ship sets `shipped`. The signal is text; keep the host's question tool for questions.
 
-Questions: investigate first, and ask only what the repository or a command cannot answer. On the Highway ask only blocking questions, those whose answer changes scope, security, persistence, external integration, architecture, or acceptance: one round per stage, at most four, each naming the decision it unlocks and offering options with your recommendation first. The user may answer any question with "you decide"; record that delegated decision and list it in the summary for veto. **Off Road** is the consulted way onto the Highway, on from the moment the user asks for it until that track's spec is approved: an intent or spec round then also carries the choices you would otherwise settle alone, within the same cap. From the approved spec on the track runs on the Highway, and a spec returned to `draft` does not turn Off Road back on unless the user asks again. Off Road adds no field to any artifact and does not carry across sessions: a new session starts with it off until the user asks again, even when a handoff quotes the earlier request.
+Questions: ask only what is not already **settled** by the request, the context you hold, a lookup tool the project names, or one targeted read, and serve the request as stated. Blocking questions, those whose answer changes scope, security, persistence, external integration, architecture, or acceptance, are asked on every route: at most four per round, one theme per round, each naming the decision it unlocks and offering options with your recommendation first. The user may answer any question with "you decide"; record that delegated decision and list it in the summary for veto. On the Highway ask only blocking questions: one round in intent, up to three in spec; suggest Off Road when the request is too vague to draft or blocking questions outlast the third spec round. **Off Road** is the consulted way onto the Highway, for terrain the request does not yet map, on from the moment the user asks for it until that track's spec is approved: rounds then also carry the design choices you would otherwise settle alone, as many rounds as the open points need, and you suggest research when the terrain needs study beyond the track. From the approved spec on the track runs on the Highway, and a spec returned to `draft` does not turn Off Road back on unless the user asks again. Off Road adds no field to any artifact and does not carry across sessions: a new session starts with it off until the user asks again, even when a handoff quotes the earlier request.
 
 Supporting artifact locations:
 
 - A ref lives at `on-track/refs/<slug>.md`.
 - Research lives at `on-track/research/<slug>.md`.
 - An assessment lives at `on-track/assessments/<YYYY-MM-DD>-<slug>.md`.
-- A decision lives at `on-track/decisions/<NNN-slug>.md`.
+- An accepted decision lives at `on-track/decisions/<NNN-slug>.md`. A superseded decision moves, keeping its number, to `on-track/decisions/archive/<NNN-slug>.md`; read the archive only to follow a citation or a `superseded_by` chain. A new decision takes the number after the highest one in both folders.
 - A handoff lives at `on-track/handoffs/<timestamp>-<slug>.md`.
 
 - Track root holds only `intent.md`, `spec.md`, `tasks.md`, and `assets/`. Loose files are forbidden. Auxiliary outputs go under `assets/`.

@@ -1,6 +1,6 @@
 ---
 title: Validação
-description: O que o gerador do índice verifica, o gate nos modos structure e completion, a evidência de aceite, a revisão do implement e a suíte de evals do pacote.
+description: O que o gerador do índice verifica, o gate nos modos structure e completion, a evidência de aceite e a revisão do implement.
 ---
 
 # Validação
@@ -11,6 +11,8 @@ Esta página responde quais verificações o método roda, o que faz cada uma fa
 
 `skills/ot-init/scripts/on-track-index.sh [repo-root]` lê o frontmatter em `on-track/` e grava só `on-track/INDEX.md`. Monta o índice inteiro num arquivo temporário e só substitui o `INDEX.md` quando a validação não relata erros. Erros de validação de artefatos produzem linhas `ERROR:` seguidas de `INDEX not updated: N error(s).`, saída com código 1 e preservação do `INDEX.md`. Se `on-track/tracks` faltar, o script sai com código 1 depois de uma única linha `ERROR:`, sem esse resumo final. Com sucesso, imprime `INDEX ok at <caminho>`.
 
+Com `--check` antes da raiz, o gerador valida e relata os mesmos erros, mas nunca grava o `INDEX.md`; o `ot-doctor` usa esse modo. Em toda execução ele também compara o bloco gerenciado do `AGENTS.md` com o pacote instalado e imprime uma linha `WARN:` quando eles diferem ou o bloco falta. O aviso nunca faz a execução falhar; a skill o repassa e sugere o `ot-doctor`.
+
 Toda skill que grava artefato regenera o índice e relata qualquer erro de validação em vez de apresentar o resultado como completo. O formato das tabelas está em [Artefatos](artifacts.md#index-md).
 
 O gerador falha quando:
@@ -20,12 +22,12 @@ O gerador falha quando:
 | Preparação | `on-track/tracks` não existe |
 | Frontmatter | Bloco não fechado, linha que não é campo `key: value`, ou chave repetida |
 | Tracks | Pasta de track sem `intent.md`; nome da pasta fora do padrão `NNN-slug`; `id` ou `status` ausente; `id` diferente do nome da pasta; `status` fora de `draft`, `shipped`, `dropped` ou `superseded` |
-| Citações | Valor não vazio de `research`, `assessments`, `refs` ou `decisions` fora da forma `[a, b]`, com slug vazio entre os itens processados, ou nomeando arquivo que não existe. Campos ausentes ou vazios não são validados |
-| Substituição | `superseded` sem `superseded_by`; `superseded_by` apontando para si mesmo ou para track ou ADR inexistente |
+| Citações | Valor não vazio de `research`, `assessments`, `refs` ou `decisions` fora da forma `[a, b]`, com slug vazio entre os itens processados, ou nomeando arquivo que não existe; um slug de `decisions` pode nomear ADR arquivada. Campos ausentes ou vazios não são validados |
+| Substituição | `superseded` sem `superseded_by`; `superseded_by` apontando para si mesmo ou para track ou ADR inexistente (a ADR pode estar em `decisions/` ou `decisions/archive/`) |
 | Refs | Nome de arquivo inválido; arquivo acima de 500 KB; `captured`, `owner` ou `content_license` ausente; `sha256` que não tem 64 caracteres hexadecimais minúsculos; campo `status`; `type` inválido; ref `inline` com `source`, `pin` ou `retrieved_at`, ou cujo `sha256` não confere com o `## Source content` normalizado; ref `pointer` sem `source`, com `pin` e `retrieved_at` juntos ou sem nenhum dos dois, ou cujo `sha256` é o hash do localizador `source`; `sha256` que duplica um ref anterior |
 | Research | Nome de arquivo inválido; `captured` ou `owner` ausente; campo `status` ou `source` no singular; título obrigatório ausente |
 | Assessments | Nome de arquivo fora de `YYYY-MM-DD-slug.md`; `captured`, `owner`, `scope`, `evaluator` ou `tracks` ausente; campo `status`; `captured` diferente da data do nome do arquivo; título obrigatório ausente |
-| Decisions | Nome de arquivo fora de `NNN-slug.md`; `id`, `status`, `date` ou `owner` ausente; `id` diferente do nome do arquivo; `status` fora de `accepted` ou `superseded`; título obrigatório ausente |
+| Decisions | Nome de arquivo fora de `NNN-slug.md`; `id`, `status`, `date` ou `owner` ausente; `id` diferente do nome do arquivo; `status` diferente de `accepted` (ADR `superseded` deve ir para `decisions/archive/`); título obrigatório ausente. Em `decisions/archive/`: nome de arquivo inválido, `status` diferente de `superseded`, ou `superseded_by` ausente ou sem destino. Nas duas pastas: número repetido |
 | Handoffs | Nome de arquivo fora de `YYYY-MM-DD-HHmmssZ-slug.md`; `captured` fora de `YYYY-MM-DDTHH:MM:SSZ` ou diferente do instante do nome; `owner` ou `focus` ausente; campo `status`; título obrigatório ausente; mais de três handoffs ativos |
 
 `spec.md` ou `tasks.md` ausente ou malformado nunca derruba o índice; só conta como não aprovado na hora de derivar a fase. `crumbs/` e `handoffs/archive/` nunca são lidos.
@@ -94,7 +96,3 @@ Todo achado é registrado em `on-track/tracks/NNN-slug/assets/review.md`:
 ```
 
 Quando a revisão não acha nada, o arquivo traz o cabeçalho e uma linha dizendo isso. O resumo do implement conta os achados `fixed` e `open` e nomeia cada `[important]` aberto. Para mandar corrigir um achado aberto, responda amarelo na parada de ship. `assets/review.md` é evidência da revisão, não exigência extra do gate.
-
-## Suíte de evals do pacote
-
-O próprio pacote é verificado por uma suíte determinística que roda instalação, recursos e scripts contra projetos descartáveis, sem chamar modelo: `bash evals/run-evals.sh all` na raiz do repositório do pacote. Existem sessões opcionais com agentes reais, mas elas nunca aprovam o pacote sozinhas. Seletores, contratos e resultados estão em `evals/evals.md` no repositório do pacote (veja em [Instalação](../getting-started/installation.md) onde o repositório fica).

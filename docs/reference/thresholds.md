@@ -56,4 +56,4 @@ A user preference with no weighed alternative is a constraint in the intent, not
 | Implement | The user makes a qualifying decision | Files the ADR; if it conflicts with or materially changes the approved spec or tasks, both return to `draft` and need renewed approval (see [Cycle](cycle.md#implementation-limits)) |
 | Express | A qualifying decision comes up | Files only that ADR and regenerates the index; the ADR path goes in the crumb's `files` |
 
-An ADR starts as `accepted`. Replacing one files the replacement as the next numbered `accepted` ADR and marks the original `superseded` with `superseded_by`, leaving the original text unchanged. The ADR template is in [Artifacts](artifacts.md#decision-adr).
+An ADR starts as `accepted`. Replacing one files the replacement as the next numbered `accepted` ADR, marks the original `superseded` with `superseded_by`, and moves it, text unchanged, to `on-track/decisions/archive/`. The ADR template is in [Artifacts](artifacts.md#decision-adr).

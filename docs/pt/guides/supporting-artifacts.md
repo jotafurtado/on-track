@@ -73,15 +73,14 @@ Um assessment avalia algo dentro do projeto.
 - Os critérios são declarados antes da conclusão. Reúnem-se evidências a favor e contra; contraevidência material vai em `Evidence against conclusion`.
 - Cada achado declara o problema, sua evidência, sua consequência e uma recomendação. As recomendações são insumo para trabalho futuro; o assessment não implementa nada.
 - O arquivo registra o avaliador (provedor e modelo, quando conhecidos) e as tracks que avalia. Não há `status`. Um assessment existente só é reescrito quando você pede para refazê-lo.
-- Use a data do calendário local no nome do assessment. Se o caminho já existe e você não pediu para refazê-lo, escolha um slug distinto.
-- Quando provedor e modelo forem desconhecidos, registre a identidade estável disponível do agente. Em avaliação delegada, registre o avaliador delegado, não o coordenador; use `tracks: []` quando nenhuma track for avaliada.
 
 ## Decisões (ADRs)
 
 Uma ADR registra uma escolha que foi real e cujo erro custa caro; o limiar completo está em [Limiares](../reference/thresholds.md).
 
 - O status é só `accepted` ou `superseded`.
-- Para substituir uma ADR, o agente registra a substituta como a próxima ADR numerada `accepted`, grava `superseded` com `superseded_by` na original e deixa o texto da original intacto.
+- `on-track/decisions/` guarda só as decisões em vigor. Para substituir uma ADR, o agente registra a substituta como a próxima ADR numerada `accepted`, grava `superseded` com `superseded_by` na original e a move, com o texto intacto, para `on-track/decisions/archive/`. Número nunca se repete: uma ADR nova recebe o número seguinte ao maior das duas pastas.
+- O `INDEX.md` lista as decisões em vigor com os títulos, e serve de resumo do que está decidido. ADRs arquivadas ficam fora dele; abra-as só para seguir uma citação ou uma cadeia de `superseded_by`.
 - Refs, research, assessments, URLs ou caminhos do repositório que sustentam a decisão são citados na seção `## Evidence`.
 
 ## Handoffs
@@ -90,4 +89,4 @@ Um handoff permite que outra sessão retome o trabalho. Use ao trocar de harness
 
 - Ele preserva literalmente cada instrução sua ainda ativa, separa o trabalho concluído e verificado das próximas ações e referencia os outros artefatos pelo caminho em vez de copiá-los. Segredos e dados pessoais desnecessários são omitidos, e cada omissão é declarada.
 - O nome do arquivo e o campo `captured` usam o mesmo instante em UTC. O agente nunca sobrescreve um handoff existente.
-- Antes de gravar, confira o nome final no diretório ativo e no arquivo morto; pare e relate qualquer colisão. Valide o novo handoff antes de tocar nos antigos; se falhar, corrija-o ou pare sem arquivar. Ordene os handoffs ativos válidos por `captured`, mantenha os três mais recentes e arquive os antigos só se o destino não existir. Pare e relate colisões de destino sem sobrescrever. Regenere o índice só depois de arquivar; o índice exclui os handoffs arquivados. Os agentes ignoram o arquivo morto.
+- Os três handoffs mais recentes ficam ativos; os mais antigos vão para `on-track/handoffs/archive/`, que os agentes e o índice ignoram.

@@ -29,6 +29,7 @@ on-track/
   refs/
   assessments/
   decisions/
+    archive/
   handoffs/
     archive/
   crumbs/
@@ -36,11 +37,11 @@ on-track/
   tracks/
 ```
 
-- **O bloco gerenciado** é o texto entre `<!-- BEGIN MANAGED BLOCK: on-track. Installed by ot-init, idempotent block. -->` e `<!-- END MANAGED BLOCK: on-track -->` no `AGENTS.md`. Ele diz a qualquer agente que trabalhe no repositório como classificar pedidos, quando perguntar, como os sinais funcionam e onde ficam os artefatos. Se o `AGENTS.md` não existe, o init o cria com o bloco. Se o bloco já existe, o init o substitui no lugar e não toca no resto do arquivo.
+- **O bloco gerenciado** é o texto entre `<!-- BEGIN MANAGED BLOCK: on-track v0.2.0. Installed by ot-init, idempotent block. -->` (a versão é a do pacote) e `<!-- END MANAGED BLOCK: on-track -->` no `AGENTS.md`. Ele diz a qualquer agente que trabalhe no repositório como classificar pedidos, quando perguntar, como os sinais funcionam e onde ficam os artefatos. Se o `AGENTS.md` não existe, o init o cria com o bloco. Se o bloco já existe, o init o substitui no lugar e não toca no resto do arquivo.
 - **`on-track/INDEX.md`** é gerado a partir do frontmatter dos arquivos em `on-track/`. Os agentes o leem antes de procurar uma track ou um artefato de apoio. Não o edite à mão: a próxima geração sobrescreve.
 - **`on-track/crumbs/`** guarda as notas locais que as mudanças Express deixam para o commit. O `.gitignore` dela mantém a pasta fora do git. O init nunca sobrescreve um `.gitignore` que já exista ali.
 
-O init é idempotente: rode duas vezes e nada se duplica. Ele para com erro e não altera nada quando os marcadores `on-track` do `AGENTS.md` estão malformados (qualquer coisa diferente de nenhum marcador ou de exatamente um BEGIN seguido de um END), ou quando encontra o layout antigo descrito em [Migração do nome anterior](migrating.md).
+O init é idempotente: rode duas vezes e nada se duplica. Ele para com erro e não altera nada quando os marcadores `on-track` do `AGENTS.md` estão malformados (qualquer coisa diferente de nenhum marcador ou de exatamente um BEGIN seguido de um END).
 
 O init não escreve mais nada. Os artefatos de apoio são escritos depois, pelas skills donas deles.
 
@@ -57,7 +58,7 @@ Sem o nome da skill, o agente classifica o pedido sozinho. Um pedido que não cu
 
 ## Etapa 1: intent
 
-O agente investiga o repositório primeiro. Se restar uma pergunta bloqueadora, aquela cuja resposta muda escopo, segurança, persistência, integração externa, arquitetura ou aceitação, ele faz todas em uma rodada de até quatro, cada uma com opções e a recomendação dele primeiro. Veja [Perguntas e delegação](../guides/questions-and-delegation.md).
+O agente verifica primeiro o que o seu pedido e o `AGENTS.md` já resolvem. Se restar uma pergunta bloqueadora, aquela cuja resposta muda escopo, segurança, persistência, integração externa, arquitetura ou aceitação, ele faz as perguntas em uma rodada de até quatro, cada uma com opções e a recomendação dele primeiro. Veja [Perguntas e delegação](../guides/questions-and-delegation.md).
 
 Depois ele grava `on-track/tracks/001-lp-v2/intent.md` com `status: draft`, regenera o índice e apresenta um resumo:
 
@@ -87,7 +88,7 @@ O verde não aprova o intent. Ele fica em `draft` até o ship.
 
 ## Etapa 2: spec
 
-A etapa de spec lê o intent e resolve toda pergunta bloqueadora restante antes de apresentar o resumo, em quantas rodadas de até quatro perguntas forem necessárias. Ela grava dois arquivos, ambos com `status: draft`:
+A etapa de spec lê o intent e resolve toda pergunta bloqueadora restante antes de apresentar o resumo, em até três rodadas de até quatro perguntas. Ela grava dois arquivos, ambos com `status: draft`:
 
 - `spec.md`: o resultado, as fases numeradas, as restrições e o que está fora do escopo. Cada fase tem `Done:` (o estado entregue e observável), `Files:` (a lista explícita dos arquivos que ela toca) e `Accept:` (o comando ou a observação que comprova).
 - `tasks.md`: tarefas agrupadas sob títulos `## Group <name>`, com `(depends: <group>)` no grupo que precisa esperar outro. Cada tarefa leva uma marca `(Phase N)`, `Files:` e `Validate:`.

@@ -24,7 +24,7 @@ Cada uma das três primeiras etapas termina com um resumo de quatro tópicos e u
 
 `ot-intent` classifica o pedido (veja [Classes de pedido](request-classes.md)), acha o próximo número livre em `on-track/tracks/` e redige `on-track/tracks/NNN-slug/intent.md` a partir do template. O id da track tem três dígitos e um slug em kebab-case do que foi pedido, por exemplo `007-lp-v2`.
 
-Antes de redigir, o agente investiga e faz só perguntas bloqueadoras, em uma rodada de no máximo quatro. Perguntas bloqueadoras além do teto vão para `Open questions`, para a etapa de spec. Veja [Perguntas e delegação](../guides/questions-and-delegation.md). Ele também verifica se cabe research, ref, ADR ou assessment, avisa em uma frase e grava o artefato sem pedir licença. Veja [Artefatos de apoio](../guides/supporting-artifacts.md) e [Limiares](thresholds.md).
+Antes de redigir, o agente verifica o que já está resolvido e faz só as perguntas bloqueadoras ainda em aberto, em uma rodada de no máximo quatro no Highway. Perguntas bloqueadoras além do teto vão para `Open questions`, para a etapa de spec. O Off Road também pergunta as escolhas de design, em quantas rodadas forem necessárias. Veja [Perguntas e delegação](../guides/questions-and-delegation.md). Ele também verifica se cabe research, ref, ADR ou assessment, avisa em uma frase e grava o artefato sem pedir licença. Veja [Artefatos de apoio](../guides/supporting-artifacts.md) e [Limiares](thresholds.md).
 
 A etapa de intent nunca grava `spec.md`. A skill regenera o índice e relata qualquer erro de validação em vez de apresentar o resumo como completo.
 
@@ -41,7 +41,7 @@ O resumo também lista os artefatos gerados (research, refs, ADRs, assessments),
 
 Ela classifica cada item sem resposta em `Open questions`:
 
-- **Pergunta bloqueadora**: a resposta muda escopo, segurança, persistência de dados, integração externa, arquitetura ou aceite. Toda pergunta bloqueadora é resolvida antes do resumo, em quantas rodadas de até quatro forem necessárias. O agente segura o resumo e não oferece `. para implementar` enquanto alguma continuar sem resposta.
+- **Pergunta bloqueadora**: a resposta muda escopo, segurança, persistência de dados, integração externa, arquitetura ou aceite. Toda pergunta bloqueadora é resolvida antes do resumo, em rodadas de até quatro: até três rodadas no Highway, depois das quais o agente lista o que falta e sugere o Off Road; quantas forem necessárias no Off Road. O agente segura o resumo e não oferece `. para implementar` enquanto alguma continuar sem resposta.
 - **Pergunta adiável**: a resposta não bloqueia a arquitetura nem o escopo geral. Vira uma task delimitada cujo `Validate:` nomeia a resposta ou o artefato esperado, num grupo que os grupos dependentes listam em `(depends: ...)`.
 
 Sem delegação, o agente não inventa resposta para nenhum dos dois tipos.
@@ -81,7 +81,7 @@ Com o verde depois do resumo do implement, o agente põe o intent em `status: sh
 |---|---|---|
 | `intent.md` | `draft`, `shipped`, `dropped`, `superseded` | Nasce `draft` pelo `ot-intent`. `shipped` só pelo `ot-implement`, depois do verde na parada de ship. `dropped` e `superseded` só quando o mantenedor abandona ou substitui a track |
 | `spec.md`, `tasks.md` | `draft`, `approved` | Nascem `draft` pelo `ot-spec`. `approved` só com o verde na parada da spec. Voltam a `draft` com mudança material depois da aprovação |
-| ADR (`on-track/decisions/`) | `accepted`, `superseded` | Nasce `accepted`. `superseded` quando uma ADR substituta é gravada |
+| ADR (`on-track/decisions/`) | `accepted`, `superseded` | Nasce `accepted`. `superseded` quando uma ADR substituta é gravada; a ADR substituída vai para `on-track/decisions/archive/` |
 
 Regras que valem para esses valores:
 
@@ -116,7 +116,7 @@ Durante o implement, arquivos de administração do método só mudam por transi
 - arquivos em `assets/` da track;
 - `on-track/INDEX.md`, pelo script de índice;
 - `status: shipped` no intent, depois da confirmação do ship;
-- ADRs novas em `on-track/decisions/`;
+- ADRs novas em `on-track/decisions/`, e a ADR substituída movida para `on-track/decisions/archive/`;
 - devolver `spec.md` e `tasks.md` a `draft` numa mudança material.
 
 ## Grupos de tasks e dependências
@@ -129,7 +129,7 @@ Durante o implement, arquivos de administração do método só mudam por transi
 - Quando o `Validate:` de uma task pré-requisito falha, o agente para antes de todo grupo dependente e relata a falha.
 - O mesmo arquivo nunca é editado em paralelo.
 
-A delegação é proporcional. Quando o harness oferece subagentes, uma task só vai para um subagente próprio quando justifica contexto próprio: mais de um arquivo, ou um `Validate:` que vai além de uma checagem rápida. Task trivial roda no agente principal. Subagentes de task usam um agente de classe de execução do harness; o modelo da sessão fica com planejamento, integração, arquivos compartilhados, revisão e validação final. Quando o harness não roda subagentes, as tasks de cada grupo rodam em sequência, mantendo a ordem dos grupos. Verificações do projeto inteiro, como a suíte de testes completa, um build ou um typechecker, esperam todas as tasks do grupo atual voltarem.
+As tasks de um grupo podem rodar em paralelo quando o harness oferece subagentes; sem eles, rodam em sequência, mantendo a ordem dos grupos. Verificações do projeto inteiro, como a suíte de testes completa ou um build, esperam todas as tasks do grupo atual voltarem.
 
 Task nunca é marcada sobre mudança não testada. Se o `Validate:` falha, o checkbox fica aberto.
 
@@ -137,4 +137,4 @@ Task nunca é marcada sobre mudança não testada. Se o `Validate:` falha, o che
 
 Uma track parada em qualquer parada continua válida em `draft` e é retomada quando o usuário pede aquela etapa de novo.
 
-Na retomada, o implement trata cada task `- [x]` como já validada e continua da primeira task aberta, em ordem de dependência. Não roda de novo o `Validate:` de uma task marcada, a menos que uma mudança posterior toque os `Files:` dessa task; nesse caso roda esse `Validate:` de novo antes de oferecer o ship. Essa regra também seleciona verificações do projeto com escopo de task, inclusive scripts usados na validação final: o `Validate:` de uma task mantém esse escopo mesmo quando é o único script de verificação do projeto.
+Na retomada, o implement trata cada task `- [x]` como já validada e continua da primeira task aberta, em ordem de dependência. Não roda de novo o `Validate:` de uma task marcada, a menos que uma mudança posterior toque os `Files:` dessa task; nesse caso roda esse `Validate:` de novo antes de oferecer o ship.

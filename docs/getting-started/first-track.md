@@ -29,6 +29,7 @@ on-track/
   refs/
   assessments/
   decisions/
+    archive/
   handoffs/
     archive/
   crumbs/
@@ -36,11 +37,11 @@ on-track/
   tracks/
 ```
 
-- **The managed block** is the text between `<!-- BEGIN MANAGED BLOCK: on-track. Installed by ot-init, idempotent block. -->` and `<!-- END MANAGED BLOCK: on-track -->` in `AGENTS.md`. It tells any agent working in the repository how to classify requests, when to ask, how signals work, and where artifacts live. If `AGENTS.md` does not exist, init creates it with the block. If the block exists, init replaces it in place and leaves the rest of the file untouched.
+- **The managed block** is the text between `<!-- BEGIN MANAGED BLOCK: on-track v0.2.0. Installed by ot-init, idempotent block. -->` (the version is the package version) and `<!-- END MANAGED BLOCK: on-track -->` in `AGENTS.md`. It tells any agent working in the repository how to classify requests, when to ask, how signals work, and where artifacts live. If `AGENTS.md` does not exist, init creates it with the block. If the block exists, init replaces it in place and leaves the rest of the file untouched.
 - **`on-track/INDEX.md`** is generated from the frontmatter of the files under `on-track/`. Agents read it before looking for a track or a supporting artifact. Do not edit it by hand: the next generation overwrites it.
 - **`on-track/crumbs/`** holds the local notes that Express changes leave for the commit. Its `.gitignore` keeps the folder out of git. Init never overwrites an existing `.gitignore` there.
 
-Init is idempotent: run it twice and nothing is duplicated. It stops with an error and changes nothing when the `on-track` markers in `AGENTS.md` are malformed (anything other than no markers at all, or exactly one BEGIN followed by one END), or when it finds the legacy layout described in [Migrating from the previous name](migrating.md).
+Init is idempotent: run it twice and nothing is duplicated. It stops with an error and changes nothing when the `on-track` markers in `AGENTS.md` are malformed (anything other than no markers at all, or exactly one BEGIN followed by one END).
 
 Init writes nothing else. Supporting artifacts are written later by the skills that own them.
 
@@ -57,7 +58,7 @@ Without the skill name, the agent classifies the request itself. A request that 
 
 ## Stage 1: intent
 
-The agent investigates the repository first. If a blocking question remains, one whose answer changes scope, security, persistence, external integration, architecture, or acceptance, it asks all of them in one round of at most four, each with options and its recommendation first. See [Questions and delegation](../guides/questions-and-delegation.md).
+The agent first checks what your request and `AGENTS.md` already settle. If a blocking question remains, one whose answer changes scope, security, persistence, external integration, architecture, or acceptance, it asks them in one round of at most four, each with options and its recommendation first. See [Questions and delegation](../guides/questions-and-delegation.md).
 
 It then writes `on-track/tracks/001-lp-v2/intent.md` with `status: draft`, regenerates the index, and presents a summary:
 
@@ -87,7 +88,7 @@ Green does not approve the intent. It stays `draft` until ship.
 
 ## Stage 2: spec
 
-The spec stage reads the intent and resolves every remaining blocking question before presenting the summary, in as many rounds of at most four questions as needed. It writes two files, both with `status: draft`:
+The spec stage reads the intent and resolves every remaining blocking question before presenting the summary, in up to three rounds of at most four questions. It writes two files, both with `status: draft`:
 
 - `spec.md`: the outcome, numbered phases, constraints, and out of scope. Each phase has `Done:` (the observable delivered state), `Files:` (the explicit list of files it touches), and `Accept:` (the command or observation that proves it).
 - `tasks.md`: tasks grouped under `## Group <name>` headers, with `(depends: <group>)` on a group that must wait for another. Each task carries a `(Phase N)` tag, `Files:`, and `Validate:`.

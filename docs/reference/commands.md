@@ -1,11 +1,11 @@
 ---
 title: Commands
-description: The seven commands of On Track Method, what each one does, what it writes, and what it never does.
+description: The eight commands of On Track Method, what each one does, what it writes, and what it never does.
 ---
 
 # Commands
 
-This page answers what each of the seven commands does. Each command file in `commands/` tells the agent to run the skill of the same name in `skills/`. The skills hold the procedure, so asking the agent to use a skill by name works the same as the command. Installation is in [Installation](../getting-started/installation.md).
+This page answers what each of the eight commands does. Each command file in `commands/` tells the agent to run the skill of the same name in `skills/`. The skills hold the procedure, so asking the agent to use a skill by name works the same as the command. Installation is in [Installation](../getting-started/installation.md).
 
 | Command | Does | Writes |
 |---|---|---|
@@ -16,21 +16,21 @@ This page answers what each of the seven commands does. Each command file in `co
 | `ot-research` | Investigates an external fact with traceable sources | `on-track/research/<slug>.md`, `INDEX.md` |
 | `ot-assess` | Evaluates what exists, with evidence and counterevidence | `on-track/assessments/<YYYY-MM-DD>-<slug>.md`, `INDEX.md` |
 | `ot-handoff` | Captures working context to continue later | `on-track/handoffs/<YYYY-MM-DD-HHmmssZ>-<slug>.md`, moves older handoffs to `archive/`, `INDEX.md` |
+| `ot-doctor` | Diagnoses a project and repairs it after confirmation | Only what the user confirms: the managed block, missing folders, moved legacy files and superseded ADRs, ADR titles, `INDEX.md` |
 
-Refs and decisions have no command of their own. `ot-intent` captures refs; `ot-intent`, `ot-spec`, and `ot-implement` file ADRs; the Express lane can file one qualifying ADR. Express itself has no command: its rules are in the managed block and are also carried by `ot-intent`, so it needs no dedicated skill.
+Refs and decisions have no command of their own. `ot-intent` captures refs; `ot-intent`, `ot-spec`, and `ot-implement` file ADRs; the Express lane can file one qualifying ADR. Express has no command: its rules are in the managed block.
 
 ## `ot-init`
 
-Runs `on-track-init.sh` on the target directory, verifies the tree (`on-track/{research,refs,handoffs/archive,assessments,decisions,tracks,crumbs}`, `on-track/crumbs/.gitignore`, `on-track/INDEX.md`), runs `on-track-index.sh`, and reports. The agent also uses it when the user says "setup on-track", "install on-track", or "init the method here", or when `on-track/` is missing.
+Runs `on-track-init.sh` on the target directory, verifies the tree (`on-track/{research,refs,handoffs/archive,assessments,decisions,decisions/archive,tracks,crumbs}`, `on-track/crumbs/.gitignore`, `on-track/INDEX.md`), runs `on-track-index.sh`, and reports. The agent also uses it when the user says "setup on-track", "install on-track", or "init the method here", or when `on-track/` is missing.
 
 - Running it twice changes nothing the second time and never duplicates the managed block. An outdated block is replaced in place without touching the text around it.
 - It fails without writing when `AGENTS.md` has malformed markers (other than zero or exactly one BEGIN and one END, in order).
-- It refuses, and changes nothing, while a legacy tree or legacy managed block from the method's former name exists. The agent relays the message and renames or deletes nothing unless the user asks. See [Migrating](../getting-started/migrating.md).
 - It vendors nothing into the target. Supporting artifacts are written by their own skills, not by init.
 
 ## `ot-intent`
 
-Classifies each part of the request (see [Request classes](request-classes.md)), routes operational, Express, research-only, and assessment-only parts without a track, and, for a Highway change, drafts `intent.md` with `status: draft`. Before drafting it investigates, asks at most one round of blocking questions, and checks the research, ref, ADR, and assessment triggers. It regenerates the index, presents the four-bullet summary, and stops with `. para continuar com a spec`. On green it chains to `ot-spec`.
+Classifies each part of the request (see [Request classes](request-classes.md)), routes operational, Express, research-only, and assessment-only parts without a track, and, for a Highway change, drafts `intent.md` with `status: draft`. Before drafting it checks what is already settled, asks the open blocking questions (one round on the Highway, as many as needed in Off Road), and checks the research, ref, ADR, and assessment triggers. It regenerates the index, presents the four-bullet summary, and stops with `. para continuar com a spec`. On green it chains to `ot-spec`.
 
 Never: writes `spec.md`; changes intent `status` on green; creates a track for operational parts; creates a track for an otherwise Express edit unless the user selected the Highway; invents `superseded_by`.
 
@@ -63,3 +63,11 @@ Never: modifies the assessed subject; requires a generic numeric scorecard; impl
 Reads the index and the conversation, preserves active user instructions verbatim except secrets or unnecessary personal data, and discloses any such omission. It separates verified work from next actions, references durable artifacts by path, and writes the handoff to a path computed from the current UTC instant. It validates the new handoff first, then keeps the three newest active handoffs and moves older ones to `archive/`, then regenerates the index.
 
 Never: overwrites an existing handoff in the active folder or in `archive/` (it stops and reports the collision); archives anything before the new handoff validates; paraphrases instructions whose wording constrains the next agent; adds a `status` field.
+
+## `ot-doctor`
+
+Runs `on-track-doctor.sh`, which reads the project and changes nothing. It reports each finding: a layout from the method's former name, a missing or outdated managed block (with the project and package versions), a missing folder, a superseded ADR still in `on-track/decisions/`, an ADR whose heading repeats its id, and index errors. For each one it proposes a fix, waits for your confirmation, applies only what you confirmed, regenerates the index, and runs the diagnosis again. Use it after updating the package, when an index warning tells you to, or when `ot-init` refuses a legacy layout.
+
+It compares the project with the installed package, so it cannot tell whether a newer package was published. To update the package, run the installer again (see [Installation](../getting-started/installation.md#update)).
+
+Never: changes anything before you confirm; deletes an artifact; invents a field value; edits outside `on-track/`, the managed blocks in `AGENTS.md`, and the legacy path from the former name; commits.

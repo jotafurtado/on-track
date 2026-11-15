@@ -15,4 +15,4 @@ description: Capture portable working context directly under on-track/handoffs. 
 
 Path resolution: `./` paths and `../ot-*` sibling paths resolve from this skill's installed directory, and `on-track/` paths resolve from the target repository root.
 
-The owner index script is local Bash with no network calls: it reads frontmatter under `on-track/` and writes only `on-track/INDEX.md`, or exits with validation errors and leaves it unchanged.
+The owner index script is local Bash with no network calls: it reads frontmatter under `on-track/` and writes only `on-track/INDEX.md`, or exits with validation errors and leaves it unchanged. When it prints a `WARN:` line, relay it to the user in one sentence at the end of your report; a warning never blocks the stage.

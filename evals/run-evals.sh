@@ -869,7 +869,7 @@ run_init() {
   "$init_script" "$target" >/dev/null
   "$init_script" "$target" >/dev/null
 
-  for directory in research refs handoffs/archive assessments decisions tracks; do
+  for directory in research refs handoffs/archive assessments decisions decisions/archive tracks; do
     assert_dir "$target/on-track/$directory"
   done
   assert_file "$target/on-track/crumbs/.gitignore"
@@ -1138,7 +1138,7 @@ owner: maintainer
 evidence: []
 ---
 
-# ADR: 001-example-decision
+# ADR: Example decision
 
 ## Context
 Fixture context.
@@ -1177,7 +1177,7 @@ EOF
   assert_contains "$target/on-track/INDEX.md" "| mutable-source | pointer | 2026-09-20 |"
   assert_contains "$target/on-track/INDEX.md" "| example-research | 2026-09-20 |"
   assert_contains "$target/on-track/INDEX.md" "| 2026-09-20-example-assessment | 2026-09-20 |"
-  assert_contains "$target/on-track/INDEX.md" "| 001-example-decision | accepted |"
+  assert_contains "$target/on-track/INDEX.md" "| 001-example-decision | Example decision |"
   assert_contains "$target/on-track/INDEX.md" "| 2026-09-20-150000Z-active | 2026-09-20T15:00:00Z |"
   assert_not_contains "$target/on-track/INDEX.md" "2026-09-20-140000Z-archived"
   assert_not_contains "$target/on-track/INDEX.md" "| via |"
@@ -1276,6 +1276,7 @@ EOF
 superseded_by: 099-nowhere/' "$target/on-track/decisions/001-example-decision.md"
   expect_failure "index with missing decision replacement" "$index_script" "$target"
   assert_contains "$work/failure.err" "001-example-decision.md superseded_by references missing 099-nowhere"
+  assert_contains "$work/failure.err" "001-example-decision.md is superseded; move it to decisions/archive/"
   mv "$target/on-track/decisions/001-example-decision.md.bak" "$target/on-track/decisions/001-example-decision.md"
 
   sed -i.bak 's/^status: accepted$/status: superseded\
@@ -1442,7 +1443,7 @@ assert_installed_layout() {
     [ -d "$claude_dir/$name" ] || fail "Claude mirror does not resolve: $claude_dir/$name"
     count=$((count + 1))
   done
-  [ "$count" -eq 7 ] || fail "expected 7 installed skills, got $count"
+  [ "$count" -eq 8 ] || fail "expected 8 installed skills, got $count"
   [ ! -e "$agents_dir/shared" ] || fail "shared link was installed"
   [ ! -e "$claude_dir/shared" ] || fail "shared Claude mirror was installed"
   cmd_count=0
@@ -1451,7 +1452,7 @@ assert_installed_layout() {
     [ -e "$commands_dir/$name" ] || fail "command does not resolve: $commands_dir/$name"
     cmd_count=$((cmd_count + 1))
   done
-  [ "$cmd_count" -eq 7 ] || fail "expected 7 installed commands, got $cmd_count"
+  [ "$cmd_count" -eq 8 ] || fail "expected 8 installed commands, got $cmd_count"
 }
 
 # tree_fingerprint <dir>: sha256 over every file path and content.
@@ -1487,7 +1488,7 @@ check_installed_resources() {
       done
       count=$((count + 1))
     done
-    [ "$count" -eq 7 ] || { echo "expected 7 installed skills in $dir, got $count"; return 1; }
+    [ "$count" -eq 8 ] || { echo "expected 8 installed skills in $dir, got $count"; return 1; }
   done
 }
 
@@ -1504,7 +1505,7 @@ run_installed_scripts() {
   first="$(tree_fingerprint "$t")"
   "$i_init" "$t" >/dev/null || fail "installed init rerun failed through $base"
   [ "$first" = "$(tree_fingerprint "$t")" ] || fail "installed init rerun changed the target through $base"
-  for track in research refs handoffs/archive assessments decisions tracks; do
+  for track in research refs handoffs/archive assessments decisions decisions/archive tracks; do
     assert_dir "$t/on-track/$track"
   done
   assert_file "$t/on-track/INDEX.md"
@@ -1600,7 +1601,7 @@ run_readme_checks() {
 run_resources() {
   run_readme_checks
   legacy_files="$(cd "$repo_root" && grep -rl 'fast-track-ai' skills commands install.sh AGENTS.md | LC_ALL=C sort)"
-  expected_legacy_files="$(printf '%s\n' 'skills/ot-init/SKILL.md' 'skills/ot-init/scripts/on-track-init.sh')"
+  expected_legacy_files="$(printf '%s\n' 'commands/ot-doctor.md' 'skills/ot-doctor/SKILL.md' 'skills/ot-doctor/scripts/on-track-doctor.sh' 'skills/ot-init/SKILL.md' 'skills/ot-init/scripts/on-track-init.sh')"
   [ "$legacy_files" = "$expected_legacy_files" ] || fail "unexpected legacy-name files: $legacy_files"
   # A preceding letter excludes unrelated words such as draft-status.
   old_command_pattern='(^|[^[:alpha:]])ft-(init|intent|spec|implement|research|assess|handoff)([^[:alnum:]_]|$)|(^|[^[:alpha:]])ft-\*'
@@ -1609,8 +1610,8 @@ run_resources() {
   fi
   skill_count="$(find "$repo_root/skills" -mindepth 1 -maxdepth 1 -type d -name 'ot-*' | wc -l | tr -d ' ')"
   command_count="$(find "$repo_root/commands" -mindepth 1 -maxdepth 1 -type f -name 'ot-*.md' | wc -l | tr -d ' ')"
-  [ "$skill_count" -eq 7 ] || fail "expected seven ot-* skill directories, got $skill_count"
-  [ "$command_count" -eq 7 ] || fail "expected seven ot-*.md command files, got $command_count"
+  [ "$skill_count" -eq 8 ] || fail "expected eight ot-* skill directories, got $skill_count"
+  [ "$command_count" -eq 8 ] || fail "expected eight ot-*.md command files, got $command_count"
 
   init_skill="$repo_root/skills/ot-init/SKILL.md"
   intent_skill="$repo_root/skills/ot-intent/SKILL.md"
@@ -1795,7 +1796,11 @@ run_decisions() {
   assert_not_matches "$template" '^evidence:'
   assert_contains "$template" '## Evidence'
   assert_contains "$spec_skill" 'the ADR frontmatter has no `evidence` field'
-  assert_contains "$spec_skill" 'set the original'"'"'s `status: superseded` and add `superseded_by: <replacement-id>`'
+  assert_contains "$spec_skill" 'set the original'"'"'s `status: superseded`, add `superseded_by: <replacement-id>`, and move the original to `on-track/decisions/archive/<NNN-slug>.md`'
+  for archive_file in "$intent_skill" "$spec_skill" "$implement_skill" "$repo_root/skills/ot-init/assets/AGENTS-snippet.md"; do
+    assert_contains "$archive_file" 'decisions/archive/'
+  done
+  assert_contains "$template" '# ADR: short title'
   replacement="$work/replacement-target"
   "$init_script" "$replacement" >/dev/null
   write_intent "$replacement" "001-replacement-fixture" "draft"
@@ -1828,7 +1833,7 @@ content_license: unknown
 
 # Ref: mutable v2
 EOF
-  cat >"$replacement/on-track/decisions/001-original.md" <<'EOF'
+  cat >"$replacement/on-track/decisions/archive/001-original.md" <<'EOF'
 ---
 id: 001-original
 status: superseded
@@ -1855,7 +1860,7 @@ Use the replacement path immediately.
 ## Consequences
 The original decision remains historical.
 EOF
-  cp "$replacement/on-track/decisions/001-original.md" "$work/001-original.before"
+  cp "$replacement/on-track/decisions/archive/001-original.md" "$work/001-original.before"
   cat >"$replacement/on-track/decisions/002-replacement.md" <<'EOF'
 ---
 id: 002-replacement
@@ -1865,7 +1870,7 @@ owner: maintainer
 evidence: []
 ---
 
-# ADR: 002-replacement
+# ADR: Replacement fixture path
 
 ## Context
 The original fixture decision no longer applies.
@@ -1882,14 +1887,43 @@ Keep the original path.
 ## Consequences
 New work follows the replacement decision.
 EOF
+  mkdir -p "$replacement/on-track/tracks/001-cites-archive"
+  cat >"$replacement/on-track/tracks/001-cites-archive/intent.md" <<'EOF'
+---
+id: 001-cites-archive
+status: draft
+decisions: [001-original, 002-replacement]
+---
+
+# Intent: cites an archived decision
+EOF
   "$index_script" "$replacement" >/dev/null
   cmp "$work/mutable-v1.before" "$replacement/on-track/refs/mutable-v1.md" || fail "mutable original ref changed"
-  cmp "$work/001-original.before" "$replacement/on-track/decisions/001-original.md" || fail "original ADR content changed"
+  cmp "$work/001-original.before" "$replacement/on-track/decisions/archive/001-original.md" || fail "original ADR content changed"
   assert_contains "$replacement/on-track/INDEX.md" "| mutable-v1 | pointer | 2026-09-20 |"
   assert_contains "$replacement/on-track/INDEX.md" "| mutable-v2 | pointer | 2026-09-20 |"
-  assert_contains "$replacement/on-track/INDEX.md" "| 001-original | superseded |"
-  assert_contains "$replacement/on-track/INDEX.md" "| 002-replacement | accepted |"
-  assert_contains "$replacement/on-track/decisions/001-original.md" "superseded_by: 002-replacement"
+  assert_contains "$replacement/on-track/INDEX.md" "| decision | title |"
+  assert_contains "$replacement/on-track/INDEX.md" "| 002-replacement | Replacement fixture path |"
+  assert_not_contains "$replacement/on-track/INDEX.md" "001-original"
+  assert_contains "$replacement/on-track/INDEX.md" "| 001-cites-archive | draft | intent |"
+
+  cp "$replacement/on-track/decisions/archive/001-original.md" "$replacement/on-track/decisions/archive/002-duplicate.md"
+  sed -i.bak 's/^id: 001-original$/id: 002-duplicate/' "$replacement/on-track/decisions/archive/002-duplicate.md"
+  rm "$replacement/on-track/decisions/archive/002-duplicate.md.bak"
+  expect_failure "index with a decision number used twice" "$index_script" "$replacement"
+  assert_contains "$work/failure.err" "decision number 002 is used more than once across decisions/ and decisions/archive/"
+  rm "$replacement/on-track/decisions/archive/002-duplicate.md"
+
+  sed -i.bak 's/^status: superseded$/status: accepted/' "$replacement/on-track/decisions/archive/001-original.md"
+  expect_failure "index with an accepted decision in the archive" "$index_script" "$replacement"
+  assert_contains "$work/failure.err" "archive/001-original.md must have status: superseded"
+  mv "$replacement/on-track/decisions/archive/001-original.md.bak" "$replacement/on-track/decisions/archive/001-original.md"
+
+  sed -i.bak 's/^superseded_by: 002-replacement$/superseded_by: 099-nowhere/' "$replacement/on-track/decisions/archive/001-original.md"
+  expect_failure "index with an archived decision pointing nowhere" "$index_script" "$replacement"
+  assert_contains "$work/failure.err" "001-original.md superseded_by references missing 099-nowhere"
+  mv "$replacement/on-track/decisions/archive/001-original.md.bak" "$replacement/on-track/decisions/archive/001-original.md"
+  "$index_script" "$replacement" >/dev/null
   pass "decision capture contract"
 }
 
@@ -2152,16 +2186,21 @@ run_flow() {
   assert_contains "$intent_skill" 'Change no `status` and delete nothing'
   assert_contains "$spec_skill" 'Leave `spec.md` and `tasks.md` in `draft` and delete nothing'
   assert_contains "$implement_skill" 'keep the implemented code'
-  for contract_text in 'investigate first' 'ask only blocking questions' 'one round per stage, at most four' 'your recommendation first' '"you decide"' '**Off Road** is the consulted way onto the Highway' "until that track's spec is approved" 'does not turn Off Road back on unless the user asks again' 'within the same cap' 'Off Road adds no field to any artifact and does not carry across sessions' 'a new session starts with it off until the user asks again' 'even when a handoff quotes the earlier request'; do
+  for contract_text in 'not already **settled**' 'one targeted read' 'serve the request as stated' 'are asked on every route' 'at most four per round, one theme per round' 'ask only blocking questions' 'one round in intent, up to three in spec' 'outlast the third spec round' 'your recommendation first' '"you decide"' '**Off Road** is the consulted way onto the Highway' "until that track's spec is approved" 'as many rounds as the open points need' 'suggest research' 'does not turn Off Road back on unless the user asks again' 'Off Road adds no field to any artifact and does not carry across sessions' 'a new session starts with it off until the user asks again' 'even when a handoff quotes the earlier request'; do
     assert_contains "$signal_snippet" "$contract_text"
   done
   assert_not_contains "$signal_snippet" 'until the conversation ends'
   assert_not_contains "$signal_snippet" 'the implement review asks before fixing'
-  for contract_text in 'Ask every blocking question in one round, at most four' 'names the decision it unlocks' 'your recommendation first' 'marked `(delegated)`' 'There is one round in this stage' 'In Off Road' "until that track's spec is approved" 'A decision the user delegated is the other entry allowed there' 'Off Road adds no field to any artifact and does not carry across sessions' 'a new session starts with it off until the user asks again' 'even when a handoff quotes the earlier request'; do
+  for contract_text in '**Settled**' 'one targeted read' 'record its source under `Assumed state` > `Verified by the agent`' '**Suggestion**' 'a recorded decision (an ADR, a documented choice) stays as written' '**Serve the request as stated**' 'suggest `ot-research` before the intent, and continue with the request as stated unless the user takes the suggestion' 'all on one **theme**' 'close a theme before opening the next' 'on the Highway and in Off Road alike' 'names the decision it unlocks' 'your recommendation first' 'marked `(delegated)`' 'there is one round in this stage' 'suggest Off Road in one sentence' '**Off Road**' 'as many rounds as the open points need' "until that track's spec is approved" 'A decision the user delegated is the other entry allowed there' 'Off Road adds no field to any artifact and does not carry across sessions' 'a new session starts with it off until the user asks again' 'even when a handoff quotes the earlier request'; do
     assert_contains "$intent_skill" "$contract_text"
   done
   assert_not_contains "$intent_skill" 'until the conversation ends'
-  for contract_text in 'ask in rounds of at most four' 'marked `(delegated)`' 'Without delegation, do not invent answers to either kind' 'list delegated decisions so the user can veto them' 'In Off Road' 'until this spec is approved' 'Approval ends Off Road' 'Off Road adds no field to any artifact and does not carry across sessions' 'a new session starts with it off until the user asks again' 'even when a handoff quotes the earlier request'; do
+  for stale_text in 'within the same cap' 'one round per stage' 'the repository or a command cannot answer'; do
+    assert_not_contains "$signal_snippet" "$stale_text"
+    assert_not_contains "$intent_skill" "$stale_text"
+    assert_not_contains "$spec_skill" "$stale_text"
+  done
+  for contract_text in '**Settled**' 'one targeted read' '**Suggestion**' '**Serve the request as stated**' 'all on one **theme**' 'on the Highway and in Off Road alike' 'ask in rounds of at most four, up to three rounds' 'When blocking questions remain after the third round, stop, list them, and suggest Off Road' 'suggest `ot-research` and continue unless the user takes the suggestion' 'as many rounds as the open points need' 'marked `(delegated)`' 'Without delegation, do not invent answers to either kind' 'list delegated decisions so the user can veto them' '**Off Road**' 'until this spec is approved' 'Approval ends Off Road' 'Off Road adds no field to any artifact and does not carry across sessions' 'a new session starts with it off until the user asks again' 'even when a handoff quotes the earlier request'; do
     assert_contains "$spec_skill" "$contract_text"
   done
   assert_not_contains "$spec_skill" 'until the conversation ends'
@@ -2520,9 +2559,85 @@ run_isolation() {
   pass "isolation"
 }
 
+run_doctor() {
+  local doctor_script="$repo_root/skills/ot-doctor/scripts/on-track-doctor.sh"
+  local doctor_skill="$repo_root/skills/ot-doctor/SKILL.md"
+  local target="$work/doctor-target" before
+  "$init_script" "$target" >/dev/null
+  "$doctor_script" "$target" >"$work/doctor.out" || fail "doctor reported findings on a fresh init"
+  assert_contains "$work/doctor.out" "OK: nothing to fix"
+  "$index_script" "$target" >/dev/null 2>"$work/index.err"
+  assert_not_contains "$work/index.err" "WARN:"
+
+  sed -i.bak '1s/on-track v[0-9.]*\./on-track./' "$target/AGENTS.md"
+  rm "$target/AGENTS.md.bak"
+  "$index_script" "$target" >/dev/null 2>"$work/index.err" || fail "an outdated block must not fail the index"
+  assert_contains "$work/index.err" "WARN: the on-track managed block in AGENTS.md is outdated (project: no version, package: v"
+  cp "$target/on-track/INDEX.md" "$work/index-before-check.md"
+  "$index_script" --check "$target" >"$work/index-check.out" 2>/dev/null || fail "index --check failed on a valid tree"
+  assert_contains "$work/index-check.out" "check only, not written"
+
+  cat >"$target/on-track/decisions/001-old.md" <<'EOF'
+---
+id: 001-old
+status: superseded
+date: 2026-09-20
+owner: maintainer
+superseded_by: 002-new
+---
+
+# ADR: 001-old
+
+## Context
+c
+## Decision
+d
+## Rationale
+r
+## Alternatives considered
+a
+## Consequences
+q
+EOF
+  sed -e 's/001-old/002-new/g; s/^status: superseded$/status: accepted/; /^superseded_by:/d' "$target/on-track/decisions/001-old.md" >"$target/on-track/decisions/002-new.md"
+  rmdir "$target/on-track/decisions/archive"
+  before="$(tree_fingerprint "$target")"
+  expect_failure "doctor on a drifted project" "$doctor_script" "$target"
+  [ "$before" = "$(tree_fingerprint "$target")" ] || fail "doctor changed the target"
+  assert_contains "$work/failure.out" "FIND: block-outdated: project no version, package v"
+  assert_contains "$work/failure.out" "FIND: tree-missing: on-track/decisions/archive/"
+  assert_contains "$work/failure.out" "FIND: adr-superseded: on-track/decisions/001-old.md"
+  assert_contains "$work/failure.out" "FIND: adr-untitled: on-track/decisions/002-new.md"
+  assert_not_contains "$work/failure.out" "adr-untitled: on-track/decisions/001-old.md"
+  assert_not_contains "$work/failure.out" "index-invalid"
+  assert_contains "$work/failure.out" "Nothing was changed."
+
+  mkdir "$target/fast-track-ai"
+  expect_failure "doctor on a legacy project" "$doctor_script" "$target"
+  assert_contains "$work/failure.out" "FIND: legacy-tree:"
+  rmdir "$target/fast-track-ai"
+
+  "$init_script" "$target" >/dev/null
+  mv "$target/on-track/decisions/001-old.md" "$target/on-track/decisions/archive/"
+  sed -i.bak 's/^# ADR: 002-new$/# ADR: New decision/' "$target/on-track/decisions/002-new.md"
+  rm "$target/on-track/decisions/002-new.md.bak"
+  "$index_script" "$target" >/dev/null 2>"$work/index.err"
+  assert_not_contains "$work/index.err" "WARN:"
+  "$doctor_script" "$target" >"$work/doctor.out" || fail "doctor still reports findings after the fixes"
+
+  for contract_text in 'It is read-only' 'wait for the user'"'"'s confirmation' 'Apply only what was confirmed' 'never commits, pushes, or deploys' 'cannot tell whether a newer package was published'; do
+    assert_contains "$doctor_skill" "$contract_text"
+  done
+  for warn_skill in "$repo_root"/skills/ot-*/SKILL.md; do
+    assert_contains "$warn_skill" 'relay it to the user in one sentence'
+  done
+  pass "doctor"
+}
+
 run_case() {
   case "$1" in
     self) run_self ;;
+    doctor) run_doctor ;;
     init) run_init ;;
     index) run_index ;;
     approval) run_approval ;;
@@ -2543,7 +2658,7 @@ run_case() {
 }
 
 if [ "$mode" = "all" ]; then
-  for eval_name in self init index approval install resources workflows refs decisions handoff spec flow active frontmatter docs isolation; do
+  for eval_name in self init index approval install resources workflows refs decisions doctor handoff spec flow active frontmatter docs isolation; do
     if [ "$eval_name" = "isolation" ] && [ "${ON_TRACK_ISOLATION_GUARD:-}" = "1" ]; then
       continue
     fi

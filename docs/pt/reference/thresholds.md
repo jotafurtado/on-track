@@ -56,4 +56,4 @@ Preferência do usuário sem alternativa pesada é restrição no intent, não A
 | Implement | O usuário toma uma decisão qualificada | Grava a ADR; se ela conflita com a spec ou as tasks aprovadas, ou as muda materialmente, as duas voltam a `draft` e exigem nova aprovação (veja [Ciclo](cycle.md#limites-da-implementacao)) |
 | Express | Surge uma decisão qualificada | Grava só essa ADR e regenera o índice; o caminho da ADR entra em `files` da crumb |
 
-Uma ADR nasce `accepted`. Substituir uma grava a substituta como a próxima ADR numerada em `accepted` e marca a original como `superseded`, com `superseded_by`, sem mudar o texto original. O template da ADR está em [Artefatos](artifacts.md#decisao-adr).
+Uma ADR nasce `accepted`. Substituir uma grava a substituta como a próxima ADR numerada em `accepted` e marca a original como `superseded`, com `superseded_by`, sem mudar o texto original, e a move para `on-track/decisions/archive/`. O template da ADR está em [Artefatos](artifacts.md#decisao-adr).

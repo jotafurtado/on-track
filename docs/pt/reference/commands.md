@@ -1,11 +1,11 @@
 ---
 title: Comandos
-description: Os sete comandos do On Track Method, o que cada um faz, o que grava e o que nunca faz.
+description: Os oito comandos do On Track Method, o que cada um faz, o que grava e o que nunca faz.
 ---
 
 # Comandos
 
-Esta página responde o que faz cada um dos sete comandos. Cada arquivo de comando em `commands/` manda o agente rodar a skill de mesmo nome em `skills/`. O procedimento está nas skills, então pedir ao agente que use uma skill pelo nome funciona igual ao comando. A instalação está em [Instalação](../getting-started/installation.md).
+Esta página responde o que faz cada um dos oito comandos. Cada arquivo de comando em `commands/` manda o agente rodar a skill de mesmo nome em `skills/`. O procedimento está nas skills, então pedir ao agente que use uma skill pelo nome funciona igual ao comando. A instalação está em [Instalação](../getting-started/installation.md).
 
 | Comando | Faz | Grava |
 |---|---|---|
@@ -16,21 +16,21 @@ Esta página responde o que faz cada um dos sete comandos. Cada arquivo de coman
 | `ot-research` | Investiga um fato externo com fontes rastreáveis | `on-track/research/<slug>.md`, `INDEX.md` |
 | `ot-assess` | Avalia o que existe, com evidência e contraevidência | `on-track/assessments/<YYYY-MM-DD>-<slug>.md`, `INDEX.md` |
 | `ot-handoff` | Registra o contexto de trabalho para continuar depois | `on-track/handoffs/<YYYY-MM-DD-HHmmssZ>-<slug>.md`, move handoffs antigos para `archive/`, `INDEX.md` |
+| `ot-doctor` | Diagnostica o projeto e o corrige depois da confirmação | Só o que o usuário confirma: o bloco gerenciado, pastas faltando, arquivos do layout antigo e ADRs substituídas movidos, títulos de ADR, `INDEX.md` |
 
-Refs e decisions não têm comando próprio. `ot-intent` captura refs; `ot-intent`, `ot-spec` e `ot-implement` gravam ADRs; a via Express pode gravar uma ADR qualificada. O próprio Express não tem comando: suas regras estão no bloco gerenciado e também no `ot-intent`, então ele não precisa de skill dedicada.
+Refs e decisions não têm comando próprio. `ot-intent` captura refs; `ot-intent`, `ot-spec` e `ot-implement` gravam ADRs; a via Express pode gravar uma ADR qualificada. O Express não tem comando: suas regras estão no bloco gerenciado.
 
 ## `ot-init`
 
-Roda `on-track-init.sh` no diretório alvo, verifica a árvore (`on-track/{research,refs,handoffs/archive,assessments,decisions,tracks,crumbs}`, `on-track/crumbs/.gitignore`, `on-track/INDEX.md`), roda `on-track-index.sh` e relata. O agente também o usa quando o usuário diz "setup on-track", "install on-track" ou "init the method here", ou quando `on-track/` não existe.
+Roda `on-track-init.sh` no diretório alvo, verifica a árvore (`on-track/{research,refs,handoffs/archive,assessments,decisions,decisions/archive,tracks,crumbs}`, `on-track/crumbs/.gitignore`, `on-track/INDEX.md`), roda `on-track-index.sh` e relata. O agente também o usa quando o usuário diz "setup on-track", "install on-track" ou "init the method here", ou quando `on-track/` não existe.
 
 - Rodar duas vezes não muda nada na segunda e nunca duplica o bloco gerenciado. Um bloco desatualizado é substituído no lugar, sem tocar o texto em volta.
 - Falha sem gravar quando o `AGENTS.md` tem marcadores malformados (algo diferente de zero, ou exatamente um BEGIN e um END, nessa ordem).
-- Recusa, e não muda nada, enquanto existir a árvore ou o bloco gerenciado do nome antigo do método. O agente repassa a mensagem e não renomeia nem apaga nada sem o usuário pedir. Veja [Migração](../getting-started/migrating.md).
 - Não copia nada do pacote para o alvo. Artefatos de apoio são gravados pelas próprias skills, não pelo init.
 
 ## `ot-intent`
 
-Classifica cada parte do pedido (veja [Classes de pedido](request-classes.md)), encaminha sem track as partes operacionais, Express, de só pesquisa e de só avaliação e, para mudança do Highway, redige `intent.md` com `status: draft`. Antes de redigir, investiga, faz no máximo uma rodada de perguntas bloqueadoras e verifica os gatilhos de research, ref, ADR e assessment. Regenera o índice, mostra o resumo de quatro tópicos e para com `. para continuar com a spec`. Com o verde, encadeia o `ot-spec`.
+Classifica cada parte do pedido (veja [Classes de pedido](request-classes.md)), encaminha sem track as partes operacionais, Express, de só pesquisa e de só avaliação e, para mudança do Highway, redige `intent.md` com `status: draft`. Antes de redigir, verifica o que já está resolvido, faz as perguntas bloqueadoras em aberto (uma rodada no Highway, quantas forem necessárias no Off Road) e verifica os gatilhos de research, ref, ADR e assessment. Regenera o índice, mostra o resumo de quatro tópicos e para com `. para continuar com a spec`. Com o verde, encadeia o `ot-spec`.
 
 Nunca: grava `spec.md`; muda o `status` do intent com o verde; cria track para partes operacionais; cria track para uma edição que seria Express, a menos que o usuário tenha escolhido o Highway; inventa `superseded_by`.
 
@@ -63,3 +63,11 @@ Nunca: modifica o objeto avaliado; exige nota numérica genérica; implementa as
 Lê o índice e a conversa, preserva literalmente as instruções ativas do usuário, exceto segredos ou dados pessoais desnecessários, e informa qualquer omissão desse tipo. Separa o trabalho verificado das próximas ações, referencia artefatos duráveis pelo caminho e grava o handoff num caminho calculado a partir do instante UTC atual. Valida primeiro o handoff novo, depois mantém os três handoffs ativos mais recentes e move os mais antigos para `archive/`, e então regenera o índice.
 
 Nunca: sobrescreve um handoff existente na pasta ativa ou em `archive/` (para e relata a colisão); arquiva algo antes de o handoff novo passar na validação; parafraseia instrução cuja redação restringe o próximo agente; acrescenta campo `status`.
+
+## `ot-doctor`
+
+Roda o `on-track-doctor.sh`, que lê o projeto e não altera nada. Relata cada achado: layout do nome anterior do método, bloco gerenciado ausente ou desatualizado (com as versões do projeto e do pacote), pasta faltando, ADR substituída ainda em `on-track/decisions/`, ADR cujo título repete o id e erros do índice. Para cada um propõe uma correção, espera a sua confirmação, aplica só o que você confirmou, regenera o índice e roda o diagnóstico de novo. Use depois de atualizar o pacote, quando um aviso do índice pedir, ou quando o `ot-init` recusar um layout antigo.
+
+Ele compara o projeto com o pacote instalado, então não sabe se saiu uma versão nova. Para atualizar o pacote, rode o instalador de novo (veja [Instalação](../getting-started/installation.md#atualizar)).
+
+Nunca: muda algo antes da sua confirmação; apaga artefato; inventa valor de campo; edita fora de `on-track/`, dos blocos gerenciados no `AGENTS.md` e do caminho antigo do nome anterior; faz commit.
