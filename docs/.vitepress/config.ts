@@ -99,12 +99,12 @@ const portugueseNav: DefaultTheme.NavItem[] = [
 export default defineConfig({
   title: 'On Track Method',
   description: 'A lightweight, agent-driven software development life cycle.',
-  base: '/on-track/',
+  base: '/',
   srcExclude: ['**/node_modules/**'],
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/on-track/brand/on-track-app-icon.svg' }],
-    ['link', { rel: 'apple-touch-icon', href: '/on-track/brand/on-track-app-icon.png' }],
-    ['meta', { property: 'og:image', content: 'https://jotafurtado.github.io/on-track/brand/on-track-social-preview.png' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/brand/on-track-app-icon.svg' }],
+    ['link', { rel: 'apple-touch-icon', href: '/brand/on-track-app-icon.png' }],
+    ['meta', { property: 'og:image', content: 'https://ontrack.jotafurtado.dev/brand/on-track-social-preview.png' }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }]
   ],
   themeConfig: {

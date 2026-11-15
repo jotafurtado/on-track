@@ -6,7 +6,7 @@ Notable changes to On Track Method are recorded here. Entries describe user and 
 
 ### Added
 
-- The documentation site is published to GitHub Pages at https://jotafurtado.github.io/on-track/ by a workflow that rebuilds it on every push to `main` that touches `docs/`.
+- The documentation site is published to GitHub Pages at https://ontrack.jotafurtado.dev/ by a workflow that rebuilds it on every push to `main` that touches `docs/`.
 
 ## [0.1.0] - 2026-11-12
 
