@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1800" viewBox="0 0 2400 1800" role="img" aria-labelledby="title description">
   <title id="title">On Track Method: três caminhos para um pedido</title>
-  <desc id="description">Três vias horizontais. Express: o agente implementa, roda a verificação, grava um crumb local e relata, sem perguntas e sem sinal. Highway, o padrão: intent, um sinal, spec, um sinal, implement, um sinal e ship. Off Road, a pedido: intent e spec com mais consulta, cada um seguido de um sinal; ele entra no Highway quando a spec é aprovada, então implement e ship são os mesmos. Um sinal é uma parada em que um ponto segue, um x para e qualquer outra resposta revisa a etapa.</desc>
+  <desc id="description">Três vias horizontais. Express, o caminho mais rápido: o agente implementa, verifica, grava um crumb local e relata, sem paradas. Highway, o padrão: intent, um sinal, spec, um sinal, implementar, um sinal e a chegada, que você confirma. Off Road, para terreno sem mapa: intent e spec com mais perguntas, cada uma seguida de um sinal; entra na Highway quando a Spec é aprovada. Um sinal é uma parada em que um ponto segue, um x para e qualquer outra resposta revisa a etapa.</desc>
   <metadata id="font-license"><![CDATA[Copyright 2014 The DM Sans Project Authors (https://github.com/googlefonts/dm-fonts)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
@@ -123,18 +123,18 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   </defs>
   <rect width="2400" height="1800" fill="var(--surface)"/>
   <g aria-label="Cabeçalho">
-    <path d="M112 68 H137 L126 86 H151" fill="none" stroke="var(--fg)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(108 54) scale(.7)"><path d="M9 19 H22 L37 41 H44" fill="none" stroke="var(--fg)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="5" fill="var(--fg)"/><circle cx="52" cy="41" r="7.5" fill="none" stroke="var(--success)" stroke-width="4"/><circle cx="52" cy="41" r="2.75" fill="var(--success)"/></g>
     <text x="169" y="88" class="brand">On Track Method</text>
     <text x="110" y="214" class="headline">Três Caminhos para um Pedido.</text>
-    <text x="114" y="280" class="intro">O tamanho do pedido define o registro. Você sempre pode escolher a via.</text>
+    <text x="114" y="280" class="intro">Cada pedido pega a via do seu tamanho. A escolha final é sempre sua.</text>
     <rect x="1832" y="49" width="454" height="66" rx="33" fill="none" stroke="var(--border)" stroke-width="2"/>
     <text x="2059" y="92" font-size="30" text-anchor="middle">Padrão: Highway</text>
     <path d="M114 331 H2286" stroke="var(--border)" stroke-width="1.5"/>
   </g>
   <g data-lane="express" aria-label="Via Express: implementar, verificar, crumb, relatar">
-    <text x="114" y="498" class="tag" style="fill:var(--artifact)">Cinco critérios valem</text>
+    <text x="114" y="498" class="tag" style="fill:var(--artifact)">O caminho mais rápido</text>
     <text x="110" y="568" class="lane">Express</text>
-    <text x="114" y="622" class="detail">Sem track, sem sinal</text>
+    <text x="114" y="622" class="detail">Direto, sem paradas</text>
     <path class="track" d="M640 560 H2130" stroke="var(--border)" stroke-width="18"/>
     <path class="track" d="M640 560 H2130" stroke="var(--fg)" stroke-opacity=".55" stroke-width="2"/>
     <path class="track" d="M980 560 H990" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
@@ -144,11 +144,11 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <circle cx="760" cy="560" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="760" cy="560" r="9" fill="var(--agent)"/>
     <text x="760" y="682" class="stage">Implementar</text>
-    <text x="760" y="726" class="note">A edição em si</text>
+    <text x="760" y="726" class="note">Escreve o código</text>
     <circle cx="1217" cy="560" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="1217" cy="560" r="9" fill="var(--agent)"/>
     <text x="1217" y="682" class="stage">Verificar</text>
-    <text x="1217" y="726" class="note">Um comando</text>
+    <text x="1217" y="726" class="note">Testa o resultado</text>
     <circle cx="1673" cy="560" r="52" class="station" stroke="var(--artifact)"/>
     <circle cx="1673" cy="560" r="9" fill="var(--artifact)"/>
     <text x="1673" y="682" class="stage">Crumb</text>
@@ -158,10 +158,10 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <text x="2130" y="682" class="stage">Relatar</text>
     <text x="2130" y="726" class="note">O que mudou</text>
   </g>
-  <g data-lane="off-road" aria-label="Off Road: intent e spec com mais consulta, entrando no Highway na aprovação da spec">
-    <text x="114" y="1278" class="tag" style="fill:var(--human)">A pedido</text>
+  <g data-lane="off-road" aria-label="Off Road: intent e spec com mais perguntas, entrando na Highway quando a Spec é aprovada">
+    <text x="114" y="1278" class="tag" style="fill:var(--human)">Terreno sem mapa</text>
     <text x="110" y="1348" class="lane">Off Road</text>
-    <text x="114" y="1402" class="detail">Mais consulta</text>
+    <text x="114" y="1402" class="detail">Pergunta antes de supor</text>
     <path class="track" d="M640 1340 H1440 C1540 1340 1540 1180 1540 1020 V960" stroke="var(--border)" stroke-width="18"/>
     <path class="track" d="M640 1340 H1440 C1540 1340 1540 1180 1540 1020 V960" stroke="var(--fg)" stroke-opacity=".55" stroke-width="2"/>
     <path class="track" d="M870 1340 H880" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
@@ -172,20 +172,20 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <circle cx="760" cy="1340" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="760" cy="1340" r="9" fill="var(--agent)"/>
     <text x="760" y="1462" class="stage">Intent</text>
-    <text x="760" y="1506" class="note">+ escolhas do agente</text>
+    <text x="760" y="1506" class="note">A intenção, a fundo</text>
     <circle cx="985" cy="1340" r="27" class="station" stroke="var(--human)"/>
     <circle cx="985" cy="1340" r="7" fill="var(--human)"/>
     <circle cx="1210" cy="1340" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="1210" cy="1340" r="9" fill="var(--agent)"/>
     <text x="1210" y="1462" class="stage">Spec</text>
-    <text x="1210" y="1506" class="note">+ escolhas do agente</text>
+    <text x="1210" y="1506" class="note">O desenho, decidido com você</text>
     <circle cx="1420" cy="1340" r="27" class="station" stroke="var(--human)"/>
     <circle cx="1420" cy="1340" r="7" fill="var(--human)"/>
-    <text x="1596" y="1262" class="detail">Entra no Highway</text>
-    <text x="1596" y="1304" class="detail">quando a spec é aprovada</text>
+    <text x="1596" y="1262" class="detail">Entra na Highway</text>
+    <text x="1596" y="1304" class="detail">quando a Spec é aprovada</text>
   </g>
-  <g data-lane="highway" aria-label="Via Highway: intent, spec, implement, ship, com um sinal depois de cada etapa">
-    <text x="114" y="898" class="tag" style="fill:var(--agent)">Padrão</text>
+  <g data-lane="highway" aria-label="Via Highway: intent, spec, implementar e chegada, com um sinal depois de cada etapa">
+    <text x="114" y="898" class="tag" style="fill:var(--agent)">Velocidade de cruzeiro</text>
     <text x="110" y="968" class="lane">Highway</text>
     <text x="114" y="1022" class="detail">Ciclo completo, três sinais</text>
     <path class="track" d="M640 960 H2130" stroke="var(--border)" stroke-width="18"/>
@@ -201,24 +201,24 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <circle cx="760" cy="960" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="760" cy="960" r="9" fill="var(--agent)"/>
     <text x="760" y="1082" class="stage">Intent</text>
-    <text x="760" y="1126" class="note">Perguntas bloqueadoras</text>
+    <text x="760" y="1126" class="note">A intenção da mudança</text>
     <circle cx="985" cy="960" r="27" class="station" stroke="var(--human)"/>
     <circle cx="985" cy="960" r="7" fill="var(--human)"/>
     <circle cx="1210" cy="960" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="1210" cy="960" r="9" fill="var(--agent)"/>
     <text x="1210" y="1082" class="stage">Spec</text>
-    <text x="1210" y="1126" class="note">Perguntas bloqueadoras</text>
+    <text x="1210" y="1126" class="note">Especificação e tarefas</text>
     <circle cx="1420" cy="960" r="27" class="station" stroke="var(--human)"/>
     <circle cx="1420" cy="960" r="7" fill="var(--human)"/>
     <circle cx="1720" cy="960" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="1720" cy="960" r="9" fill="var(--agent)"/>
-    <text x="1720" y="1082" class="stage">Implement</text>
-    <text x="1720" y="1126" class="note">Gate e revisão</text>
+    <text x="1720" y="1082" class="stage">Implementar</text>
+    <text x="1720" y="1126" class="note">Código e revisão</text>
     <circle cx="1930" cy="960" r="27" class="station" stroke="var(--human)"/>
     <circle cx="1930" cy="960" r="7" fill="var(--human)"/>
     <circle cx="2130" cy="960" r="52" class="station" stroke="var(--success)"/>
-    <path d="M2108 960 L2124 976 L2153 941" fill="none" stroke="var(--success)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="2130" y="1082" class="stage" style="fill:var(--success)">Ship</text>
+    <path d="M2114 990 V930" fill="none" stroke="var(--success)" stroke-width="5" stroke-linecap="round"/><path d="M2114 932 H2152 L2141 946 L2152 960 H2114 Z" fill="var(--success)"/>
+    <text x="2130" y="1082" class="stage" style="fill:var(--success)">Chegada</text>
     <text x="2130" y="1126" class="note">Você confirma</text>
   </g>
   <g transform="translate(0 120)" aria-label="Sinais e o que cada via deixa registrado">
@@ -226,8 +226,5 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <circle cx="146" cy="1557" r="27" class="station" stroke="var(--human)"/>
     <circle cx="146" cy="1557" r="7" fill="var(--human)"/>
     <text x="197" y="1568" font-size="33">Sinal: <tspan font-weight="700">.</tspan> segue, <tspan font-weight="700">x</tspan> para, qualquer outra resposta revisa a etapa.</text>
-    <text x="2283" y="1568" text-anchor="end" font-size="31" style="fill:var(--muted)">Sem commit, push ou deploy automático.</text>
-    <text x="116" y="1630" class="caption">A via Express deixa um crumb local até o commit.</text>
-    <text x="2283" y="1630" text-anchor="end" class="caption">O Off Road só muda as perguntas do intent e da spec.</text>
   </g>
 </svg>

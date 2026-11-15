@@ -117,12 +117,12 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   </style>
   <rect width="2400" height="1800" fill="var(--surface)"/>
   <g aria-label="Header">
-    <path d="M112 68 H137 L126 86 H151" fill="none" stroke="var(--fg)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(108 54) scale(.7)"><path d="M9 19 H22 L37 41 H44" fill="none" stroke="var(--fg)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="5" fill="var(--fg)"/><circle cx="52" cy="41" r="7.5" fill="none" stroke="#0ae448" stroke-width="4"/><circle cx="52" cy="41" r="2.75" fill="#0ae448"/></g>
     <text x="169" y="88" class="brand">On Track Method</text>
     <text x="110" y="214" class="headline">Context That Stays in the Project.</text>
-    <text x="114" y="280" class="intro">Supporting artifacts are available at any time, without starting an implementation.</text>
+    <text x="114" y="280" class="intro">Memory lives in the project files, not in the chat or the model.</text>
     <rect x="1832" y="49" width="454" height="66" rx="33" fill="none" stroke="var(--border)" stroke-width="2"/>
-    <text x="2059" y="92" font-size="30" text-anchor="middle">No Implementation Needed</text>
+    <text x="2059" y="92" font-size="30" text-anchor="middle">Any Time</text>
     <path d="M114 331 H2286" stroke="var(--border)" stroke-width="1.5"/>
   </g>
   <g aria-label="Connections to the index">
@@ -150,9 +150,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <path class="stub" d="M858.863 541.672 H818.863"/>
     <text x="805.863" y="456.172" class="action end">Refs</text>
     <text x="802.863" y="507.172" class="detail end">Material you provide</text>
-    <text x="802.863" y="549.172" class="detail end">Recorded during the flow.</text>
+    <text x="802.863" y="549.172" class="detail end">Recorded during the flow</text>
     <text x="802.863" y="600.172" class="artifact end">refs/&lt;slug&gt;.md</text>
-    <text x="802.863" y="655.172" class="caption end">No command of their own.</text>
   </g>
   <g data-node="assessments" aria-label="Assessments with ot-assess">
     <circle class="node" cx="1482.137" cy="541.672" r="59"/>
@@ -170,9 +169,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <path class="stub" d="M684.493 1078.328 H644.493"/>
     <text x="631.493" y="992.828" class="action end">Decisions</text>
     <text x="628.493" y="1043.828" class="detail end">What, why, and consequences</text>
-    <text x="628.493" y="1085.828" class="detail end">Recorded during the flow.</text>
+    <text x="628.493" y="1085.828" class="detail end">Recorded during the flow</text>
     <text x="628.493" y="1136.828" class="artifact end">decisions/&lt;NNN-slug&gt;.md</text>
-    <text x="628.493" y="1191.828" class="caption end">No command of their own.</text>
   </g>
   <g data-node="research" aria-label="Research with ot-research">
     <circle class="node" cx="1656.507" cy="1078.328" r="59"/>
@@ -193,17 +191,10 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <text x="1315" y="1468.5" class="artifact">handoffs/&lt;timestamp&gt;-&lt;slug&gt;.md</text>
     <text x="1315" y="1523.5" class="command">/ot-handoff</text>
   </g>
-  <g aria-label="Common root of the paths">
+  <path d="M114 1613 H2286" stroke="var(--border)" stroke-width="1.5"/>
+  <g transform="translate(0 270)"><g aria-label="Common root of the paths">
     <path d="M140 1384 H158 L166 1394 H198 V1432 H140 Z" fill="none" stroke="var(--artifact)" stroke-width="3" stroke-linejoin="round"/>
     <text x="222" y="1404" class="caption">Every path lives under</text>
     <text x="222" y="1448" class="artifact">on-track/</text>
-  </g>
-  <g aria-label="Where the memory lives">
-    <path d="M114 1613 H2286" stroke="var(--border)" stroke-width="1.5"/>
-    <rect x="116" y="1650" width="60" height="60" rx="15" fill="none" stroke="var(--fg)" stroke-width="1.5"/>
-    <path d="M134 1669 H158 M134 1680 H158 M134 1691 H148" stroke="var(--fg)" stroke-width="2.5" stroke-linecap="round"/>
-    <text x="197" y="1688" font-size="33">Memory lives in the project files, not in the chat or the model.</text>
-    <text x="2283" y="1688" text-anchor="end" font-size="31" style="fill:var(--muted)">Slash: Claude Code. Codex: $ and the skill name.</text>
-    <text x="116" y="1750" class="caption">Review the artifacts like any other project file.</text>
-  </g>
+  </g></g>
 </svg>

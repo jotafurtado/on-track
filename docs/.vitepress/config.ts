@@ -4,9 +4,9 @@ const englishSidebar: DefaultTheme.SidebarItem[] = [
   {
     text: 'Getting started',
     items: [
+      { text: 'Quick start', link: '/getting-started/quick-start' },
       { text: 'Installation', link: '/getting-started/installation' },
       { text: 'Your first track', link: '/getting-started/first-track' },
-      { text: 'Migrating from fast-track-ai', link: '/getting-started/migrating' }
     ]
   },
   {
@@ -36,8 +36,7 @@ const englishSidebar: DefaultTheme.SidebarItem[] = [
   {
     text: 'Concepts',
     items: [
-      { text: 'Why On Track', link: '/concepts/why-on-track' },
-      { text: 'Design choices', link: '/concepts/design-choices' }
+      { text: 'Why On Track?', link: '/concepts/why-on-track' },
     ]
   }
 ]
@@ -46,9 +45,9 @@ const portugueseSidebar: DefaultTheme.SidebarItem[] = [
   {
     text: 'Primeiros Passos',
     items: [
+      { text: 'Começo Rápido', link: '/pt/getting-started/quick-start' },
       { text: 'Instalação', link: '/pt/getting-started/installation' },
       { text: 'Sua Primeira Track', link: '/pt/getting-started/first-track' },
-      { text: 'Migração do fast-track-ai', link: '/pt/getting-started/migrating' }
     ]
   },
   {
@@ -78,21 +77,20 @@ const portugueseSidebar: DefaultTheme.SidebarItem[] = [
   {
     text: 'Conceitos',
     items: [
-      { text: 'Por Que On Track', link: '/pt/concepts/why-on-track' },
-      { text: 'Escolhas de Design', link: '/pt/concepts/design-choices' }
+      { text: 'Por Que On Track?', link: '/pt/concepts/why-on-track' },
     ]
   }
 ]
 
 const englishNav: DefaultTheme.NavItem[] = [
-  { text: 'Getting started', link: '/getting-started/installation' },
+  { text: 'Getting started', link: '/getting-started/quick-start' },
   { text: 'Guides', link: '/guides/express-changes' },
   { text: 'Reference', link: '/reference/request-classes' },
   { text: 'Concepts', link: '/concepts/why-on-track' }
 ]
 
 const portugueseNav: DefaultTheme.NavItem[] = [
-  { text: 'Primeiros Passos', link: '/pt/getting-started/installation' },
+  { text: 'Primeiros Passos', link: '/pt/getting-started/quick-start' },
   { text: 'Guias', link: '/pt/guides/express-changes' },
   { text: 'Referência', link: '/pt/reference/request-classes' },
   { text: 'Conceitos', link: '/pt/concepts/why-on-track' }
@@ -103,7 +101,14 @@ export default defineConfig({
   description: 'A lightweight, agent-driven software development life cycle.',
   base: '/on-track/',
   srcExclude: ['**/node_modules/**'],
+  head: [
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/on-track/brand/on-track-app-icon.svg' }],
+    ['link', { rel: 'apple-touch-icon', href: '/on-track/brand/on-track-app-icon.png' }],
+    ['meta', { property: 'og:image', content: 'https://jotafurtado.github.io/on-track/brand/on-track-social-preview.png' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }]
+  ],
   themeConfig: {
+    logo: { light: '/brand/on-track-mark-on-light.svg', dark: '/brand/on-track-mark-on-dark.svg', alt: 'On Track Method' },
     socialLinks: [{ icon: 'github', link: 'https://github.com/jotafurtado/on-track' }],
     search: {
       provider: 'local',

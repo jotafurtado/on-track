@@ -1,5 +1,12 @@
 # On Track Method
 
+<p>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/public/brand/on-track-wordmark-on-dark.svg">
+    <img src="docs/public/brand/on-track-wordmark-on-light.svg" alt="On Track Method" height="56">
+  </picture>
+</p>
+
 [Português (Brasil)](README.pt-BR.md)
 
 On Track Method is a lightweight software development life cycle (SDLC) that keeps coding agents on track: you set the direction and answer the signals, and the agent documents, plans, implements, and validates. The record is proportional to the request, so work that does not need a track does not get one.
@@ -12,11 +19,11 @@ On Track Method classifies each request before touching anything, writes down th
 
 ## How a request travels
 
-![Diagram titled "Three Ways a Request Travels". Express, used when five criteria hold, runs Implement, Check, Crumb, and Report with no track and no signal. Highway, the default, runs Intent and Spec with blocking questions, then Implement with gate and review, then Ship, which you confirm, with a signal after each stage. Off Road, on request, runs Intent and Spec with the agent's own choices added to the questions, then joins the Highway when the spec is approved. Footer: a signal of . proceeds, x stops, any other reply revises the stage; Express leaves a local crumb until the commit; no automatic commit, push, or deploy.](docs/images/en/lanes.png)
+![Diagram titled "Three Ways a Request Travels". Express, the fastest way, runs Implement, Check, Crumb, and Report with no stops. Highway, the default, runs Intent, Spec, Implement, and Ship, with your signal after each stage. Off Road, for uncharted terrain, runs Intent and Spec with more questions, then joins the Highway when the Spec is approved. Footer: a signal of . proceeds, x stops, any other reply revises the stage.](docs/images/en/lanes.png)
 
 - **Express**: a small, reversible edit that meets five criteria, such as at most three files and one check that verifies it. The agent implements it, runs the check, leaves a local note called a crumb for your commit, and reports, with no track and no stop.
 - **Highway**: every other edit, and the default. The agent writes an intent, then a spec and tasks, then implements and offers ship, stopping for your signal after each stage.
-- **Off Road**: the consulted way onto the Highway, when you want to make more of the decisions yourself. The intent and spec questions also carry the choices the agent would otherwise settle alone, until the spec is approved.
+- **Off Road**: the consulted way onto the Highway, for terrain you do not know yet. The intent and spec questions also carry the design choices the agent would otherwise settle alone, until the spec is approved.
 
 Your explicit choice of lane always wins. The criteria are in the [request classes reference](docs/reference/request-classes.md); see also the [Express changes](docs/guides/express-changes.md) and [Off Road](docs/guides/off-road.md) guides.
 
@@ -54,7 +61,7 @@ See the [supporting artifacts guide](docs/guides/supporting-artifacts.md) and, f
 
 You need Node.js 22.20 or later, `npx`, Git, Bash, and a coding agent that supports skills.
 
-From the root of your project, install all seven skills:
+From the root of your project, install all eight skills:
 
 ```bash
 npx skills add jotafurtado/on-track --skill '*'
@@ -88,6 +95,7 @@ Replying `.` at each stop moves the track to the next stage, so you do not need 
 | **Support, any time** | `/ot-research` | Researches external facts, documentation, or alternatives with traceable sources. |
 | | `/ot-assess` | Evaluates what already exists, with evidence, limitations, and recommendations. |
 | | `/ot-handoff` | Records the context to continue in another session, agent, or model. |
+| | `/ot-doctor` | Checks the project after a package update and repairs it once you confirm. |
 
 ## Documentation
 
@@ -98,9 +106,7 @@ Replying `.` at each stop moves the track to the next stage, so you do not need 
 | Reference | [Request classes](docs/reference/request-classes.md) |
 | Concepts | [Why On Track](docs/concepts/why-on-track.md) |
 
-The full table of contents is on the [documentation home](docs/index.md). The [evals and their results](evals/evals.md) record how the package is validated with Claude Code, Codex, and Kiro.
-
-Coming from `fast-track-ai`? Follow the [migration steps](docs/getting-started/migrating.md).
+The full table of contents is on the [documentation home](docs/index.md). The [evals and their results](evals/evals.md) record how the package is validated with Claude Code, Codex, and Kiro. To run the deterministic suite from a checkout: `bash evals/run-evals.sh all`.
 
 ## License
 

@@ -119,7 +119,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   </defs>
   <rect width="2400" height="1800" fill="var(--surface)"/>
   <g aria-label="Cabeçalho">
-    <path d="M112 68 H137 L126 86 H151" fill="none" stroke="var(--fg)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(108 54) scale(.7)"><path d="M9 19 H22 L37 41 H44" fill="none" stroke="var(--fg)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="5" fill="var(--fg)"/><circle cx="52" cy="41" r="7.5" fill="none" stroke="var(--success)" stroke-width="4"/><circle cx="52" cy="41" r="2.75" fill="var(--success)"/></g>
     <text x="169" y="88" class="brand">On Track Method</text>
     <text x="110" y="214" class="headline">Você Decide. A IA Implementa.</text>
     <text x="114" y="280" class="intro">Um pedido. Um plano aprovado. Uma entrega verificada.</text>
@@ -142,7 +142,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <text x="1200" y="845" font-size="104" font-weight="600" letter-spacing="-4" class="center">Do Pedido</text>
     <text x="1200" y="956" font-size="104" font-weight="600" letter-spacing="-4" class="center">à Entrega.</text>
     <path d="M1080 1008 H1320" stroke="var(--border)" stroke-width="2"/>
-    <text x="1200" y="1066" font-size="32" class="center" fill="var(--muted)" style="fill:var(--muted)">O contexto fica no projeto.</text>
+    <text x="1200" y="1066" font-size="32" class="center" fill="var(--muted)" style="fill:var(--muted)">A Highway, em velocidade de cruzeiro.</text>
   </g>
   <g data-step="1" aria-label="1. Você inicia o pedido com ot-intent">
     <circle cx="541.821" cy="1145" r="59" class="station" stroke="var(--human)"/>
@@ -159,7 +159,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <path d="M406.896 818.708 H372" stroke="var(--agent)" stroke-width="2"/>
     <text x="139" y="681" class="role agent">Agente de IA</text>
     <text x="136" y="740" class="action">Documentar</text>
-    <text x="139" y="791" class="detail">Intenção e limites</text>
+    <text x="139" y="791" class="detail">O quê e por quê</text>
     <text x="139" y="842" class="artifact">intent.md</text>
     <text x="139" y="897" class="command">/ot-intent</text>
   </g>
@@ -209,18 +209,14 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <text x="1160" y="1393" class="detail">Confira e confirme</text>
     <path d="M1639 1302.391 H1695" stroke="var(--success)" stroke-width="2"/>
     <circle cx="1730" cy="1302.391" r="34" fill="none" stroke="var(--success)" stroke-width="2"/>
-    <path d="M1715 1302.391 L1726 1313.391 L1745 1290.391" fill="none" stroke="var(--success)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="1784" y="1292.391" font-size="33" font-weight="600" style="fill:var(--success)">Mudança</text>
-    <text x="1784" y="1334.391" font-size="33" font-weight="600" style="fill:var(--success)">Concluída</text>
+    <path d="M1720 1322.391 V1284.391" fill="none" stroke="var(--success)" stroke-width="4" stroke-linecap="round"/><path d="M1720 1285.391 H1746 L1738 1295.391 L1746 1305.391 H1720 Z" fill="var(--success)"/>
+    <text x="1784" y="1292.391" font-size="33" font-weight="600" style="fill:var(--success)" dy="21">Chegada</text>
   </g>
   </g>
   <g transform="translate(0 120)" aria-label="Como continuar e limites da conclusão">
     <path d="M114 1493 H2286" stroke="var(--border)" stroke-width="1.5"/>
-    <rect x="116" y="1530" width="60" height="60" rx="15" fill="none" stroke="var(--fg)" stroke-width="1.5"/>
-    <text x="146" y="1568" text-anchor="middle" font-size="40">.</text>
-    <text x="197" y="1568" font-size="33">para avançar ou escreva outra instrução.</text>
-    <text x="2283" y="1568" text-anchor="end" font-size="31" style="fill:var(--muted)">Sem commit, push ou deploy automático.</text>
-    <text x="116" y="1630" class="caption">Revise os artefatos antes de continuar.</text>
-    <text x="2283" y="1630" text-anchor="end" class="caption">Uma mudança por vez. Você mantém o controle.</text>
+    <circle cx="146" cy="1557" r="27" class="station" stroke="var(--human)"/>
+    <circle cx="146" cy="1557" r="7" fill="var(--human)"/>
+    <text x="197" y="1568" font-size="33">Sinal: <tspan font-weight="700">.</tspan> segue, <tspan font-weight="700">x</tspan> para, qualquer outra resposta revisa a etapa.</text>
   </g>
 </svg>

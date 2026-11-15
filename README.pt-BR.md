@@ -1,5 +1,12 @@
 # On Track Method
 
+<p>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/public/brand/on-track-wordmark-on-dark.svg">
+    <img src="docs/public/brand/on-track-wordmark-on-light.svg" alt="On Track Method" height="56">
+  </picture>
+</p>
+
 [English](README.md)
 
 O On Track Method é um ciclo de desenvolvimento de software (SDLC) leve que mantém os agentes de código nos trilhos: você define o rumo e responde aos sinais, e o agente documenta, planeja, implementa e valida. O registro é proporcional ao pedido, então o que não precisa de track não ganha track.
@@ -12,11 +19,11 @@ O On Track Method classifica cada pedido antes de tocar em qualquer coisa, regis
 
 ## Como um Pedido Viaja
 
-![Diagrama intitulado "Três Caminhos para um Pedido". Express, usada quando cinco critérios valem, passa por Implementar, Verificar, Crumb e Relatar, sem track e sem sinal. Highway, o padrão, passa por Intent e Spec com perguntas bloqueadoras, depois Implement com gate e revisão, depois Ship, que você confirma, com um sinal depois de cada etapa. Off Road, a pedido, passa por Intent e Spec com as escolhas do agente somadas às perguntas e entra no Highway quando a spec é aprovada. Rodapé: no sinal, ponto segue, x para e qualquer outra resposta revisa a etapa; a via Express deixa um crumb local até o commit; sem commit, push ou deploy automático.](docs/images/pt/lanes.png)
+![Diagrama intitulado "Três Caminhos para um Pedido". Express, o caminho mais rápido, passa por Implementar, Verificar, Crumb e Relatar, sem paradas. Highway, o padrão, passa por Intent, Spec, Implementar e Chegada, com um sinal seu depois de cada etapa. Off Road, para terreno sem mapa, passa por Intent e Spec com mais perguntas e entra na Highway quando a Spec é aprovada. Rodapé: no sinal, ponto segue, x para e qualquer outra resposta revisa a etapa.](docs/images/pt/lanes.png)
 
 - **Express**: uma edição pequena e reversível que cumpre cinco critérios, como no máximo três arquivos e uma verificação que a confirme. O agente implementa, roda a verificação, deixa uma nota local chamada crumb para o seu commit e relata, sem track e sem parada.
-- **Highway**: toda outra edição, e o padrão. O agente escreve um intent, depois uma spec e as tarefas, então implementa e oferece o ship, parando para o seu sinal depois de cada etapa.
-- **Off Road**: o acesso consultado ao Highway, para quando você quer tomar mais decisões. As perguntas do intent e da spec também trazem as escolhas que o agente resolveria sozinho, até a spec ser aprovada.
+- **Highway**: toda outra edição, e o padrão. O agente escreve um intent, depois uma spec e as tarefas, então implementa e oferece o ship (a entrega, que marca a track como concluída), parando para o seu sinal depois de cada etapa.
+- **Off Road**: o acesso consultado ao Highway, para terreno que você ainda não conhece. As perguntas do intent e da spec também trazem as escolhas de design que o agente resolveria sozinho, até a spec ser aprovada.
 
 A sua escolha explícita de via sempre vence. Os critérios estão na [referência de classes de pedido](docs/pt/reference/request-classes.md); veja também os guias de [mudanças Express](docs/pt/guides/express-changes.md) e de [Off Road](docs/pt/guides/off-road.md).
 
@@ -54,7 +61,7 @@ Veja o [guia de artefatos de apoio](docs/pt/guides/supporting-artifacts.md) e, p
 
 Você precisa de Node.js 22.20 ou superior, `npx`, Git, Bash e um agente de código com suporte a skills.
 
-Na raiz do seu projeto, instale as sete skills:
+Na raiz do seu projeto, instale as oito skills:
 
 ```bash
 npx skills add jotafurtado/on-track --skill '*'
@@ -88,6 +95,7 @@ Responder `.` em cada parada leva a track à próxima etapa, então você não p
 | **Apoio, a qualquer momento** | `/ot-research` | Pesquisa fatos externos, documentação ou alternativas com fontes rastreáveis. |
 | | `/ot-assess` | Avalia o que já existe, com evidências, limitações e recomendações. |
 | | `/ot-handoff` | Registra o contexto para continuar em outra sessão, agente ou modelo. |
+| | `/ot-doctor` | Verifica o projeto depois de atualizar o pacote e o corrige com a sua confirmação. |
 
 ## Documentação
 
@@ -98,9 +106,7 @@ Responder `.` em cada parada leva a track à próxima etapa, então você não p
 | Referência | [Classes de pedido](docs/pt/reference/request-classes.md) |
 | Conceitos | [Por que On Track](docs/pt/concepts/why-on-track.md) |
 
-O sumário completo está na [página inicial da documentação](docs/pt/index.md). Os [evals e seus resultados](evals/evals.md) registram como o pacote é validado com Claude Code, Codex e Kiro.
-
-Vem do `fast-track-ai`? Siga os [passos de migração](docs/pt/getting-started/migrating.md).
+O sumário completo está na [página inicial da documentação](docs/pt/index.md). Os [evals e seus resultados](evals/evals.md) registram como o pacote é validado com Claude Code, Codex e Kiro. Para rodar a suíte determinística num checkout: `bash evals/run-evals.sh all`.
 
 ## Licença
 

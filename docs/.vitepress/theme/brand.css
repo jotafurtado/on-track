@@ -1,0 +1,108 @@
+/* On Track Method brand colors, from the design system tokens. */
+:root {
+  --vp-c-brand-1: #0a802d;
+  --vp-c-brand-2: #0a8a30;
+  --vp-c-brand-3: #0a802d;
+  --vp-c-brand-soft: rgba(10, 128, 45, 0.14);
+  --vp-button-brand-text: #fffce1;
+  --vp-button-brand-hover-text: #fffce1;
+  --vp-button-brand-active-text: #fffce1;
+  --vp-home-hero-name-color: var(--vp-c-text-1);
+}
+
+.dark {
+  --vp-c-bg: #000000;
+  --vp-c-bg-alt: #0b0b0a;
+  --vp-c-bg-elv: #121211;
+  --vp-c-bg-soft: #121211;
+  --vp-c-text-1: #fffce1;
+  --vp-c-text-2: #b4b4a5;
+  --vp-c-divider: #42433d;
+  --vp-c-gutter: #000000;
+  --vp-c-brand-1: #0ae448;
+  --vp-c-brand-2: #3bea6c;
+  --vp-c-brand-3: #0ae448;
+  --vp-c-brand-soft: rgba(10, 228, 72, 0.14);
+  --vp-button-brand-text: #000000;
+  --vp-button-brand-hover-text: #000000;
+  --vp-button-brand-active-text: #000000;
+}
+
+.VPHero .image-src {
+  width: 240px;
+  max-width: 240px;
+}
+
+/* Landing page */
+:root {
+  --ot-human: #a85400;
+  --ot-agent: #5a4fd0;
+  --ot-artifact: #00708a;
+  --ot-success: #0a802d;
+}
+.dark {
+  --ot-human: #ff8709;
+  --ot-agent: #9d95ff;
+  --ot-artifact: #00bae2;
+  --ot-success: #0ae448;
+}
+
+.VPHero .actions a[href*="github.com"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.VPHero .actions a[href*="github.com"]::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.4 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.2 0 4.6-2.8 5.6-5.5 5.9.5.4.9 1.1.9 2.2v3.3c0 .3.1.7.8.6A12 12 0 0 0 12 .3'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.2.5-2.3 1.3-3.1-.2-.4-.6-1.6 0-3.2 0 0 1-.3 3.4 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8.1 3.2.8.8 1.3 1.9 1.3 3.2 0 4.6-2.8 5.6-5.5 5.9.5.4.9 1.1.9 2.2v3.3c0 .3.1.7.8.6A12 12 0 0 0 12 .3'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.ot-home { max-width: 1152px; margin: 0 auto; }
+.ot-home h2 { border-top: 0; margin: 0 0 12px; padding-top: 0; font-size: 28px; line-height: 1.2; letter-spacing: -0.02em; }
+.ot-home h3 { margin: 0; }
+.ot-eyebrow { margin: 0 0 8px !important; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--vp-c-text-2); }
+
+.ot-split { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; padding: 48px 0 64px; align-items: start; }
+.ot-what p:not(.ot-eyebrow) { color: var(--vp-c-text-2); font-size: 17px; line-height: 1.6; }
+
+.ot-who { display: grid; gap: 20px; }
+.ot-role h3 { display: flex; align-items: center; gap: 10px; font-size: 18px; margin-bottom: 10px; }
+.ot-dot { width: 14px; height: 14px; border-radius: 50%; border: 3px solid currentColor; box-sizing: border-box; flex: none; }
+.ot-role-human h3 { color: var(--ot-human); }
+.ot-role-agent h3 { color: var(--ot-agent); }
+.ot-chips { list-style: none; padding: 0 !important; margin: 0 !important; display: flex; flex-wrap: wrap; gap: 8px; }
+.vp-doc .ot-chips { list-style: none; }
+.ot-chips li { list-style: none; margin: 0 !important; padding: 6px 14px; border-radius: 999px; font-size: 14px; line-height: 1.4; border: 1px solid var(--vp-c-divider); color: var(--vp-c-text-1); }
+.ot-role-human .ot-chips li { border-color: color-mix(in srgb, var(--ot-human) 55%, transparent); }
+.ot-role-agent .ot-chips li { border-color: color-mix(in srgb, var(--ot-agent) 55%, transparent); }
+
+.ot-home img { border-radius: 12px; border: 1px solid var(--vp-c-divider); }
+
+.ot-lanes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0 72px; }
+.ot-lane { display: block; padding: 24px; border-radius: 12px; background: var(--vp-c-bg-soft); border: 1px solid var(--vp-c-divider); text-decoration: none !important; color: inherit !important; transition: border-color .2s; }
+.ot-lane:hover { border-color: var(--vp-c-text-2); }
+.ot-lane h3 { font-size: 22px; margin-bottom: 8px; color: var(--vp-c-text-1); }
+.ot-lane p:not(.ot-eyebrow) { margin: 0; color: var(--vp-c-text-2); font-size: 15px; line-height: 1.6; }
+.ot-lane-express .ot-eyebrow { color: var(--ot-artifact); }
+.ot-lane-highway .ot-eyebrow { color: var(--ot-agent); }
+.ot-lane-offroad .ot-eyebrow { color: var(--ot-human); }
+
+.ot-cta { text-align: center; padding: 64px 24px; margin-bottom: 48px; border-radius: 16px; border: 1px solid var(--vp-c-divider); background: var(--vp-c-bg-soft); }
+.ot-cta h2 { font-size: 32px; }
+.ot-cta p { color: var(--vp-c-text-2); font-size: 17px; margin: 0 auto 28px; max-width: 560px; }
+.ot-button { display: inline-block; padding: 12px 28px; border-radius: 999px; font-weight: 600; font-size: 16px; background: var(--vp-c-brand-1); color: var(--vp-button-brand-text) !important; text-decoration: none !important; }
+.ot-button:hover { background: var(--vp-c-brand-2); }
+
+@media (max-width: 860px) {
+  .ot-split { grid-template-columns: 1fr; gap: 32px; }
+  .ot-lanes { grid-template-columns: 1fr; }
+}
+
+/* Sidebar: VitePress reserves 96px of bottom padding, which makes a menu that fits scroll anyway */
+@media (min-width: 960px) {
+  .VPSidebar.VPSidebar { padding-bottom: 32px; }
+}

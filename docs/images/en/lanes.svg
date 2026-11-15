@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1800" viewBox="0 0 2400 1800" role="img" aria-labelledby="title description">
   <title id="title">On Track Method: three ways a request travels</title>
-  <desc id="description">Three horizontal lanes. Express: the agent implements, runs the check, writes a local crumb, and reports, with no questions and no signal. Highway, the default: intent, a signal, spec, a signal, implement, a signal, and ship. Off Road, on request: intent and spec with more consultation, each followed by a signal; it joins the Highway when the spec is approved, so implement and ship are the same. A signal is a stop where a dot proceeds, an x stops, and any other reply revises the stage.</desc>
+  <desc id="description">Three horizontal lanes. Express, the fastest way: the agent implements, checks, writes a local crumb, and reports, with no stops. Highway, the default: intent, a signal, spec, a signal, implement, a signal, and ship, which you confirm. Off Road, for uncharted terrain: intent and spec with more questions, each followed by a signal; it joins the Highway when the Spec is approved. A signal is a stop where a dot proceeds, an x stops, and any other reply revises the stage.</desc>
   <metadata id="font-license"><![CDATA[Copyright 2014 The DM Sans Project Authors (https://github.com/googlefonts/dm-fonts)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
@@ -123,18 +123,18 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   </defs>
   <rect width="2400" height="1800" fill="var(--surface)"/>
   <g aria-label="Header">
-    <path d="M112 68 H137 L126 86 H151" fill="none" stroke="var(--fg)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(108 54) scale(.7)"><path d="M9 19 H22 L37 41 H44" fill="none" stroke="var(--fg)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="19" r="5" fill="var(--fg)"/><circle cx="52" cy="41" r="7.5" fill="none" stroke="var(--success)" stroke-width="4"/><circle cx="52" cy="41" r="2.75" fill="var(--success)"/></g>
     <text x="169" y="88" class="brand">On Track Method</text>
     <text x="110" y="214" class="headline">Three Ways a Request Travels.</text>
-    <text x="114" y="280" class="intro">The size of the request decides the record. You can always choose the lane.</text>
+    <text x="114" y="280" class="intro">Each request takes the lane that fits its size. The final choice is always yours.</text>
     <rect x="1832" y="49" width="454" height="66" rx="33" fill="none" stroke="var(--border)" stroke-width="2"/>
     <text x="2059" y="92" font-size="30" text-anchor="middle">Default: Highway</text>
     <path d="M114 331 H2286" stroke="var(--border)" stroke-width="1.5"/>
   </g>
   <g data-lane="express" aria-label="Express lane: implement, check, crumb, report">
-    <text x="114" y="498" class="tag" style="fill:var(--artifact)">Five criteria hold</text>
+    <text x="114" y="498" class="tag" style="fill:var(--artifact)">The fastest way</text>
     <text x="110" y="568" class="lane">Express</text>
-    <text x="114" y="622" class="detail">No track, no signal</text>
+    <text x="114" y="622" class="detail">Straight through, no stops</text>
     <path class="track" d="M640 560 H2130" stroke="var(--border)" stroke-width="18"/>
     <path class="track" d="M640 560 H2130" stroke="var(--fg)" stroke-opacity=".55" stroke-width="2"/>
     <path class="track" d="M980 560 H990" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
@@ -144,11 +144,11 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <circle cx="760" cy="560" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="760" cy="560" r="9" fill="var(--agent)"/>
     <text x="760" y="682" class="stage">Implement</text>
-    <text x="760" y="726" class="note">The edit itself</text>
+    <text x="760" y="726" class="note">Writes the code</text>
     <circle cx="1217" cy="560" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="1217" cy="560" r="9" fill="var(--agent)"/>
     <text x="1217" y="682" class="stage">Check</text>
-    <text x="1217" y="726" class="note">One command</text>
+    <text x="1217" y="726" class="note">Tests the result</text>
     <circle cx="1673" cy="560" r="52" class="station" stroke="var(--artifact)"/>
     <circle cx="1673" cy="560" r="9" fill="var(--artifact)"/>
     <text x="1673" y="682" class="stage">Crumb</text>
@@ -158,10 +158,10 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <text x="2130" y="682" class="stage">Report</text>
     <text x="2130" y="726" class="note">What changed</text>
   </g>
-  <g data-lane="off-road" aria-label="Off Road: intent and spec with more consultation, joining the Highway at spec approval">
-    <text x="114" y="1278" class="tag" style="fill:var(--human)">On request</text>
+  <g data-lane="off-road" aria-label="Off Road: intent and spec with more questions, joining the Highway when the Spec is approved">
+    <text x="114" y="1278" class="tag" style="fill:var(--human)">Uncharted terrain</text>
     <text x="110" y="1348" class="lane">Off Road</text>
-    <text x="114" y="1402" class="detail">More consultation</text>
+    <text x="114" y="1402" class="detail">Asks before it guesses</text>
     <path class="track" d="M640 1340 H1440 C1540 1340 1540 1180 1540 1020 V960" stroke="var(--border)" stroke-width="18"/>
     <path class="track" d="M640 1340 H1440 C1540 1340 1540 1180 1540 1020 V960" stroke="var(--fg)" stroke-opacity=".55" stroke-width="2"/>
     <path class="track" d="M870 1340 H880" stroke="var(--fg)" stroke-width="2" marker-end="url(#direction)"/>
@@ -172,20 +172,20 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <circle cx="760" cy="1340" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="760" cy="1340" r="9" fill="var(--agent)"/>
     <text x="760" y="1462" class="stage">Intent</text>
-    <text x="760" y="1506" class="note">+ the agent's choices</text>
+    <text x="760" y="1506" class="note">The intent, in depth</text>
     <circle cx="985" cy="1340" r="27" class="station" stroke="var(--human)"/>
     <circle cx="985" cy="1340" r="7" fill="var(--human)"/>
     <circle cx="1210" cy="1340" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="1210" cy="1340" r="9" fill="var(--agent)"/>
     <text x="1210" y="1462" class="stage">Spec</text>
-    <text x="1210" y="1506" class="note">+ the agent's choices</text>
+    <text x="1210" y="1506" class="note">The design, settled with you</text>
     <circle cx="1420" cy="1340" r="27" class="station" stroke="var(--human)"/>
     <circle cx="1420" cy="1340" r="7" fill="var(--human)"/>
     <text x="1596" y="1262" class="detail">Joins the Highway</text>
-    <text x="1596" y="1304" class="detail">when the spec is approved</text>
+    <text x="1596" y="1304" class="detail">when the Spec is approved</text>
   </g>
   <g data-lane="highway" aria-label="Highway lane: intent, spec, implement, ship, with a signal after each stage">
-    <text x="114" y="898" class="tag" style="fill:var(--agent)">Default</text>
+    <text x="114" y="898" class="tag" style="fill:var(--agent)">Cruising speed</text>
     <text x="110" y="968" class="lane">Highway</text>
     <text x="114" y="1022" class="detail">Full cycle, three signals</text>
     <path class="track" d="M640 960 H2130" stroke="var(--border)" stroke-width="18"/>
@@ -201,23 +201,23 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <circle cx="760" cy="960" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="760" cy="960" r="9" fill="var(--agent)"/>
     <text x="760" y="1082" class="stage">Intent</text>
-    <text x="760" y="1126" class="note">Blocking questions</text>
+    <text x="760" y="1126" class="note">What should change, and why</text>
     <circle cx="985" cy="960" r="27" class="station" stroke="var(--human)"/>
     <circle cx="985" cy="960" r="7" fill="var(--human)"/>
     <circle cx="1210" cy="960" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="1210" cy="960" r="9" fill="var(--agent)"/>
     <text x="1210" y="1082" class="stage">Spec</text>
-    <text x="1210" y="1126" class="note">Blocking questions</text>
+    <text x="1210" y="1126" class="note">The plan and its tasks</text>
     <circle cx="1420" cy="960" r="27" class="station" stroke="var(--human)"/>
     <circle cx="1420" cy="960" r="7" fill="var(--human)"/>
     <circle cx="1720" cy="960" r="52" class="station" stroke="var(--agent)"/>
     <circle cx="1720" cy="960" r="9" fill="var(--agent)"/>
     <text x="1720" y="1082" class="stage">Implement</text>
-    <text x="1720" y="1126" class="note">Gate and review</text>
+    <text x="1720" y="1126" class="note">Code and review</text>
     <circle cx="1930" cy="960" r="27" class="station" stroke="var(--human)"/>
     <circle cx="1930" cy="960" r="7" fill="var(--human)"/>
     <circle cx="2130" cy="960" r="52" class="station" stroke="var(--success)"/>
-    <path d="M2108 960 L2124 976 L2153 941" fill="none" stroke="var(--success)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M2114 990 V930" fill="none" stroke="var(--success)" stroke-width="5" stroke-linecap="round"/><path d="M2114 932 H2152 L2141 946 L2152 960 H2114 Z" fill="var(--success)"/>
     <text x="2130" y="1082" class="stage" style="fill:var(--success)">Ship</text>
     <text x="2130" y="1126" class="note">You confirm</text>
   </g>
@@ -226,8 +226,5 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <circle cx="146" cy="1557" r="27" class="station" stroke="var(--human)"/>
     <circle cx="146" cy="1557" r="7" fill="var(--human)"/>
     <text x="197" y="1568" font-size="33">Signal: <tspan font-weight="700">.</tspan> proceeds, <tspan font-weight="700">x</tspan> stops, any other reply revises the stage.</text>
-    <text x="2283" y="1568" text-anchor="end" font-size="31" style="fill:var(--muted)">No automatic commit, push, or deploy.</text>
-    <text x="116" y="1630" class="caption">Express leaves a local crumb until the commit.</text>
-    <text x="2283" y="1630" text-anchor="end" class="caption">Off Road only changes the questions in intent and spec.</text>
   </g>
 </svg>
