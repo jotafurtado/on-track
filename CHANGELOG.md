@@ -4,9 +4,28 @@ Notable changes to On Track Method are recorded here. Entries describe user and 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-15
+
 ### Added
 
-- The documentation site is published to GitHub Pages at https://ontrack.jotafurtado.dev/ by a workflow that rebuilds it on every push to `main` that touches `docs/`.
+- `ot-doctor` diagnoses an on-track project after a package update and repairs it only after the user confirms: a missing or outdated managed block, missing folders, a legacy `fast-track-ai/` tree or block, superseded ADRs left in `decisions/`, ADRs without a title, and index errors. It never deletes an artifact, commits, pushes, or deploys.
+- Superseded decisions move, keeping their number, to `on-track/decisions/archive/`. `ot-init` creates the folder; the index fails while a superseded ADR stays in `decisions/`, validates the archive, rejects a number used twice across both folders, and lists ADRs by title.
+- The index prints a `WARN:` line when the managed block in `AGENTS.md` is missing or older than the installed package, and the skills relay it without blocking the stage. The block marker now carries the package version (`on-track v0.2.0`).
+- The documentation site is published at https://ontrack.jotafurtado.dev/ by a workflow that rebuilds it on every push to `main` that touches `docs/`, with a landing page, a Quick Start page, the On Track Method logo, and a brand theme in English and pt-BR.
+
+### Changed
+
+- Questions on every route skip what is already settled by the request, the context in hand, a lookup tool the project names, or one targeted read. Rounds hold at most four questions on one theme; recorded decisions stay as written, while an undocumented choice may receive a suggestion. Blocking questions are asked on the Highway and in Off Road alike, and spec stops after three Highway rounds and suggests Off Road.
+- `ot-init` suggests `ot-doctor` when it refuses a legacy `fast-track-ai/` layout.
+- The lanes, workflow, and support-context diagrams are revised, and the READMEs gain the wordmark and a link to the site.
+
+### Removed
+
+- The migrating and design-choices documentation pages.
+
+### Upgrade
+
+- Reinstall the skills, then run `ot-doctor` in each project: it refreshes the managed block and creates `on-track/decisions/archive/` after you confirm.
 
 ## [0.1.0] - 2026-11-12
 
