@@ -12,15 +12,20 @@
 #
 # Invocation (per turn):
 #   codex exec --json -C <workspace> -c 'sandbox_mode="workspace-write"'
-#              -c 'approval_policy="never"' [-m MODEL] [-c 'model_reasoning_effort="E"'] "<prompt>"
+#              -c 'approval_policy="never"' -c 'features.apps=false' [-m MODEL] [-c 'model_reasoning_effort="E"'] "<prompt>"
 #   codex exec resume <thread-id> --json -c ... [-m MODEL] [-c ...] "<prompt>"
 # Sessions are persisted: no --ephemeral, no --last, no sandbox bypass. Shell
-# commands run inside Codex's workspace-write sandbox; the user's Codex config
-# and AGENTS.md are still loaded (see evals.md).
+# commands run inside Codex's workspace-write sandbox.
+#
+# Every session runs in the isolated environment built by ftai_isolate (lib.sh):
+# a private HOME and CODEX_HOME that hold only a link to the maintainer's
+# auth.json, a closed list of inherited variables, and account-level apps
+# disabled. The maintainer's config.toml, AGENTS.md, hooks, and user-level skills
+# are not loaded (see evals.md).
 #
 # Native stdout events omit patch content, so file-change detail is read from the
-# thread's local rollout file under $CODEX_HOME/sessions (read-only, outside the
-# workspace). When it cannot be found, approval content stays unproven.
+# thread's local rollout file under the private CODEX_HOME/sessions (read-only,
+# outside the workspace). When it cannot be found, approval content stays unproven.
 #
 # Output under --out (shared contract, see lib.sh):
 #   turns.jsonl, turn-NN.events.jsonl, turn-NN.stderr, turn-NN.actions.jsonl,
@@ -32,10 +37,12 @@
 set -euo pipefail
 
 codex_cli="${CODEX_CLI:-codex}"
-codex_home="${CODEX_HOME:-$HOME/.codex}"
 # shellcheck source=lib.sh
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 adapter_init codex-adapter.sh "$@"
+ftai_isolate codex
+trap ftai_isolate_cleanup EXIT
+codex_home="$ftai_iso_home/.codex"
 
 cli_version="$("$codex_cli" --version 2>/dev/null | head -1 || true)"
 
@@ -187,7 +194,7 @@ for turn_file in "$turns_dir"/turn-*.txt; do
   rollout_slice="$out/$name.rollout.jsonl"
   marker="$out/$name.timeout"
 
-  config_args=(-c 'sandbox_mode="workspace-write"' -c 'approval_policy="never"')
+  config_args=(-c 'sandbox_mode="workspace-write"' -c 'approval_policy="never"' -c 'features.apps=false')
   [ -n "$model" ] && config_args+=(-m "$model")
   [ -n "$effort" ] && config_args+=(-c "model_reasoning_effort=\"$effort\"")
   rollout_offset=0
@@ -207,7 +214,7 @@ for turn_file in "$turns_dir"/turn-*.txt; do
 
   started="$(date +%s)"
   exit_code=0
-  run_bounded "$timeout_seconds" "$events_file" "$stderr_file" "$marker" "$codex_cli" "${args[@]}" || exit_code=$?
+  run_bounded "$timeout_seconds" "$events_file" "$stderr_file" "$marker" env -i "${ftai_env[@]}" "$codex_cli" "${args[@]}" || exit_code=$?
   duration=$(( $(date +%s) - started ))
 
   ftai_checkpoint "$name"

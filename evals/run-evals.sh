@@ -208,7 +208,10 @@ gate="$repo_root/skills/ot-spec/scripts/on-track-gate.sh"
 
 # fake_agent is an executable stand-in for a harness CLI. It answers the
 # prerequisite probes, then emits canned native events (FAKE_EVENTS file, or a
-# minimal successful session for FAKE_KIND). It never contacts a model.
+# minimal successful session for FAKE_KIND). It never contacts a model. The
+# adapters start it in the isolated environment, so its FAKE_* inputs cross only
+# because the callers name them in ON_TRACK_AGENT_PASS_ENV (fake_pass_env).
+fake_pass_env="FAKE_KIND FAKE_EVENTS FAKE_SETUP FAKE_ROLLOUTS FAKE_ENV_DUMP"
 write_fake_agent() {
   fake_agent="$work/fake-agent"
   if [ -x "$fake_agent" ]; then return 0; fi
@@ -223,6 +226,18 @@ case "$PWD" in
   */compat/workspace) printf 'ftai-compat-7f3a9c2e\n' >token.txt;;
   */resume/workspace) : >.eval-validate-alpha-ran;;
 esac
+if [ -n "${FAKE_ROLLOUTS:-}" ] && [ -n "${CODEX_HOME:-}" ] && [ -d "$FAKE_ROLLOUTS" ]; then
+  mkdir -p "$CODEX_HOME/sessions" && cp -R "$FAKE_ROLLOUTS/." "$CODEX_HOME/sessions/"
+fi
+if [ -n "${FAKE_ENV_DUMP:-}" ]; then
+  { env; printf 'ARG=%s\n' "$@"
+    for home_var in CODEX_HOME KIRO_HOME; do
+      [ -n "${!home_var:-}" ] || continue
+      ls -A "${!home_var}" | sed "s/^/$home_var entry: /"
+    done
+    [ -z "${CODEX_HOME:-}" ] || echo "auth link: $(readlink "$CODEX_HOME/auth.json")"
+  } >"$FAKE_ENV_DUMP"
+fi
 if [ -n "${FAKE_SETUP:-}" ]; then bash "$FAKE_SETUP"; fi
 if [ -n "${FAKE_EVENTS:-}" ]; then cat "$FAKE_EVENTS"; exit 0; fi
 case "${FAKE_KIND:-}" in
@@ -287,7 +302,7 @@ check_agent_runner_staging() {
     esac
     keep="$work/staging-$harness_name"
     out_file="$work/staging-$harness_name.out"
-    env "$cli_env=$fake_agent" FAKE_KIND="$harness_name" CODEX_HOME="$codex_home_dir" \
+    env "$cli_env=$fake_agent" FAKE_KIND="$harness_name" CODEX_HOME="$codex_home_dir" ON_TRACK_AGENT_PASS_ENV="$fake_pass_env" \
       bash "$repo_root/evals/run-agent-evals.sh" all --harness "$harness_name" --timeout 60 --keep-dir "$keep" >"$out_file" 2>&1 || true
     assert_contains "$out_file" "HARNESS: $harness_name"
     assert_contains "$out_file" "RESULT: compat pass"
@@ -353,9 +368,11 @@ cx_rollout_item() {
 cx_rollout_batch() {
   jq -s -c '{type:"event_msg", payload:{type:"item_completed", item:{type:"FileChange", status:"completed", changes:(map(.payload.item.changes) | add)}}}'
 }
+# Rollouts are staged outside any Codex home; the stand-in CLI copies them into
+# the private CODEX_HOME it is started with, where the real CLI would write them.
 cx_place_rollout() {
-  mkdir -p "$codex_home_dir/sessions/2026/10/13"
-  cat >"$codex_home_dir/sessions/2026/10/13/rollout-2026-10-13T00-00-00-$1.jsonl"
+  mkdir -p "$work/codex-rollouts/2026/10/13"
+  cat >"$work/codex-rollouts/2026/10/13/rollout-2026-10-13T00-00-00-$1.jsonl"
 }
 
 # run_fake_adapter <kiro|claude|codex> <events-file> <out-dir>
@@ -365,7 +382,7 @@ run_fake_adapter() {
   mkdir -p "$native_ws" "$work/native-turns"
   printf 'prompt\n' >"$work/native-turns/turn-01.txt"
   case "$1" in kiro) cli_env=KIRO_CLI;; claude) cli_env=CLAUDE_CLI;; codex) cli_env=CODEX_CLI;; esac
-  env "$cli_env=$fake_agent" FAKE_EVENTS="$2" CODEX_HOME="$codex_home_dir" \
+  env "$cli_env=$fake_agent" FAKE_EVENTS="$2" FAKE_ROLLOUTS="$work/codex-rollouts" CODEX_HOME="$codex_home_dir" ON_TRACK_AGENT_PASS_ENV="$fake_pass_env" \
     bash "$repo_root/evals/agent/$1-adapter.sh" --workspace "$native_ws" --turns-dir "$work/native-turns" --out "$3" --timeout 60 >"$work/native-adapter.out" 2>&1 \
     || fail "$1 adapter failed on a native-event fixture"
 }
@@ -382,6 +399,90 @@ assert_reason() {
     *"$2"*) ;;
     *) fail "$3: coverage reasons lack '$2': $(ftai_turn_incomplete_reasons "$1/turns.jsonl" 1)";;
   esac
+}
+
+# Isolation: an agent CLI starts with the maintainer's login and nothing else of
+# the machine. Asserted on the launch environment the stand-in CLI observes.
+check_agent_isolation() {
+  write_fake_agent
+  local harness_name cli_env dump source_home source_real private_home
+  source_home="$work/iso-codex-source"
+  rm -rf "$source_home"
+  mkdir -p "$source_home" "$work/iso-ws" "$work/iso-turns"
+  source_real="$(cd "$source_home" && pwd -P)"
+  printf 'prompt\n' >"$work/iso-turns/turn-01.txt"
+  printf '{"tokens":{"refresh_token":"before"}}\n' >"$source_home/auth.json"
+  printf 'model = "maintainer"\n' >"$source_home/config.toml"
+  printf 'maintainer rules\n' >"$source_home/AGENTS.md"
+  # iso_run <harness> <out-dir> [NAME=value...]: one adapter turn started from a
+  # terminal that carries session variables the agent must never see.
+  iso_run() {
+    local h="$1" o="$2"
+    shift 2
+    case "$h" in kiro) cli_env=KIRO_CLI;; claude) cli_env=CLAUDE_CLI;; codex) cli_env=CODEX_CLI;; esac
+    rm -rf "$o"
+    env "$cli_env=$fake_agent" FAKE_KIND="$h" CODEX_HOME="$source_home" ON_TRACK_AGENT_PASS_ENV="$fake_pass_env" \
+      REX_SESSION=leak HC_TERMINAL_ID=leak CLAUDE_CODE_SESSION_ID=leak ON_TRACK_ISOLATION_PROBE=leak "$@" \
+      bash "$repo_root/evals/agent/$h-adapter.sh" --workspace "$work/iso-ws" --turns-dir "$work/iso-turns" --out "$o" --timeout 60 >"$work/iso-adapter.out" 2>&1 \
+      || fail "$h adapter failed in the isolation check"
+    jq -e '.outcome == "success"' "$o/turns.jsonl" >/dev/null || fail "$h: the isolated stand-in session did not succeed"
+  }
+  for harness_name in kiro claude codex; do
+    dump="$work/iso-$harness_name.env"
+    rm -f "$dump"
+    iso_run "$harness_name" "$work/iso-$harness_name-out" FAKE_ENV_DUMP="$dump"
+    [ -s "$dump" ] || fail "$harness_name: the stand-in CLI did not record its launch environment"
+    if grep -Eq '^(REX_SESSION|HC_TERMINAL_ID|CLAUDE_CODE_SESSION_ID|ON_TRACK_ISOLATION_PROBE)=' "$dump"; then
+      fail "$harness_name: a variable of the launching terminal reached the agent CLI"
+    fi
+    grep -Fxq "PATH=$PATH" "$dump" || fail "$harness_name: PATH did not reach the agent CLI"
+    grep -Fxq 'GIT_CONFIG_GLOBAL=/dev/null' "$dump" || fail "$harness_name: global git configuration is not replaced"
+    grep -Fxq 'GIT_AUTHOR_NAME=on-track-eval' "$dump" || fail "$harness_name: the eval git identity is not set"
+    grep -Fxq "FAKE_KIND=$harness_name" "$dump" || fail "$harness_name: a name listed in ON_TRACK_AGENT_PASS_ENV did not cross"
+    case "$harness_name" in
+      claude)
+        grep -Fxq "HOME=$HOME" "$dump" || fail "claude: HOME changed, which detaches the login"
+        if grep -q '^CLAUDE_CONFIG_DIR=' "$dump"; then fail "claude: the configuration directory was moved, which detaches the login"; fi
+        grep -q '^ARG={"autoMemoryEnabled":false,' "$dump" || fail "claude: auto memory is not disabled"
+        grep -Fxq 'ARG=project,local' "$dump" || fail "claude: user settings are not excluded"
+        grep -Fxq 'ARG=--strict-mcp-config' "$dump" || fail "claude: MCP servers are not excluded";;
+      kiro)
+        grep -Fxq "HOME=$HOME" "$dump" || fail "kiro: HOME changed, which detaches the login"
+        private_home="$(sed -n 's/^KIRO_HOME=//p' "$dump")"
+        [ -n "$private_home" ] || fail "kiro: no private KIRO_HOME"
+        [ "$private_home" != "$HOME/.kiro" ] || fail "kiro: KIRO_HOME is the maintainer's"
+        if grep -q '^KIRO_HOME entry: ' "$dump"; then fail "kiro: the private KIRO_HOME was not empty"; fi
+        [ ! -e "$(dirname "$private_home")" ] || fail "kiro: the private home was not removed";;
+      codex)
+        private_home="$(sed -n 's/^HOME=//p' "$dump")"
+        [ -n "$private_home" ] || fail "codex: no private HOME"
+        [ "$private_home" != "$HOME" ] || fail "codex: HOME is the maintainer's, so ~/.agents/skills is visible"
+        grep -Fxq "CODEX_HOME=$private_home/.codex" "$dump" || fail "codex: CODEX_HOME is not under the private HOME"
+        [ "$(grep -c '^CODEX_HOME entry: ' "$dump")" -eq 1 ] || fail "codex: the private CODEX_HOME holds more than the login link"
+        grep -Fxq 'CODEX_HOME entry: auth.json' "$dump" || fail "codex: the private CODEX_HOME has no login link"
+        grep -Fxq "auth link: $source_real/auth.json" "$dump" || fail "codex: the login link does not point at the maintainer's auth.json"
+        grep -Fxq 'ARG=features.apps=false' "$dump" || fail "codex: account-level apps are not disabled"
+        [ ! -e "$private_home" ] || fail "codex: the private home was not removed";;
+    esac
+  done
+  assert_contains "$source_home/auth.json" '"refresh_token":"before"'
+
+  # Codex replaces auth.json when it refreshes the login. The refreshed file is
+  # handed back to the maintainer's Codex home; a file that is not a login is not.
+  cat >"$work/iso-refresh.sh" <<'SETUP'
+rm -f "$CODEX_HOME/auth.json"
+printf '{"tokens":{"refresh_token":"after"}}\n' >"$CODEX_HOME/auth.json"
+SETUP
+  iso_run codex "$work/iso-refresh-out" FAKE_SETUP="$work/iso-refresh.sh"
+  assert_contains "$source_home/auth.json" '"refresh_token":"after"'
+  [ ! -e "$source_home/auth.json.eval-refresh" ] || fail "codex: a temporary login file was left in the maintainer's Codex home"
+  cat >"$work/iso-tamper.sh" <<'SETUP'
+rm -f "$CODEX_HOME/auth.json"
+printf 'not a login\n' >"$CODEX_HOME/auth.json"
+SETUP
+  iso_run codex "$work/iso-tamper-out" FAKE_SETUP="$work/iso-tamper.sh"
+  assert_contains "$source_home/auth.json" '"refresh_token":"after"'
+  assert_contains "$source_home/config.toml" 'model = "maintainer"'
 }
 
 # Native-event regression fixtures: consumer-visible verdict evidence must never
@@ -625,7 +726,7 @@ check_single_turn_scenario_evidence() {
     selector_name="$1"; expected="$2"; case_name="$3"
     case_dir="$work/single-turn-$case_name"
     rc=0
-    env CLAUDE_CLI="$fake_agent" FAKE_SETUP="$setup_file" FAKE_EVENTS="$events_file" \
+    env CLAUDE_CLI="$fake_agent" FAKE_SETUP="$setup_file" FAKE_EVENTS="$events_file" ON_TRACK_AGENT_PASS_ENV="$fake_pass_env" \
       bash "$repo_root/evals/run-agent-evals.sh" "$selector_name" --harness claude --timeout 60 --keep-dir "$case_dir" >"$case_dir.out" 2>&1 || rc=$?
     assert_contains "$case_dir.out" "RESULT: $selector_name $expected:"
     if [ "$expected" = fail ]; then
@@ -876,7 +977,7 @@ SETUP
       fi
       cl_done; } >"$events_file"
     rc=0
-    env CLAUDE_CLI="$fake_agent" FAKE_SETUP="$setup_file" FAKE_EVENTS="$events_file" \
+    env CLAUDE_CLI="$fake_agent" FAKE_SETUP="$setup_file" FAKE_EVENTS="$events_file" ON_TRACK_AGENT_PASS_ENV="$fake_pass_env FAKE_RED_STATE FAKE_RED_CASE" \
       FAKE_RED_STATE="$case_dir.state" FAKE_RED_CASE="$red_case" \
       bash "$repo_root/evals/run-agent-evals.sh" red-signal --harness claude --timeout 60 --keep-dir "$case_dir" >"$case_dir.out" 2>&1 || rc=$?
     assert_contains "$case_dir.out" 'RESULT: compat pass:'
@@ -906,6 +1007,7 @@ run_self() {
   . "$repo_root/evals/agent/lib.sh"
   check_agent_runner_prerequisites
   check_agent_runner_staging
+  check_agent_isolation
   check_native_event_evidence
   check_single_turn_scenario_evidence
   check_red_signal_evidence

@@ -13,6 +13,7 @@ Notable changes to On Track Method are recorded here. Entries describe user and 
 - Express criterion 2 counts distinct edits instead of files: the change is the smallest that serves the request as stated, one concern with at most three distinct edits, and the same edit repeated across files (a rename, a version string, a mirrored translation) counts once. It replaces "at most three files change", which sent a one-line edit in five files to the Highway and let an agent count files it added on its own.
 - Doubt about the size of a change no longer sends it to the Highway. An uncertain criterion 1, 3, 4, or 5 still does; doubt about criterion 2 alone keeps the edit on the Express lane, under its stop rule.
 - The managed block marker is `on-track v0.3.0`.
+- Agent evals launch each CLI in an isolated environment that carries the maintainer's login and nothing else of the machine: a closed list of inherited variables, no global git configuration, a private home for Codex and Kiro, and auto memory off for Claude Code. Global rules, MCP servers, user-level skills, and terminal variables no longer reach a session, so an eval measures the method alone. With no `--model` or `--effort`, the default is now the CLI's own, not the one in the maintainer's configuration. `ON_TRACK_AGENT_PASS_ENV` names extra variables to inherit, such as proxy settings.
 
 ### Upgrade
 

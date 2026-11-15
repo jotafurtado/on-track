@@ -9,6 +9,10 @@
 # Environment defaults: ON_TRACK_AGENT_MODEL, ON_TRACK_AGENT_EFFORT,
 #   ON_TRACK_AGENT_TIMEOUT (seconds per turn, default 900), KIRO_CLI (default
 #   kiro-cli), CLAUDE_CLI (default claude), CODEX_CLI (default codex).
+# Every agent CLI starts in an isolated environment that carries the login and
+#   nothing else of the machine (ftai_isolate in agent/lib.sh). CODEX_HOME
+#   (default ~/.codex) names the Codex home whose auth.json is linked, and
+#   ON_TRACK_AGENT_PASS_ENV lists extra variable names the CLI may inherit.
 #
 # Each scenario prints one line: RESULT: <scenario> <pass|fail|inconclusive|prerequisite-unavailable>: <reason>
 # A HARNESS: line precedes the results. Diagnostics live under <root>/<harness>/<scenario>.
@@ -136,12 +140,17 @@ prerequisite_reason() {
   for tool in jq rsync shasum git; do
     command -v "$tool" >/dev/null 2>&1 || { echo "required tool not found: $tool"; return; }
   done
+  # The login is checked inside the isolated environment the sessions will run in,
+  # so a login that does not survive isolation is reported before any scenario.
+  local reason=""
+  ftai_isolate "$harness"
   case "$harness" in
-    kiro) "$cli" whoami >/dev/null 2>&1 </dev/null || { echo "$label is not authenticated ($cli whoami failed); run kiro-cli login"; return;};;
-    claude) "$cli" auth status 2>/dev/null </dev/null | jq -e '.loggedIn == true' >/dev/null 2>&1 || { echo "$label is not authenticated ($cli auth status does not report loggedIn); run claude auth login"; return;};;
-    codex) "$cli" login status >/dev/null 2>&1 </dev/null || { echo "$label is not authenticated ($cli login status failed); run codex login"; return;};;
+    kiro) env -i "${ftai_env[@]}" "$cli" whoami >/dev/null 2>&1 </dev/null || reason="$label is not authenticated in the isolated environment ($cli whoami failed); run kiro-cli login";;
+    claude) env -i "${ftai_env[@]}" "$cli" auth status 2>/dev/null </dev/null | jq -e '.loggedIn == true' >/dev/null 2>&1 || reason="$label is not authenticated in the isolated environment ($cli auth status does not report loggedIn); run claude auth login";;
+    codex) env -i "${ftai_env[@]}" "$cli" login status >/dev/null 2>&1 </dev/null || reason="$label is not authenticated in the isolated environment ($cli login status failed); run codex login";;
   esac
-  echo ""
+  ftai_isolate_cleanup
+  echo "$reason"
 }
 
 missing_prerequisite="$(prerequisite_reason)"

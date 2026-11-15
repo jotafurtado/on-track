@@ -2,7 +2,8 @@
 # lib.sh holds the helpers shared by the agent-eval runner and the harness
 # adapters (Kiro, Claude Code, Codex). It is sourced, never executed.
 #
-# Adapter helpers: adapter_init, ftai_checkpoint, run_bounded, ftai_finalize_record.
+# Adapter helpers: adapter_init, ftai_isolate, ftai_isolate_cleanup,
+#   ftai_checkpoint, run_bounded, ftai_finalize_record.
 # Evidence helpers used by the runner and the deterministic self-check:
 #   ftai_actions, ftai_turn_complete, ftai_approval_order, ftai_first_edit.
 #
@@ -51,6 +52,81 @@ adapter_init() {
   turns_dir="$(cd "$turns_dir" && pwd)"
   workspace_logical="$(cd "$workspace" && pwd)"
   workspace_real="$(cd "$workspace" && pwd -P)"
+}
+
+# Variables every agent CLI inherits: executable search path, user identity,
+# locale, terminal, and temporary directory. Nothing else crosses by default.
+FTAI_BASE_ENV='PATH HOME USER LOGNAME SHELL TMPDIR LANG LC_ALL LC_CTYPE TERM'
+
+# ftai_isolate <kiro|claude|codex>
+# Prepares the environment an agent CLI is launched with, as
+# `env -i "${ftai_env[@]}" <cli> ...`, so the session carries the maintainer's
+# login and nothing else of the machine:
+#   - only FTAI_BASE_ENV, the harness's own credential variables, and the names
+#     listed in ON_TRACK_AGENT_PASS_ENV are inherited;
+#   - global git configuration is replaced by a fixed eval identity;
+#   - Codex gets a private HOME and CODEX_HOME holding only a link to the
+#     auth.json of the maintainer's Codex home, so no config.toml, AGENTS.md,
+#     hooks, or user-level skills (~/.agents/skills) are found;
+#   - Kiro gets a private KIRO_HOME; its login lives in its data directory;
+#   - Claude Code keeps its configuration directory, because its login is bound
+#     to it; the adapter's flags keep user settings, memory, and skills out.
+# Sets ftai_env (array), ftai_iso_home (the private directory, empty for Claude
+# Code), and ftai_auth_source (the linked auth.json, when there is one). The
+# caller runs ftai_isolate_cleanup when the last session has ended.
+ftai_isolate() {
+  local harness="$1" name auth_names="" source_home
+  ftai_env=()
+  ftai_iso_home=""
+  ftai_auth_source=""
+  case "$harness" in
+    claude) auth_names="ANTHROPIC_API_KEY CLAUDE_CODE_OAUTH_TOKEN";;
+    codex) auth_names="OPENAI_API_KEY CODEX_API_KEY";;
+    kiro) auth_names="KIRO_API_KEY";;
+  esac
+  for name in $FTAI_BASE_ENV $auth_names ${ON_TRACK_AGENT_PASS_ENV:-}; do
+    case "$name" in ''|[0-9]*|*[!A-Za-z0-9_]*) continue;; esac
+    if [ -n "${!name+x}" ]; then ftai_env+=("$name=${!name}"); fi
+  done
+  ftai_env+=(GIT_CONFIG_GLOBAL=/dev/null
+             GIT_AUTHOR_NAME=on-track-eval GIT_AUTHOR_EMAIL=eval@example.invalid
+             GIT_COMMITTER_NAME=on-track-eval GIT_COMMITTER_EMAIL=eval@example.invalid)
+  case "$harness" in
+    codex|kiro)
+      ftai_iso_home="$(mktemp -d "${TMPDIR:-/tmp}/on-track-agent-home.XXXXXX")"
+      ftai_iso_home="$(cd "$ftai_iso_home" && pwd -P)";;
+  esac
+  case "$harness" in
+    codex)
+      source_home="${CODEX_HOME:-$HOME/.codex}"
+      mkdir -p "$ftai_iso_home/.codex"
+      if [ -f "$source_home/auth.json" ]; then
+        ftai_auth_source="$(cd "$source_home" && pwd -P)/auth.json"
+        ln -s "$ftai_auth_source" "$ftai_iso_home/.codex/auth.json"
+      fi
+      ftai_env+=("HOME=$ftai_iso_home" "CODEX_HOME=$ftai_iso_home/.codex");;
+    kiro)
+      mkdir -p "$ftai_iso_home/.kiro"
+      ftai_env+=("KIRO_HOME=$ftai_iso_home/.kiro");;
+  esac
+}
+
+# ftai_isolate_cleanup: removes the private directory. Codex replaces auth.json
+# instead of rewriting it, so a login refreshed during the session lands in the
+# private home as a regular file where the link was. That file is handed back to
+# the maintainer's Codex home first; otherwise the refreshed login would be lost
+# and the one left behind rejected at its next use.
+ftai_isolate_cleanup() {
+  local refreshed
+  if [ -n "${ftai_iso_home:-}" ] && [ -d "$ftai_iso_home" ]; then
+    refreshed="$ftai_iso_home/.codex/auth.json"
+    if [ -n "${ftai_auth_source:-}" ] && [ -f "$refreshed" ] && [ ! -L "$refreshed" ] \
+       && jq -e 'type == "object" and ((.tokens | type) == "object" or (.OPENAI_API_KEY | type) == "string")' "$refreshed" >/dev/null 2>&1; then
+      cp -p "$refreshed" "$ftai_auth_source.eval-refresh" && mv -f "$ftai_auth_source.eval-refresh" "$ftai_auth_source"
+    fi
+    rm -rf "$ftai_iso_home"
+  fi
+  ftai_iso_home=""
 }
 
 # ftai_checkpoint <name>: snapshot and sha256 manifest of the workspace, excluding

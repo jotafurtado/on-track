@@ -19,6 +19,11 @@
 # Snapshots exclude .git, .kiro, .claude, and .agents. Agent response text stays
 # only in the raw events; no record field carries it.
 #
+# Every session runs in the isolated environment built by ftai_isolate (lib.sh):
+# a private KIRO_HOME and a closed list of inherited variables, so the
+# maintainer's steering, skills, agents, settings, and MCP servers under ~/.kiro
+# are not loaded. The login lives in Kiro's data directory and is kept.
+#
 # Exit codes: 0 evidence recorded (inspect turns.jsonl for outcomes), 2 usage error.
 set -euo pipefail
 
@@ -26,6 +31,8 @@ kiro_cli="${KIRO_CLI:-kiro-cli}"
 # shellcheck source=lib.sh
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 adapter_init kiro-adapter.sh "$@"
+ftai_isolate kiro
+trap ftai_isolate_cleanup EXIT
 
 # Tool calls are the `tool_call` session updates; a call ends at its first
 # `completed` or `failed` update, which also gives the final status.
@@ -162,7 +169,7 @@ for turn_file in "$turns_dir"/turn-*.txt; do
 
   started="$(date +%s)"
   exit_code=0
-  run_bounded "$timeout_seconds" "$events_file" "$stderr_file" "$marker" "$kiro_cli" "${args[@]}" || exit_code=$?
+  run_bounded "$timeout_seconds" "$events_file" "$stderr_file" "$marker" env -i "${ftai_env[@]}" "$kiro_cli" "${args[@]}" || exit_code=$?
   duration=$(( $(date +%s) - started ))
 
   ftai_checkpoint "$name"

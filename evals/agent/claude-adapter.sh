@@ -13,11 +13,16 @@
 #   claude "<prompt>" -p --output-format stream-json --verbose
 #          --permission-mode dontAsk --allowedTools "<tools>"
 #          --setting-sources project,local --strict-mcp-config
-#          --settings '{"sandbox":{"enabled":true,"autoAllowBashIfSandboxed":true,"allowUnsandboxedCommands":false}}'
+#          --settings '{"autoMemoryEnabled":false,"sandbox":{"enabled":true,"autoAllowBashIfSandboxed":true,"allowUnsandboxedCommands":false}}'
 #          [--model MODEL] [--effort EFFORT] [--resume SESSION]
 # Shell commands run inside Claude Code's native sandbox, so writes outside the
-# disposable workspace are denied. User-level settings files are not loaded; user
-# memory files, user-level skills, and authentication still are (see evals.md).
+# disposable workspace are denied.
+#
+# Every session runs in the isolated environment built by ftai_isolate (lib.sh):
+# a closed list of inherited variables. The configuration directory stays the
+# maintainer's, because the login is bound to it; --setting-sources project,local
+# keeps user settings, user memory, and user-level skills out, --strict-mcp-config
+# keeps MCP servers out, and auto memory is off (see evals.md).
 #
 # Output under --out (shared contract, see lib.sh):
 #   turns.jsonl, turn-NN.events.jsonl, turn-NN.stderr, turn-NN.actions.jsonl,
@@ -31,8 +36,9 @@ claude_cli="${CLAUDE_CLI:-claude}"
 # shellcheck source=lib.sh
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 adapter_init claude-adapter.sh "$@"
+ftai_isolate claude
 
-sandbox_settings='{"sandbox":{"enabled":true,"autoAllowBashIfSandboxed":true,"allowUnsandboxedCommands":false}}'
+sandbox_settings='{"autoMemoryEnabled":false,"sandbox":{"enabled":true,"autoAllowBashIfSandboxed":true,"allowUnsandboxedCommands":false}}'
 allowed_tools="Skill Read Write Edit MultiEdit NotebookEdit Bash Glob Grep Task Agent TodoWrite"
 
 # Tool calls are `tool_use` content blocks of assistant events; a call ends at the
@@ -178,7 +184,7 @@ for turn_file in "$turns_dir"/turn-*.txt; do
 
   started="$(date +%s)"
   exit_code=0
-  run_bounded "$timeout_seconds" "$events_file" "$stderr_file" "$marker" "$claude_cli" "${args[@]}" || exit_code=$?
+  run_bounded "$timeout_seconds" "$events_file" "$stderr_file" "$marker" env -i "${ftai_env[@]}" "$claude_cli" "${args[@]}" || exit_code=$?
   duration=$(( $(date +%s) - started ))
 
   ftai_checkpoint "$name"
