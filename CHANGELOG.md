@@ -4,6 +4,8 @@ Notable changes to On Track Method are recorded here. Entries describe user and 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-15
+
 ### Added
 
 - Agent evals `express-spread` (the same one-line edit in five files must take the Express lane) and `open-decision` (a one-file request with an open decision must not), with stand-in checks for both in the suite.
