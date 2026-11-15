@@ -105,7 +105,8 @@ export default defineConfig({
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/brand/on-track-app-icon.svg' }],
     ['link', { rel: 'apple-touch-icon', href: '/brand/on-track-app-icon.png' }],
     ['meta', { property: 'og:image', content: 'https://ontrack.jotafurtado.dev/brand/on-track-social-preview.png' }],
-    ['meta', { name: 'twitter:card', content: 'summary_large_image' }]
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['script', { defer: '', src: 'https://static.cloudflareinsights.com/beacon.min.js', 'data-cf-beacon': '{"token": "f2161bd377d44b5caa7a60b15bece009"}' }]
   ],
   themeConfig: {
     logo: { light: '/brand/on-track-mark-on-light.svg', dark: '/brand/on-track-mark-on-dark.svg', alt: 'On Track Method' },
