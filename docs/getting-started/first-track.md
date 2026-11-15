@@ -37,7 +37,7 @@ on-track/
   tracks/
 ```
 
-- **The managed block** is the text between `<!-- BEGIN MANAGED BLOCK: on-track v0.2.0. Installed by ot-init, idempotent block. -->` (the version is the package version) and `<!-- END MANAGED BLOCK: on-track -->` in `AGENTS.md`. It tells any agent working in the repository how to classify requests, when to ask, how signals work, and where artifacts live. If `AGENTS.md` does not exist, init creates it with the block. If the block exists, init replaces it in place and leaves the rest of the file untouched.
+- **The managed block** is the text between `<!-- BEGIN MANAGED BLOCK: on-track v0.3.0. Installed by ot-init, idempotent block. -->` (the version is the package version) and `<!-- END MANAGED BLOCK: on-track -->` in `AGENTS.md`. It tells any agent working in the repository how to classify requests, when to ask, how signals work, and where artifacts live. If `AGENTS.md` does not exist, init creates it with the block. If the block exists, init replaces it in place and leaves the rest of the file untouched.
 - **`on-track/INDEX.md`** is generated from the frontmatter of the files under `on-track/`. Agents read it before looking for a track or a supporting artifact. Do not edit it by hand: the next generation overwrites it.
 - **`on-track/crumbs/`** holds the local notes that Express changes leave for the commit. Its `.gitignore` keeps the folder out of git. Init never overwrites an existing `.gitignore` there.
 

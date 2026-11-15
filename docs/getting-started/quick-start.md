@@ -40,7 +40,7 @@ The examples use the Claude Code call, `/ot-intent`. In Codex, use `$ot-intent` 
 
 ![Diagram titled "Three Ways a Request Travels". Express, the fastest way, runs Implement, Check, Crumb, and Report with no stops. Highway, the default, runs Intent, Spec, Implement, and Ship, with your signal after each stage. Off Road, for uncharted terrain, runs Intent and Spec with more questions, then joins the Highway when the Spec is approved. Footer: a signal of . proceeds, x stops, any other reply revises the stage.](../images/en/lanes.png)
 
-- **Express**: a small, reversible edit that meets five criteria, such as at most three files and one check that verifies it. The agent implements it, runs the check, leaves a local note called a crumb for your commit, and reports, with no track and no stop.
+- **Express**: a small, reversible edit that meets five criteria, such as at most three distinct edits and one check that verifies it. The agent implements it, runs the check, leaves a local note called a crumb for your commit, and reports, with no track and no stop.
 - **Highway**: every other edit, and the default. The agent writes an intent, then a spec and tasks, then implements and offers ship, stopping for your signal after each stage.
 - **Off Road**: the consulted way onto the Highway, for terrain you do not know yet. The intent and spec questions also carry the design choices the agent would otherwise settle alone, until the spec is approved.
 

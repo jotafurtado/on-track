@@ -40,7 +40,7 @@ Os exemplos usam a chamada do Claude Code, `/ot-intent`. No Codex, use `$ot-inte
 
 ![Diagrama intitulado "Três Caminhos para um Pedido". Express, o caminho mais rápido, passa por Implementar, Verificar, Crumb e Relatar, sem paradas. Highway, o padrão, passa por Intent, Spec, Implementar e Chegada, com um sinal seu depois de cada etapa. Off Road, para terreno sem mapa, passa por Intent e Spec com mais perguntas e entra na Highway quando a Spec é aprovada. Rodapé: no sinal, ponto segue, x para e qualquer outra resposta revisa a etapa.](../../images/pt/lanes.png)
 
-- **Express**: uma edição pequena e reversível que cumpre cinco critérios, como no máximo três arquivos e uma verificação que a confirme. O agente implementa, roda a verificação, deixa uma nota local chamada crumb para o seu commit e relata, sem track e sem parada.
+- **Express**: uma edição pequena e reversível que cumpre cinco critérios, como no máximo três edições distintas e uma verificação que a confirme. O agente implementa, roda a verificação, deixa uma nota local chamada crumb para o seu commit e relata, sem track e sem parada.
 - **Highway**: toda outra edição, e o padrão. O agente escreve um intent, depois uma spec e as tarefas, então implementa e oferece o ship (a entrega, que marca a track como concluída), parando para o seu sinal depois de cada etapa.
 - **Off Road**: o acesso consultado ao Highway, para terreno que você ainda não conhece. As perguntas do intent e da spec também trazem as escolhas de design que o agente resolveria sozinho, até a spec ser aprovada.
 

@@ -5,7 +5,7 @@
 #
 # Usage: run-agent-evals.sh <selector> [--harness kiro|claude|codex] [--model MODEL]
 #                           [--effort EFFORT] [--timeout SECONDS] [--keep-dir DIR]
-# Selectors: compat revision approval red-signal failed-validation material-change resume express-change compound-request artifact-threshold all
+# Selectors: compat revision approval red-signal failed-validation material-change resume express-change express-spread open-decision compound-request artifact-threshold all
 # Environment defaults: ON_TRACK_AGENT_MODEL, ON_TRACK_AGENT_EFFORT,
 #   ON_TRACK_AGENT_TIMEOUT (seconds per turn, default 900), KIRO_CLI (default
 #   kiro-cli), CLAUDE_CLI (default claude), CODEX_CLI (default codex).
@@ -32,14 +32,14 @@ effort="${ON_TRACK_AGENT_EFFORT:-}"
 timeout_seconds="${ON_TRACK_AGENT_TIMEOUT:-900}"
 keep_dir=""
 selector=""
-all_scenarios="compat revision approval red-signal failed-validation material-change resume express-change compound-request artifact-threshold"
+all_scenarios="compat revision approval red-signal failed-validation material-change resume express-change express-spread open-decision compound-request artifact-threshold"
 # Scenarios that need a resumed headless session with a subsequent prompt, or a
 # material decision, run only after the compat spike reports `supported`.
 continuation_scenarios="revision approval red-signal material-change"
 
 usage() {
   echo "ERROR: $1" >&2
-  echo "Usage: run-agent-evals.sh <compat|revision|approval|red-signal|failed-validation|material-change|resume|express-change|compound-request|artifact-threshold|all> [--harness kiro|claude|codex] [--model MODEL] [--effort EFFORT] [--timeout SECONDS] [--keep-dir DIR]" >&2
+  echo "Usage: run-agent-evals.sh <compat|revision|approval|red-signal|failed-validation|material-change|resume|express-change|express-spread|open-decision|compound-request|artifact-threshold|all> [--harness kiro|claude|codex] [--model MODEL] [--effort EFFORT] [--timeout SECONDS] [--keep-dir DIR]" >&2
   exit 2
 }
 
@@ -686,110 +686,120 @@ assert_intent_track() {
   assert_ok "exactly one new track with intent.md"
 }
 
+# assert_express_lane <required crumb files> <label>: exactly one well-formed
+# crumb whose `files` lists every required path, and no other on-track path
+# changed. Leaves method_changes and directory_changes set for the caller's
+# product assertion.
+assert_express_lane() {
+  local required_files="$1" required_label="$2" checkpoint method_path crumb_path crumb_count unexpected_paths added_directory removed_directory crumb_valid
+  # Include empty directories and symlink targets, which file manifests omit.
+  method_changes="$(changed_paths 0 1 | grep '^on-track/' || true)"
+  for checkpoint in 0 1; do
+    (cd "$(checkpoint_dir "$checkpoint")"
+      if [ -e on-track ]; then
+        find on-track ! -type f | while IFS= read -r entry; do
+          printf '%s' "$entry"
+          if [ -L "$entry" ]; then printf ' -> %s' "$(readlink "$entry")"; fi
+          printf '\n'
+        done | LC_ALL=C sort
+      fi) >"$sdir/method-dirs-$checkpoint.txt"
+  done
+  directory_changes="$(LC_ALL=C comm -3 "$sdir/method-dirs-0.txt" "$sdir/method-dirs-1.txt")"
+  unexpected_paths=""
+  crumb_path=""
+  crumb_count=0
+  while IFS= read -r method_path; do
+    [ -n "$method_path" ] || continue
+    case "$method_path" in
+      on-track/crumbs/.gitignore)
+        if [ -e "$(checkpoint_dir 0)/$method_path" ] || [ ! -f "$(checkpoint_dir 1)/$method_path" ]; then
+          unexpected_paths="$unexpected_paths $method_path"
+        else
+          printf '*\n' >"$sdir/crumbs-gitignore.expected"
+          cmp -s "$sdir/crumbs-gitignore.expected" "$(checkpoint_dir 1)/$method_path" || unexpected_paths="$unexpected_paths $method_path"
+        fi
+        ;;
+      on-track/crumbs/*.md)
+        if [ -e "$(checkpoint_dir 0)/$method_path" ] || [ ! -f "$(checkpoint_dir 1)/$method_path" ] || [[ "${method_path#on-track/crumbs/}" == */* ]]; then
+          unexpected_paths="$unexpected_paths $method_path"
+        else
+          crumb_count=$((crumb_count + 1))
+          crumb_path="$method_path"
+        fi
+        ;;
+      *) unexpected_paths="$unexpected_paths $method_path";;
+    esac
+  done <<< "$method_changes"
+  while IFS= read -r removed_directory; do
+    [ -z "$removed_directory" ] || unexpected_paths="$unexpected_paths $removed_directory"
+  done < <(LC_ALL=C comm -23 "$sdir/method-dirs-0.txt" "$sdir/method-dirs-1.txt")
+  while IFS= read -r added_directory; do
+    case "$added_directory" in
+      ''|on-track/crumbs) ;;
+      *) unexpected_paths="$unexpected_paths $added_directory";;
+    esac
+  done < <(LC_ALL=C comm -13 "$sdir/method-dirs-0.txt" "$sdir/method-dirs-1.txt")
+  if [ -n "$unexpected_paths" ]; then
+    assert_bad "Express change modified unexpected on-track paths:$unexpected_paths"
+  fi
+  crumb_valid=true
+  if [ "$crumb_count" -ne 1 ]; then
+    crumb_valid=false
+    if [ "$crumb_count" -gt 1 ] || { [ "$(turn_complete 1)" = "true" ] && [ -n "$(product_changes 0 1)$method_changes$directory_changes" ]; }; then
+      assert_bad "expected exactly one new crumb, found $crumb_count"
+    fi
+  else
+    if ! printf '%s\n' "${crumb_path#on-track/crumbs/}" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}Z-[a-z0-9-]+\.md$'; then
+      assert_bad "crumb name is not a UTC timestamp and kebab-case slug"
+      crumb_valid=false
+    fi
+    if awk -v required="$required_files" '
+      BEGIN { required_count = split(required, wanted, " ") }
+      NR == 1 && $0 != "---" { exit 1 }
+      /^---$/ { section++; next }
+      section == 1 {
+        if ($0 ~ /^created:[[:space:]]*[^[:space:]]/) created = 1
+        if ($0 ~ /^files:/) {
+          files = ($0 ~ /^files:[[:space:]]*$/)
+          if ($0 ~ /^files:[[:space:]]*[^[:space:]]/) inline_files = 1
+        } else if (files && $0 ~ /^[[:space:]]*-[[:space:]]+/) {
+          value = $0; sub(/^[[:space:]]*-[[:space:]]+/, "", value)
+          gsub(/^[[:space:]\042\047]+|[[:space:]\042\047]+$/, "", value)
+          for (i = 1; i <= required_count; i++) if (value == wanted[i]) listed[i] = 1
+        } else if ($0 ~ /^[^[:space:]]/) files = 0
+        next
+      }
+      section == 2 {
+        if ($0 == "## Request") request = 1
+        if ($0 == "## Changes") changes = 1
+        if ($0 == "## Verification") verification = 1
+      }
+      END {
+        if (inline_files) exit 2
+        for (i = 1; i <= required_count; i++) if (!listed[i]) exit 1
+        if (!(section >= 2 && created && request && changes && verification)) exit 1
+      }
+    ' "$(checkpoint_dir 1)/$crumb_path"; then
+      :
+    else
+      if [ "$?" -eq 2 ]; then
+        assert_bad "crumb files is not a YAML block list"
+      else
+        assert_bad "crumb lacks created, files listing $required_label, or required headings"
+      fi
+      crumb_valid=false
+    fi
+  fi
+  if [ "$crumb_valid" = true ] && [ -z "$unexpected_paths" ] && [ "$(turn_complete 1)" = "true" ]; then
+    assert_ok "one well-formed crumb and no other method path changed"
+  fi
+}
+
 scenario_express_change() {
-  local method_path crumb_path crumb_count unexpected_paths added_directory removed_directory crumb_valid
   reset_assertions
   prepare_workspace express-change method
   if run_turns && require_turns 1 && assert_single_turn_checkpoints; then
-    # Include empty directories and symlink targets, which file manifests omit.
-    method_changes="$(changed_paths 0 1 | grep '^on-track/' || true)"
-    for checkpoint in 0 1; do
-      (cd "$(checkpoint_dir "$checkpoint")"
-        if [ -e on-track ]; then
-          find on-track ! -type f | while IFS= read -r entry; do
-            printf '%s' "$entry"
-            if [ -L "$entry" ]; then printf ' -> %s' "$(readlink "$entry")"; fi
-            printf '\n'
-          done | LC_ALL=C sort
-        fi) >"$sdir/method-dirs-$checkpoint.txt"
-    done
-    directory_changes="$(LC_ALL=C comm -3 "$sdir/method-dirs-0.txt" "$sdir/method-dirs-1.txt")"
-    unexpected_paths=""
-    crumb_path=""
-    crumb_count=0
-    while IFS= read -r method_path; do
-      [ -n "$method_path" ] || continue
-      case "$method_path" in
-        on-track/crumbs/.gitignore)
-          if [ -e "$(checkpoint_dir 0)/$method_path" ] || [ ! -f "$(checkpoint_dir 1)/$method_path" ]; then
-            unexpected_paths="$unexpected_paths $method_path"
-          else
-            printf '*\n' >"$sdir/crumbs-gitignore.expected"
-            cmp -s "$sdir/crumbs-gitignore.expected" "$(checkpoint_dir 1)/$method_path" || unexpected_paths="$unexpected_paths $method_path"
-          fi
-          ;;
-        on-track/crumbs/*.md)
-          if [ -e "$(checkpoint_dir 0)/$method_path" ] || [ ! -f "$(checkpoint_dir 1)/$method_path" ] || [[ "${method_path#on-track/crumbs/}" == */* ]]; then
-            unexpected_paths="$unexpected_paths $method_path"
-          else
-            crumb_count=$((crumb_count + 1))
-            crumb_path="$method_path"
-          fi
-          ;;
-        *) unexpected_paths="$unexpected_paths $method_path";;
-      esac
-    done <<< "$method_changes"
-    while IFS= read -r removed_directory; do
-      [ -z "$removed_directory" ] || unexpected_paths="$unexpected_paths $removed_directory"
-    done < <(LC_ALL=C comm -23 "$sdir/method-dirs-0.txt" "$sdir/method-dirs-1.txt")
-    while IFS= read -r added_directory; do
-      case "$added_directory" in
-        ''|on-track/crumbs) ;;
-        *) unexpected_paths="$unexpected_paths $added_directory";;
-      esac
-    done < <(LC_ALL=C comm -13 "$sdir/method-dirs-0.txt" "$sdir/method-dirs-1.txt")
-    if [ -n "$unexpected_paths" ]; then
-      assert_bad "Express change modified unexpected on-track paths:$unexpected_paths"
-    fi
-    crumb_valid=true
-    if [ "$crumb_count" -ne 1 ]; then
-      crumb_valid=false
-      if [ "$crumb_count" -gt 1 ] || { [ "$(turn_complete 1)" = "true" ] && [ -n "$(product_changes 0 1)$method_changes$directory_changes" ]; }; then
-        assert_bad "expected exactly one new crumb, found $crumb_count"
-      fi
-    else
-      if ! printf '%s\n' "${crumb_path#on-track/crumbs/}" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{6}Z-[a-z0-9-]+\.md$'; then
-        assert_bad "crumb name is not a UTC timestamp and kebab-case slug"
-        crumb_valid=false
-      fi
-      if awk '
-        NR == 1 && $0 != "---" { exit 1 }
-        /^---$/ { section++; next }
-        section == 1 {
-          if ($0 ~ /^created:[[:space:]]*[^[:space:]]/) created = 1
-          if ($0 ~ /^files:/) {
-            files = ($0 ~ /^files:[[:space:]]*$/)
-            if ($0 ~ /^files:[[:space:]]*[^[:space:]]/) inline_files = 1
-          } else if (files && $0 ~ /^[[:space:]]*-[[:space:]]+/) {
-            value = $0; sub(/^[[:space:]]*-[[:space:]]+/, "", value)
-            gsub(/^[[:space:]\042\047]+|[[:space:]\042\047]+$/, "", value)
-            if (value == "greeting.txt") greeting = 1
-          } else if ($0 ~ /^[^[:space:]]/) files = 0
-          next
-        }
-        section == 2 {
-          if ($0 == "## Request") request = 1
-          if ($0 == "## Changes") changes = 1
-          if ($0 == "## Verification") verification = 1
-        }
-        END {
-          if (inline_files) exit 2
-          if (!(section >= 2 && created && greeting && request && changes && verification)) exit 1
-        }
-      ' "$(checkpoint_dir 1)/$crumb_path"; then
-        :
-      else
-        if [ "$?" -eq 2 ]; then
-          assert_bad "crumb files is not a YAML block list"
-        else
-          assert_bad "crumb lacks created, files listing greeting.txt, or required headings"
-        fi
-        crumb_valid=false
-      fi
-    fi
-    if [ "$crumb_valid" = true ] && [ -z "$unexpected_paths" ] && [ "$(turn_complete 1)" = "true" ]; then
-      assert_ok "one well-formed crumb and no other method path changed"
-    fi
+    assert_express_lane greeting.txt greeting.txt
     if [ ! -f "$(checkpoint_dir 1)/greeting.txt" ] || [ "$(cat "$(checkpoint_dir 1)/greeting.txt")" != 'hello world' ] || [ "$(wc -l <"$(checkpoint_dir 1)/greeting.txt" | tr -d ' ')" -gt 1 ]; then
       if [ -z "$(product_changes 0 1)" ] && [ -z "$method_changes$directory_changes" ]; then
         assert_unknown "no product or method change; Express lane was not reached"
@@ -801,6 +811,61 @@ scenario_express_change() {
     fi
   fi
   verdict express-change
+}
+
+# The same one-line edit repeated across five files is one edit under criterion 2:
+# opening a track for it fails, as does a crumb that omits one of the files.
+scenario_express_spread() {
+  local note notes notes_hold other_changes
+  reset_assertions
+  prepare_workspace express-spread method
+  if run_turns && require_turns 1 && assert_single_turn_checkpoints; then
+    notes="notes/alpha.txt notes/bravo.txt notes/charlie.txt notes/delta.txt notes/echo.txt"
+    assert_express_lane "$notes" "the five notes files"
+    notes_hold=true
+    for note in $notes; do
+      if ! grep -Fxq 'owner: welcome-team' "$(checkpoint_dir 1)/$note" 2>/dev/null || grep -Fq 'greeting-team' "$(checkpoint_dir 1)/$note" 2>/dev/null; then
+        notes_hold=false
+      fi
+    done
+    if [ "$notes_hold" != true ]; then
+      if [ -z "$(product_changes 0 1)" ] && [ -z "$method_changes$directory_changes" ]; then
+        assert_unknown "no product or method change; Express lane was not reached"
+      else
+        assert_bad "the five notes files do not all hold owner: welcome-team"
+      fi
+    else
+      assert_ok "the five notes files hold owner: welcome-team"
+    fi
+    other_changes="$(product_changes 0 1 | grep -Ev '^notes/(alpha|bravo|charlie|delta|echo)\.txt$' || true)"
+    if [ -n "$other_changes" ]; then
+      assert_bad "product change outside the five notes files: $(printf '%s' "$other_changes" | tr '\n' ' ')"
+    else
+      assert_ok "no product change outside the five notes files"
+    fi
+  fi
+  verdict express-spread
+}
+
+# A one-file request that leaves open a decision changing what is built fails
+# criterion 1: editing the product or leaving a crumb fails. Asking the question
+# without drafting leaves no track, which a single turn cannot tell from a stall.
+scenario_open_decision() {
+  local crumbs
+  reset_assertions
+  prepare_workspace open-decision method
+  if run_turns && require_turns 1 && assert_single_turn_checkpoints; then
+    assert_no_product_change 0 1
+    assert_no_product_edit_action 1
+    crumbs="$(changed_paths 0 1 | grep -E '^on-track/crumbs/.*\.md$' || true)"
+    if [ -n "$crumbs" ]; then
+      assert_bad "an open decision took the Express lane and left a crumb: $(printf '%s' "$crumbs" | tr '\n' ' ')"
+    else
+      assert_ok "no crumb was written"
+    fi
+    assert_intent_track || true
+  fi
+  verdict open-decision
 }
 
 scenario_compound_request() {
@@ -896,6 +961,8 @@ for selected_scenario in $selected; do
     material-change) scenario_material_change;;
     resume) scenario_resume;;
     express-change) scenario_express_change;;
+    express-spread) scenario_express_spread;;
+    open-decision) scenario_open_decision;;
     compound-request) scenario_compound_request;;
     artifact-threshold) scenario_artifact_threshold;;
   esac

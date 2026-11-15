@@ -1,0 +1,1 @@
+Follow the on-track rules in AGENTS.md in this repository. Rename the owner from greeting-team to welcome-team on the owner line of the five files under notes/. The existing scripts/check-owner.sh verifies it.

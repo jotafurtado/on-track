@@ -14,12 +14,12 @@ A via Express é para edições pequenas, delimitadas e reversíveis. Ela não t
 Os cinco critérios precisam valer:
 
 1. O pedido diz o que construir, sem pergunta aberta que o mudaria.
-2. No máximo três arquivos mudam.
+2. A mudança é a menor que atende o pedido como foi feito: um único assunto com no máximo três edições distintas. A mesma edição repetida em vários arquivos, como uma renomeação, uma string de versão ou uma tradução espelhada, conta uma vez.
 3. Nada desta lista muda: um contrato público (API, flags de CLI, schema, um formato de arquivo que alguém consome), dado persistido ou migration, um controle de segurança (autenticação, autorização, segredos, permissões) ou uma dependência (adicionada, atualizada ou removida).
 4. Reverter apenas o diff desfaz a mudança, sem backfill de dados e sem efeito colateral externo.
 5. Um comando existente ou uma verificação observável a confirma.
 
-Se algum critério estiver incerto, a edição segue pelo Highway. O Highway é o padrão.
+Se o critério 1, 3, 4 ou 5 estiver incerto, a edição segue pelo Highway, que é o padrão. Dúvida só sobre o critério 2 mantém a edição na via Express: se a mudança crescer além dele, o agente para como descrito em [Quando um critério deixa de valer](#quando-um-criterio-deixa-de-valer).
 
 Exemplos em um pequeno site institucional:
 
@@ -27,6 +27,7 @@ Exemplos em um pequeno site institucional:
 |---|---|---|
 | "Corrija o erro de digitação na linha de copyright do rodapé." | Express | Um arquivo, nada em aberto, a página mostra o resultado. |
 | "Troque a cor do botão de cadastro para o verde da marca e atualize o snapshot dele." | Express | Dois arquivos, verificados pelo teste de snapshot existente. |
+| "Renomeie o produto de Acme para Apex no rodapé das cinco páginas." | Express | A mesma edição repetida em cinco arquivos conta uma vez. |
 | "Adicione uma tabela de preços que lê os planos da API." | Highway | Restam perguntas de desenho em aberto (layout, ordem dos planos, estado de erro), então o critério 1 falha. |
 | "Adicione uma flag `--draft` ao script de build." | Highway | Muda flags de CLI, um contrato público. |
 | "Atualize o framework de CSS." | Highway | Muda uma dependência. |
@@ -101,4 +102,4 @@ Peça ao agente para desfazer. Ele reverte as próprias edições trecho por tre
 
 ## Quando um critério deixa de valer
 
-Se, durante o trabalho, o agente descobre que um critério não vale mais (é preciso um quarto arquivo, uma dependência precisa mudar, surge uma pergunta aberta), ele para antes da edição que quebraria o critério, diz qual critério caiu e inicia o Highway com `ot-intent`. A partir daí o pedido segue [Sua primeira track](../getting-started/first-track.md).
+Se, durante o trabalho, o agente descobre que um critério não vale mais (é preciso uma quarta edição distinta, uma dependência precisa mudar, surge uma pergunta aberta), ele para antes da edição que quebraria o critério, diz qual critério caiu e inicia o Highway com `ot-intent`. A partir daí o pedido segue [Sua primeira track](../getting-started/first-track.md).

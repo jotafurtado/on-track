@@ -13,7 +13,7 @@ This page answers how the agent decides what a request becomes. Every request is
 |---|---|---|
 | Operational | Running, building, installing, inspecting, or reporting without editing a versioned file of the target repository | Nothing. No track, no artifact, and never a note inside a track, including under `assets/` |
 | Express | An edit for which all five Express criteria hold | One local crumb until the commit. No track, no other file under `on-track/`, no index regeneration |
-| Highway | Every other edit, and any edit where an Express criterion is uncertain. This is the default | The full cycle: `intent.md`, `spec.md`, `tasks.md`, and `assets/` in `on-track/tracks/NNN-slug/` |
+| Highway | Every other edit, and any edit where Express criterion 1, 3, 4, or 5 is uncertain. This is the default | The full cycle: `intent.md`, `spec.md`, `tasks.md`, and `assets/` in `on-track/tracks/NNN-slug/` |
 | Research only | Investigating an external fact, with no desired state change in the system | `on-track/research/<slug>.md` and the index, through `ot-research`. No track |
 | Assessment only | Evaluating or auditing what exists, with no desired state change in the system | `on-track/assessments/<YYYY-MM-DD>-<slug>.md` and the index, through `ot-assess`. No track |
 
@@ -26,12 +26,12 @@ A request that only asks for a handoff goes to `ot-handoff`, which writes the ha
 A request takes the Express lane only when all five criteria hold:
 
 1. The request states what to build, with no open question that would change it.
-2. At most three files change.
+2. The change is the smallest that serves the request as stated: one concern with at most three distinct edits. The same edit repeated across files, such as a rename, a version string, or a mirrored translation, counts once.
 3. None of these changes: a public contract (API, CLI flags, schema, a file format someone else consumes), persisted data or a migration, a security control (authentication, authorization, secrets, permissions), or a dependency (added, upgraded, or removed).
 4. Reverting the diff alone undoes the change, with no data backfill and no external side effect.
 5. One existing command or one observable check verifies it.
 
-If any criterion is uncertain, the request takes the Highway.
+If criterion 1, 3, 4, or 5 is uncertain, the request takes the Highway. Doubt about criterion 2 alone keeps it on the Express lane, under the stop rule below.
 
 ## What the Express lane does
 

@@ -13,7 +13,7 @@ Esta página responde como o agente decide o que um pedido vira. Todo pedido é 
 |---|---|---|
 | Operacional | Rodar, compilar, instalar, inspecionar ou relatar sem editar arquivo versionado do repositório alvo | Nada. Nem track, nem artefato, e nunca uma nota dentro de uma track, inclusive em `assets/` |
 | Express | Edição em que os cinco critérios do Express valem | Uma crumb local até o commit. Sem track, sem outro arquivo em `on-track/`, sem regenerar o índice |
-| Highway | Qualquer outra edição, e toda edição com critério do Express incerto. É o padrão | O ciclo completo: `intent.md`, `spec.md`, `tasks.md` e `assets/` em `on-track/tracks/NNN-slug/` |
+| Highway | Qualquer outra edição, e toda edição com o critério 1, 3, 4 ou 5 do Express incerto. É o padrão | O ciclo completo: `intent.md`, `spec.md`, `tasks.md` e `assets/` em `on-track/tracks/NNN-slug/` |
 | Só pesquisa | Investigar um fato externo, sem mudança de estado desejada no sistema | `on-track/research/<slug>.md` e o índice, por `ot-research`. Sem track |
 | Só avaliação | Avaliar ou auditar o que existe, sem mudança de estado desejada no sistema | `on-track/assessments/<YYYY-MM-DD>-<slug>.md` e o índice, por `ot-assess`. Sem track |
 
@@ -26,12 +26,12 @@ Um pedido que só pede um handoff vai para `ot-handoff`, que grava o handoff e r
 Um pedido segue pela via Express só quando os cinco critérios valem:
 
 1. O pedido diz o que construir, sem pergunta aberta que o mudaria.
-2. No máximo três arquivos mudam.
+2. A mudança é a menor que atende o pedido como foi feito: um único assunto com no máximo três edições distintas. A mesma edição repetida em vários arquivos, como uma renomeação, uma string de versão ou uma tradução espelhada, conta uma vez.
 3. Nada disto muda: contrato público (API, flags de CLI, schema, formato de arquivo consumido por terceiros), dado persistido ou migration, controle de segurança (autenticação, autorização, segredos, permissões) ou dependência (adicionada, atualizada ou removida).
 4. Reverter só o diff desfaz a mudança, sem backfill de dados e sem efeito externo.
 5. Um comando existente ou uma verificação observável confirma o resultado.
 
-Se algum critério for incerto, o pedido segue pelo Highway.
+Se o critério 1, 3, 4 ou 5 for incerto, o pedido segue pelo Highway. Dúvida só sobre o critério 2 o mantém na via Express, sob a regra de parada abaixo.
 
 ## O que a via Express faz
 

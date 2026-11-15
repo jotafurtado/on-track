@@ -37,7 +37,7 @@ on-track/
   tracks/
 ```
 
-- **O bloco gerenciado** é o texto entre `<!-- BEGIN MANAGED BLOCK: on-track v0.2.0. Installed by ot-init, idempotent block. -->` (a versão é a do pacote) e `<!-- END MANAGED BLOCK: on-track -->` no `AGENTS.md`. Ele diz a qualquer agente que trabalhe no repositório como classificar pedidos, quando perguntar, como os sinais funcionam e onde ficam os artefatos. Se o `AGENTS.md` não existe, o init o cria com o bloco. Se o bloco já existe, o init o substitui no lugar e não toca no resto do arquivo.
+- **O bloco gerenciado** é o texto entre `<!-- BEGIN MANAGED BLOCK: on-track v0.3.0. Installed by ot-init, idempotent block. -->` (a versão é a do pacote) e `<!-- END MANAGED BLOCK: on-track -->` no `AGENTS.md`. Ele diz a qualquer agente que trabalhe no repositório como classificar pedidos, quando perguntar, como os sinais funcionam e onde ficam os artefatos. Se o `AGENTS.md` não existe, o init o cria com o bloco. Se o bloco já existe, o init o substitui no lugar e não toca no resto do arquivo.
 - **`on-track/INDEX.md`** é gerado a partir do frontmatter dos arquivos em `on-track/`. Os agentes o leem antes de procurar uma track ou um artefato de apoio. Não o edite à mão: a próxima geração sobrescreve.
 - **`on-track/crumbs/`** guarda as notas locais que as mudanças Express deixam para o commit. O `.gitignore` dela mantém a pasta fora do git. O init nunca sobrescreve um `.gitignore` que já exista ali.
 

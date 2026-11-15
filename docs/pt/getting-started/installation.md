@@ -85,4 +85,4 @@ O instalador do checkout grava links nos diretórios configurados do harness. Ex
 - Com `npx skills`, rode de novo o mesmo comando `npx skills add` para instalar a versão atual.
 - Com um checkout, atualize o repositório com pull; os links já apontam para ele. Rode `./install.sh` de novo quando skills ou comandos forem adicionados ou renomeados.
 
-Depois de uma atualização, a primeira skill que regenera o índice num projeto avisa quando o bloco gerenciado do `AGENTS.md` difere do pacote instalado, por exemplo `project v0.1.0, package v0.2.0`. Aí rode `ot-doctor` nesse projeto: ele lista o que está desatualizado (o bloco, pastas novas, arquivos num layout antigo), propõe as correções e as aplica depois da sua confirmação.
+Depois de uma atualização, a primeira skill que regenera o índice num projeto avisa quando o bloco gerenciado do `AGENTS.md` difere do pacote instalado, por exemplo `project v0.2.0, package v0.3.0`. Aí rode `ot-doctor` nesse projeto: ele lista o que está desatualizado (o bloco, pastas novas, arquivos num layout antigo), propõe as correções e as aplica depois da sua confirmação.

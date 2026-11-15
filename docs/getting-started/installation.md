@@ -85,4 +85,4 @@ The checkout installer writes links to the configured harness directories. Run `
 - With `npx skills`, run the same `npx skills add` command again to install the current version.
 - With a checkout, pull the repository; the links already point at it. Run `./install.sh` again when skills or commands were added or renamed.
 
-After an update, the first skill that regenerates the index in a project warns when its managed block in `AGENTS.md` differs from the installed package, for example `project v0.1.0, package v0.2.0`. Then run `ot-doctor` in that project: it lists what is out of date (the block, new folders, files in an old layout), proposes the fixes, and applies them once you confirm.
+After an update, the first skill that regenerates the index in a project warns when its managed block in `AGENTS.md` differs from the installed package, for example `project v0.2.0, package v0.3.0`. Then run `ot-doctor` in that project: it lists what is out of date (the block, new folders, files in an old layout), proposes the fixes, and applies them once you confirm.

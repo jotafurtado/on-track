@@ -4,6 +4,20 @@ Notable changes to On Track Method are recorded here. Entries describe user and 
 
 ## [Unreleased]
 
+### Added
+
+- Agent evals `express-spread` (the same one-line edit in five files must take the Express lane) and `open-decision` (a one-file request with an open decision must not), with stand-in checks for both in the suite.
+
+### Changed
+
+- Express criterion 2 counts distinct edits instead of files: the change is the smallest that serves the request as stated, one concern with at most three distinct edits, and the same edit repeated across files (a rename, a version string, a mirrored translation) counts once. It replaces "at most three files change", which sent a one-line edit in five files to the Highway and let an agent count files it added on its own.
+- Doubt about the size of a change no longer sends it to the Highway. An uncertain criterion 1, 3, 4, or 5 still does; doubt about criterion 2 alone keeps the edit on the Express lane, under its stop rule.
+- The managed block marker is `on-track v0.3.0`.
+
+### Upgrade
+
+- Reinstall the skills, then run `ot-doctor` in each project: it refreshes the managed block after you confirm.
+
 ## [0.2.0] - 2026-11-15
 
 ### Added

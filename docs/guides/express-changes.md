@@ -14,12 +14,12 @@ The Express lane is for small, bounded, reversible edits. It has no track, no in
 All five criteria must hold:
 
 1. The request states what to build, with no open question that would change it.
-2. At most three files change.
+2. The change is the smallest that serves the request as stated: one concern with at most three distinct edits. The same edit repeated across files, such as a rename, a version string, or a mirrored translation, counts once.
 3. Nothing in this list changes: a public contract (API, CLI flags, schema, a file format someone consumes), persisted data or a migration, a security control (authentication, authorization, secrets, permissions), or a dependency (added, upgraded, or removed).
 4. Reverting the diff alone undoes the change, with no data backfill and no external side effect.
 5. One existing command or one observable check verifies it.
 
-If any criterion is uncertain, the edit takes the Highway. The Highway is the default.
+If criterion 1, 3, 4, or 5 is uncertain, the edit takes the Highway, which is the default. Doubt about criterion 2 alone keeps the edit on the Express lane: if the change grows past it, the agent stops as described in [When a criterion stops holding](#when-a-criterion-stops-holding).
 
 Examples in a small marketing site:
 
@@ -27,6 +27,7 @@ Examples in a small marketing site:
 |---|---|---|
 | "Fix the typo in the footer copyright line." | Express | One file, nothing open, the page shows the result. |
 | "Change the signup button color to the brand green and update its snapshot." | Express | Two files, verified by the existing snapshot test. |
+| "Rename the product from Acme to Apex in the footer of the five pages." | Express | The same edit repeated in five files counts once. |
 | "Add a pricing table that reads plans from the API." | Highway | Open design questions remain (layout, plan order, error state), so criterion 1 fails. |
 | "Add a `--draft` flag to the build script." | Highway | Changes CLI flags, a public contract. |
 | "Upgrade the CSS framework." | Highway | Changes a dependency. |
@@ -101,4 +102,4 @@ Ask the agent to undo it. The agent reverses its own edits hunk by hunk, so any 
 
 ## When a criterion stops holding
 
-If, while working, the agent finds that a criterion no longer holds (a fourth file is needed, a dependency must change, an open question appears), it stops before the edit that would break the criterion, names the failed criterion, and starts the Highway with `ot-intent`. From there the request follows [Your first track](../getting-started/first-track.md).
+If, while working, the agent finds that a criterion no longer holds (a fourth distinct edit is needed, a dependency must change, an open question appears), it stops before the edit that would break the criterion, names the failed criterion, and starts the Highway with `ot-intent`. From there the request follows [Your first track](../getting-started/first-track.md).

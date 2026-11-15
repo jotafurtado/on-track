@@ -1,0 +1,1 @@
+Follow the on-track rules in AGENTS.md in this repository. Make scripts/greet.sh handle an empty NAME instead of printing a bare hello. I have not decided whether it should refuse the empty name or greet a default one.

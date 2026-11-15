@@ -252,8 +252,8 @@ check_agent_runner_prerequisites() {
       bash "$runner" all --harness "$harness_name" >"$out_file" 2>&1 || fail "agent-eval runner without a $cli_label did not exit 0"
     assert_contains "$out_file" "HARNESS: $harness_name"
     assert_contains "$out_file" "RESULT: compat prerequisite-unavailable: $cli_label not found"
-    assert_contains "$out_file" "prerequisite-unavailable=10"
-    [ "$(grep -c '^RESULT: .* prerequisite-unavailable: ' "$out_file")" -eq 10 ] || fail "$harness_name: not all ten selectors reported prerequisite-unavailable"
+    assert_contains "$out_file" "prerequisite-unavailable=12"
+    [ "$(grep -c '^RESULT: .* prerequisite-unavailable: ' "$out_file")" -eq 12 ] || fail "$harness_name: not all twelve selectors reported prerequisite-unavailable"
     [ ! -e "$tripwire.called" ] || fail "$harness_name: a CLI was invoked despite a missing prerequisite"
   done
   # Default harness is Kiro.
@@ -700,6 +700,79 @@ SETUP
   done
   printf ':\n' >"$setup_file"
   single_turn_case express-change inconclusive express-noop
+
+  cat >"$work/spread-valid-setup.sh" <<'SETUP'
+for note in alpha bravo charlie delta echo; do
+  sed 's/greeting-team/welcome-team/' "notes/$note.txt" >note.tmp
+  mv note.tmp "notes/$note.txt"
+done
+mkdir -p on-track/crumbs
+cat >on-track/crumbs/2026-11-15-120000Z-owner.md <<'CRUMB'
+---
+created: 2026-11-15T12:00:00Z
+files:
+  - notes/alpha.txt
+  - notes/bravo.txt
+  - notes/charlie.txt
+  - notes/delta.txt
+  - notes/echo.txt
+---
+
+## Request
+Rename the owner to welcome-team in the five notes.
+
+## Changes
+- notes/alpha.txt: rename the owner.
+- notes/bravo.txt: rename the owner.
+- notes/charlie.txt: rename the owner.
+- notes/delta.txt: rename the owner.
+- notes/echo.txt: rename the owner.
+
+## Verification
+scripts/check-owner.sh: passed.
+CRUMB
+SETUP
+  cp "$work/spread-valid-setup.sh" "$setup_file"
+  { cl_init; cl_done; } >"$events_file"
+  single_turn_case express-spread pass spread-complete
+  # The same edit repeated across five files counts once: a track for it fails.
+  cat >"$setup_file" <<'SETUP'
+mkdir -p on-track/tracks/001-owner
+printf '%s\n' '---' 'id: 001-owner' 'status: draft' '---' '# Intent' >on-track/tracks/001-owner/intent.md
+SETUP
+  single_turn_case express-spread fail spread-track
+  assert_contains "$case_dir/claude/express-spread/assertions.log" 'FAIL Express change modified unexpected on-track paths'
+  cp "$work/spread-valid-setup.sh" "$setup_file"
+  cat >>"$setup_file" <<'SETUP'
+sed '/^  - notes\/echo\.txt$/d' on-track/crumbs/2026-11-15-120000Z-owner.md >crumb.tmp
+mv crumb.tmp on-track/crumbs/2026-11-15-120000Z-owner.md
+SETUP
+  single_turn_case express-spread fail spread-crumb-omits-file
+  assert_contains "$case_dir/claude/express-spread/assertions.log" 'FAIL crumb lacks created, files listing the five notes files, or required headings'
+  cp "$work/spread-valid-setup.sh" "$setup_file"
+  printf "printf 'changed\n' >scripts/check-owner.sh\n" >>"$setup_file"
+  single_turn_case express-spread fail spread-other-product
+  assert_contains "$case_dir/claude/express-spread/assertions.log" 'FAIL product change outside the five notes files'
+  printf ':\n' >"$setup_file"
+  single_turn_case express-spread inconclusive spread-noop
+
+  cat >"$setup_file" <<'SETUP'
+mkdir -p on-track/tracks/001-empty-name
+printf '%s\n' '---' 'id: 001-empty-name' 'status: draft' '---' '# Intent' >on-track/tracks/001-empty-name/intent.md
+SETUP
+  single_turn_case open-decision pass open-decision-track
+  # An open decision that reaches the product or leaves a crumb took the Express lane.
+  printf "printf 'changed\n' >scripts/greet.sh\n" >"$setup_file"
+  single_turn_case open-decision fail open-decision-product
+  cat >"$setup_file" <<'SETUP'
+mkdir -p on-track/crumbs
+: >on-track/crumbs/2026-11-15-120000Z-empty-name.md
+SETUP
+  single_turn_case open-decision fail open-decision-crumb
+  assert_contains "$case_dir/claude/open-decision/assertions.log" 'FAIL an open decision took the Express lane and left a crumb'
+  # Asking without drafting leaves neither an edit nor a track: not a pass.
+  printf ':\n' >"$setup_file"
+  single_turn_case open-decision inconclusive open-decision-asked
 
   cat >"$setup_file" <<'SETUP'
 mkdir -p on-track/tracks/001-recipient
@@ -2243,7 +2316,7 @@ run_flow() {
   assert_contains "$tasks_template" "## Group"
   assert_contains "$tasks_template" "(depends:"
   for routing_file in "$intent_skill" "$repo_root/skills/ot-init/assets/AGENTS-snippet.md"; do
-    for contract_text in 'splitting compound requests' 'before allocating anything' 'handle each part in its own lane' 'naming `ot-intent` or asking for a track or intent selects the Highway' 'asking to do it directly or without a track selects the Express lane' 'the request states what to build, with no open question that changes it' 'explicit choice wins in both directions' 'at most three files' 'no public contract (API, CLI flags, schema, consumed file format)' 'persisted data or migration' 'security control (authentication, authorization, secrets, permissions)' 'dependency (add, upgrade, remove)' 'reverting the diff alone' 'no data backfill or external side effect' 'Say in one sentence that the change takes the Express lane' 'implement, run the check, write a crumb, and report the change and result' 'any edit where an Express criterion is uncertain' 'one existing command or one observable check' 'stop before the edit that breaks it' 'name the failed criterion' 'start the Highway with `ot-intent`' 'never record it inside a track' 'Apart from the crumb, create no track or file under' 'do not regenerate the index' 'file only that ADR and regenerate the index' 'method never commits on its own' 'The Highway runs intent, spec, implement, and ship, and is the default'; do
+    for contract_text in 'splitting compound requests' 'before allocating anything' 'handle each part in its own lane' 'naming `ot-intent` or asking for a track or intent selects the Highway' 'asking to do it directly or without a track selects the Express lane' 'the request states what to build, with no open question that changes it' 'explicit choice wins in both directions' 'the change is the smallest that serves the request as stated' 'one concern with at most three distinct edits' 'the same edit repeated across files (a rename, a version string, a mirrored translation) counts once' 'no public contract (API, CLI flags, schema, consumed file format)' 'persisted data or migration' 'security control (authentication, authorization, secrets, permissions)' 'dependency (add, upgrade, remove)' 'reverting the diff alone' 'no data backfill or external side effect' 'Say in one sentence that the change takes the Express lane' 'implement, run the check, write a crumb, and report the change and result' 'any edit where criterion 1, 3, 4, or 5 is uncertain' 'Doubt about criterion 2 alone keeps the edit on the Express lane, under its stop rule' 'one existing command or one observable check' 'stop before the edit that breaks it' 'name the failed criterion' 'start the Highway with `ot-intent`' 'never record it inside a track' 'Apart from the crumb, create no track or file under' 'do not regenerate the index' 'file only that ADR and regenerate the index' 'method never commits on its own' 'The Highway runs intent, spec, implement, and ship, and is the default'; do
       assert_contains "$routing_file" "$contract_text"
     done
   done
