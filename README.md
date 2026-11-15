@@ -7,7 +7,7 @@
   </picture>
 </p>
 
-[Português (Brasil)](README.pt-BR.md)
+[Documentation](https://ontrack.jotafurtado.dev/) · [Português (Brasil)](README.pt-BR.md)
 
 On Track Method is a lightweight software development life cycle (SDLC) that keeps coding agents on track: you set the direction and answer the signals, and the agent documents, plans, implements, and validates. The record is proportional to the request, so work that does not need a track does not get one.
 
@@ -29,7 +29,7 @@ Your explicit choice of lane always wins. The criteria are in the [request class
 
 ## The Highway
 
-![Numbered workflow titled "You Decide. The AI Implements.", drawn as an open arc from request to delivery. 1, you: Start, state the request with /ot-intent. 2, AI agent: Document the intent and limits in intent.md. 3, you: Review, check the intent. 4, AI agent: Plan the specification and tasks in spec.md and tasks.md with /ot-spec. 5, you: Approve, authorize the implementation. 6, AI agent: Implement with code, validation, and review, with /ot-implement. 7, you: Finish, check and confirm, and the change is shipped. A badge says to run /ot-init before you start. Footer: type . to proceed or write another instruction; review the artifacts before you continue; no automatic commit, push, or deploy.](docs/images/en/workflow.png)
+![Numbered workflow titled "You Decide. The AI Implements.". 1, you: state the request with /ot-intent. 2, agent: document the intent and limits in intent.md. 3, you: review the intent. 4, agent: plan spec.md and tasks.md with /ot-spec. 5, you: approve. 6, agent: implement with validation and review, with /ot-implement. 7, you: confirm, and the change is shipped.](docs/images/en/workflow.png)
 
 The images use the [Claude Code](https://code.claude.com/docs/en/skills) call: `/ot-intent`. In [Codex](https://developers.openai.com/codex/skills), use `$ot-intent` or the `/skills` picker. In other harnesses, you can also ask `Use the ot-intent skill to <goal>`.
 
@@ -43,7 +43,7 @@ Ship marks the track as done; it never commits, pushes, or deploys. Read the [Hi
 
 ## Context that stays in the project
 
-![Diagram titled "Context That Stays in the Project.": an AI agent in the center reads the index at on-track/INDEX.md and connects to five supporting artifacts. Refs, material you provide, recorded during the flow at refs/<slug>.md, with no command of their own. Assessments, evidence of the current state with limits and recommendations, at assessments/<YYYY-MM-DD>-<slug>.md, through /ot-assess. Research, external facts and sources, at research/<slug>.md, through /ot-research. Handoff, continuity across sessions, agents, and models, at handoffs/<timestamp>-<slug>.md, through /ot-handoff. Decisions, what, why, and consequences, recorded during the flow at decisions/<NNN-slug>.md, with no command of their own. Every path lives under on-track/. Footer: memory lives in the project files, not in the chat or the model.](docs/images/en/support-context.png)
+![Diagram titled "Context That Stays in the Project.": an AI agent reads the index at on-track/INDEX.md and connects to five supporting artifacts: refs, assessments, research, handoffs, and decisions, all under on-track/.](docs/images/en/support-context.png)
 
 Research, assessments, and handoffs can be requested at any time, without starting a change, and refs and decisions are recorded on their own during the flow when they are warranted. Agents find all of them through the generated index, so the memory lives in the files instead of depending on the model remembering earlier conversations.
 

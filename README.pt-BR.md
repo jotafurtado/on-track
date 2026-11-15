@@ -7,7 +7,7 @@
   </picture>
 </p>
 
-[English](README.md)
+[Documentação](https://ontrack.jotafurtado.dev/pt/) · [English](README.md)
 
 O On Track Method é um ciclo de desenvolvimento de software (SDLC) leve que mantém os agentes de código nos trilhos: você define o rumo e responde aos sinais, e o agente documenta, planeja, implementa e valida. O registro é proporcional ao pedido, então o que não precisa de track não ganha track.
 
@@ -29,7 +29,7 @@ A sua escolha explícita de via sempre vence. Os critérios estão na [referênc
 
 ## O Highway
 
-![Fluxo numerado intitulado "Você Decide. A IA Implementa.", desenhado como um arco aberto do pedido à entrega. 1, você: Iniciar, descreva o pedido com /ot-intent. 2, agente de IA: Documentar a intenção e os limites em intent.md. 3, você: Revisar, confira a intenção. 4, agente de IA: Planejar a especificação e as tarefas em spec.md e tasks.md com /ot-spec. 5, você: Aprovar, autorize a implementação. 6, agente de IA: Implementar com código, validação e revisão, com /ot-implement. 7, você: Concluir, confira e confirme, e a mudança fica concluída. Um selo indica rodar /ot-init antes de começar. Rodapé: digite ponto para avançar ou escreva outra instrução; revise os artefatos antes de continuar; sem commit, push ou deploy automático.](docs/images/pt/workflow.png)
+![Fluxo numerado intitulado "Você Decide. A IA Implementa.". 1, você: descreva o pedido com /ot-intent. 2, agente: documenta a intenção e os limites em intent.md. 3, você: revisa o intent. 4, agente: planeja spec.md e tasks.md com /ot-spec. 5, você: aprova. 6, agente: implementa com validação e revisão, com /ot-implement. 7, você: confirma, e a mudança fica concluída.](docs/images/pt/workflow.png)
 
 As imagens usam a chamada do [Claude Code](https://code.claude.com/docs/en/skills): `/ot-intent`. No [Codex](https://developers.openai.com/codex/skills), use `$ot-intent` ou o seletor `/skills`. Nos demais harnesses, você também pode pedir `Use a skill ot-intent para <objetivo>`.
 
@@ -43,7 +43,7 @@ O ship marca a track como concluída; ele nunca faz commit, push ou deploy. Leia
 
 ## Contexto que Fica no Projeto
 
-![Diagrama intitulado "Contexto que Fica no Projeto.": um agente de IA no centro consulta o índice em on-track/INDEX.md e se liga a cinco artefatos de apoio. Referências, material fornecido por você, registradas durante o fluxo em refs/<slug>.md, sem comando próprio. Avaliações, evidências do estado atual com limitações e recomendações, em assessments/<YYYY-MM-DD>-<slug>.md, por /ot-assess. Pesquisas, fatos externos e fontes, em research/<slug>.md, por /ot-research. Handoff, continuidade entre sessões, agentes e modelos, em handoffs/<timestamp>-<slug>.md, por /ot-handoff. Decisões, o que, por quê e consequências, registradas durante o fluxo em decisions/<NNN-slug>.md, sem comando próprio. Todos os caminhos ficam em on-track/. Rodapé: a memória fica nos arquivos do projeto, não no chat nem no modelo.](docs/images/pt/support-context.png)
+![Diagrama intitulado "Contexto que Fica no Projeto.": um agente de IA consulta o índice em on-track/INDEX.md e se liga a cinco artefatos de apoio: referências, avaliações, pesquisas, handoffs e decisões, todos em on-track/.](docs/images/pt/support-context.png)
 
 Pesquisas, avaliações e handoffs podem ser pedidos a qualquer momento, sem iniciar uma mudança, e referências e decisões são registradas sozinhas durante o fluxo quando se justificam. Os agentes encontram todos eles pelo índice gerado, então a memória fica nos arquivos em vez de depender de o modelo lembrar de conversas anteriores.
 
